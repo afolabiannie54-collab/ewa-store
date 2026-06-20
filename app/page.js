@@ -1,65 +1,123 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+
+export default function HomePage() {
+  const [featured, setFeatured] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchFeatured()
+  }, [])
+
+  const fetchFeatured = async () => {
+    try {
+      const res = await fetch('/api/products/featured')
+      const data = await res.json()
+      setFeatured(data.products || [])
+    } catch (err) {
+      console.error('Failed to load featured products')
+    }
+    setLoading(false)
+  }
+
+  const getStartingPrice = (variants) => {
+    if (!variants || variants.length === 0) return 0
+    return Math.min(...variants.map(v => v.price))
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div>
+      {/* HERO */}
+      <section style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        minHeight: '70vh',
+        background: '#FEFAE0'
+      }}>
+        <div style={{
+          padding: '80px 56px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          gap: '20px'
+        }}>
+          <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#606C38' }}>
+            Clean skincare · Made for you
           </p>
+          <h1 style={{ fontFamily: 'serif', fontSize: '48px', color: '#283618', lineHeight: 1.1 }}>
+            Skin that feels<br/>like itself again
+          </h1>
+          <p style={{ fontSize: '15px', color: '#7A7A5C', maxWidth: '380px', lineHeight: 1.7 }}>
+            Carefully formulated skincare for every skin type. No noise, no excess — just what your skin actually needs.
+          </p>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+            <Link
+              href="/shop"
+              style={{
+                background: '#606C38', color: '#FEFAE0', padding: '14px 32px',
+                borderRadius: '100px', fontSize: '13px', fontWeight: 500,
+                letterSpacing: '0.08em', textTransform: 'uppercase', textDecoration: 'none'
+              }}
+            >
+              Shop Now
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div style={{ background: '#283618' }} />
+      </section>
+
+      {/* FEATURED */}
+      <section style={{ maxWidth: '1200px', margin: '0 auto', padding: '80px 24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px' }}>
+          <div>
+            <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#606C38', marginBottom: '8px' }}>
+              Bestsellers
+            </p>
+            <h2 style={{ fontFamily: 'serif', fontSize: '32px', color: '#283618' }}>Customer Favourites</h2>
+          </div>
+          <Link href="/shop" style={{ fontSize: '12px', color: '#606C38', textDecoration: 'none' }}>
+            View all products →
+          </Link>
         </div>
-      </main>
+
+        {loading ? (
+          <p style={{ color: '#7A7A5C' }}>Loading...</p>
+        ) : featured.length === 0 ? (
+          <p style={{ color: '#7A7A5C' }}>No featured products yet. Mark some products as featured from the admin dashboard.</p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+            {featured.map(product => (
+              <Link
+                key={product._id}
+                href={`/shop/${product.slug}`}
+                style={{
+                  textDecoration: 'none', background: '#FFFFFF', borderRadius: '20px',
+                  border: '1px solid #D6CEB8', overflow: 'hidden', display: 'block'
+                }}
+              >
+                <div style={{ aspectRatio: '1', background: '#FEFAE0' }}>
+                  {product.images?.[0] && (
+                    <img src={product.images[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  )}
+                </div>
+                <div style={{ padding: '16px' }}>
+                  <p style={{ fontSize: '10px', color: '#7A7A5C', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>
+                    {product.category}
+                  </p>
+                  <p style={{ fontSize: '14px', color: '#283618', fontWeight: 500, marginBottom: '8px' }}>
+                    {product.name}
+                  </p>
+                  <p style={{ fontSize: '15px', color: '#283618', fontWeight: 600 }}>
+                    From ₦{getStartingPrice(product.variants).toLocaleString()}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
-  );
+  )
 }
