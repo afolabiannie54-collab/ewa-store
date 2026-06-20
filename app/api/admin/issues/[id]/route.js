@@ -1,5 +1,6 @@
 import connectDB from '@/lib/mongodb'
 import OrderIssue from '@/models/OrderIssue'
+import Order from '@/models/Order'
 import { sendOrderEmail } from '@/lib/email'
 import { requireAdmin } from '@/lib/auth'
 import { NextResponse } from 'next/server'
