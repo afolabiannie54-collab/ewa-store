@@ -1,4 +1,4 @@
- 'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
@@ -20,6 +20,12 @@ export default function ProductDetailPage() {
   const [addedMessage, setAddedMessage] = useState('')
   const { data: session } = useSession()
 
+  const [reviews, setReviews] = useState([])
+  const [reviewRating, setReviewRating] = useState(5)
+  const [reviewComment, setReviewComment] = useState('')
+  const [reviewError, setReviewError] = useState('')
+  const [reviewMessage, setReviewMessage] = useState('')
+  const [submittingReview, setSubmittingReview] = useState(false)
 
   useEffect(() => {
     fetchProduct()
@@ -36,6 +42,7 @@ export default function ProductDetailPage() {
         setProduct(data.product)
         const firstInStock = data.product.variants.find(v => v.stockQuantity > 0)
         setSelectedVariant(firstInStock || data.product.variants[0])
+        fetchReviews(data.product._id)
       }
     } catch (err) {
       setError('Failed to load product')
@@ -43,7 +50,48 @@ export default function ProductDetailPage() {
     setLoading(false)
   }
 
+  const fetchReviews = async (productId) => {
+    try {
+      const res = await fetch(`/api/products/${productId}/reviews`)
+      const data = await res.json()
+      setReviews(data.reviews || [])
+    } catch (err) {
+      console.error('Failed to load reviews')
+    }
+  }
 
+  const handleSubmitReview = async (e) => {
+    e.preventDefault()
+    setReviewError('')
+    setReviewMessage('')
+
+    if (!reviewComment.trim()) {
+      setReviewError('Please write a comment')
+      return
+    }
+
+    setSubmittingReview(true)
+
+    try {
+      const res = await fetch(`/api/products/${product._id}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: reviewRating, comment: reviewComment })
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setReviewError(data.error)
+      } else {
+        setReviewMessage(data.message)
+        setReviewComment('')
+      }
+    } catch (err) {
+      setReviewError('Something went wrong')
+    }
+    setSubmittingReview(false)
+  }
 
   const handleAddToCart = async () => {
     if (!selectedVariant || selectedVariant.stockQuantity === 0) return
@@ -277,6 +325,74 @@ export default function ProductDetailPage() {
             <p style={{ fontSize: '13px', color: '#606C38', marginBottom: '8px' }}>Usage: {product.usageTime}</p>
             <p style={{ fontSize: '14px', color: '#283618', lineHeight: 1.7 }}>{product.howToUse || 'No usage instructions available.'}</p>
           </div>
+        )}
+      </div>
+
+      {/* REVIEWS */}
+      <div style={{ marginTop: '56px', maxWidth: '600px' }}>
+        <h2 style={{ fontSize: '18px', fontFamily: 'serif', color: '#283618', marginBottom: '20px' }}>
+          Reviews {reviews.length > 0 && `(${reviews.length})`}
+        </h2>
+
+        {reviews.length === 0 ? (
+          <p style={{ fontSize: '13px', color: '#7A7A5C', marginBottom: '32px' }}>No reviews yet.</p>
+        ) : (
+          <div style={{ marginBottom: '32px' }}>
+            {reviews.map(review => (
+              <div key={review._id} style={{ borderBottom: '1px solid #D6CEB8', paddingBottom: '16px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 600, color: '#283618' }}>{review.userId?.name || 'Anonymous'}</p>
+                  <p style={{ fontSize: '13px', color: '#606C38' }}>{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</p>
+                </div>
+                <p style={{ fontSize: '13px', color: '#7A7A5C', lineHeight: 1.6 }}>{review.comment}</p>
+                <p style={{ fontSize: '11px', color: '#7A7A5C', marginTop: '6px' }}>
+                  {new Date(review.createdAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {session ? (
+          <form onSubmit={handleSubmitReview} style={{ background: '#FFFFFF', border: '1px solid #D6CEB8', borderRadius: '16px', padding: '20px' }}>
+            <p style={{ fontSize: '13px', fontWeight: 600, color: '#283618', marginBottom: '12px' }}>Leave a Review</p>
+
+            <div style={{ marginBottom: '12px' }}>
+              <select
+                value={reviewRating}
+                onChange={(e) => setReviewRating(Number(e.target.value))}
+                style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid #D6CEB8', fontSize: '13px' }}
+              >
+                {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} Star{n > 1 ? 's' : ''}</option>)}
+              </select>
+            </div>
+
+            <textarea
+              value={reviewComment}
+              onChange={(e) => setReviewComment(e.target.value)}
+              placeholder="Share your experience with this product..."
+              rows={3}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #D6CEB8', fontSize: '13px', marginBottom: '12px' }}
+            />
+
+            {reviewError && <p style={{ color: '#C0392B', fontSize: '12px', marginBottom: '12px' }}>{reviewError}</p>}
+            {reviewMessage && <p style={{ color: '#4A7C59', fontSize: '12px', marginBottom: '12px' }}>{reviewMessage}</p>}
+
+            <button
+              type="submit"
+              disabled={submittingReview}
+              style={{
+                padding: '10px 24px', borderRadius: '100px', background: '#606C38',
+                color: '#FEFAE0', border: 'none', fontSize: '12px', fontWeight: 500, cursor: 'pointer'
+              }}
+            >
+              {submittingReview ? 'Submitting...' : 'Submit Review'}
+            </button>
+          </form>
+        ) : (
+          <p style={{ fontSize: '13px', color: '#7A7A5C' }}>
+            <a href="/login" style={{ color: '#606C38', fontWeight: 500 }}>Log in</a> to leave a review.
+          </p>
         )}
       </div>
     </div>
