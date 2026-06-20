@@ -1,6 +1,7 @@
 import connectDB from '@/lib/mongodb'
 import Order from '@/models/Order'
 import OrderIssue from '@/models/OrderIssue'
+import User from '@/models/User'
 import { uploadImage } from '@/lib/cloudinary'
 import { sendOrderEmail } from '@/lib/email'
 import { getCurrentUser } from '@/lib/auth'
@@ -38,7 +39,11 @@ export async function POST(req, { params }) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
 
-    if (order.userId?.toString() !== user.id) {
+    const dbUser = await User.findById(user.id)
+    const isOwner = order.userId?.toString() === user.id
+    const isGuestMatch = dbUser.isEmailVerified && order.guestEmail === dbUser.email
+
+    if (!isOwner && !isGuestMatch) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
     }
 

@@ -1,6 +1,7 @@
 import connectDB from '@/lib/mongodb'
 import Order from '@/models/Order'
 import Product from '@/models/Product'
+import User from '@/models/User'
 import { getCurrentUser } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
@@ -20,7 +21,11 @@ export async function POST(req, { params }) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
 
-    if (order.userId?.toString() !== user.id) {
+    const dbUser = await User.findById(user.id)
+    const isOwner = order.userId?.toString() === user.id
+    const isGuestMatch = dbUser.isEmailVerified && order.guestEmail === dbUser.email
+
+    if (!isOwner && !isGuestMatch) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
     }
 
