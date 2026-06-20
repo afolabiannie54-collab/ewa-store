@@ -18,7 +18,9 @@ export default function Navbar() {
       <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
         <Link href="/shop" style={{ color: '#FEFAE0', fontSize: '13px', textDecoration: 'none' }}>Shop</Link>
         <Link href="/cart" style={{ color: '#FEFAE0', fontSize: '13px', textDecoration: 'none' }}>Cart</Link>
-
+        {session && (
+          <Link href="/issues" style={{ color: '#FEFAE0', fontSize: '13px', textDecoration: 'none' }}>My Issues</Link>
+        )}
         {session ? (
           <>
             {session.user.role === 'admin' && (
