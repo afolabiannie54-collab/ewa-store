@@ -21,6 +21,11 @@ export default function Navbar() {
         {session && (
           <Link href="/issues" style={{ color: '#FEFAE0', fontSize: '13px', textDecoration: 'none' }}>My Issues</Link>
         )}
+
+{session && (
+          <Link href="/reviews" style={{ color: '#FEFAE0', fontSize: '13px', textDecoration: 'none' }}>My Reviews</Link>
+        )}
+
         {session ? (
           <>
             {session.user.role === 'admin' && (
