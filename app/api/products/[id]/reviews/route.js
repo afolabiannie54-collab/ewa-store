@@ -2,6 +2,7 @@ import connectDB from '@/lib/mongodb'
 import Review from '@/models/Review'
 import Order from '@/models/Order'
 import Product from '@/models/Product'
+import User from '@/models/User'
 import { getCurrentUser } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
@@ -42,9 +43,15 @@ export async function POST(req, { params }) {
       return NextResponse.json({ error: 'Rating must be between 1 and 5' }, { status: 400 })
     }
 
-    // Find a delivered order belonging to this user that contains this product
+    // Find a delivered order belonging to this user (or their verified guest email) that contains this product
+    const dbUser = await User.findById(user.id)
+
+    const ownerCondition = dbUser.isEmailVerified
+      ? { $or: [{ userId: user.id }, { guestEmail: dbUser.email }] }
+      : { userId: user.id }
+
     const qualifyingOrder = await Order.findOne({
-      userId: user.id,
+      ...ownerCondition,
       status: 'Delivered',
       'items.productId': id
     })
