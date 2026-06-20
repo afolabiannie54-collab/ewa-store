@@ -78,8 +78,8 @@ export default function OrderDetailPage() {
           </p>
         </div>
 
-       {order.invoiceUrl ? (
-            <a
+        {order.invoiceUrl ? (
+          <a
             href={order.invoiceUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -187,7 +187,7 @@ export default function OrderDetailPage() {
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: '12px' }}>
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
         {order.status === 'Pending' ? (
           <button
             onClick={handleCancel}
@@ -207,19 +207,38 @@ export default function OrderDetailPage() {
         ) : null}
 
         {order.status === 'Delivered' ? (
-          <Link
-            href={`/orders/${order._id}/issue`}
-            style={{
-              padding: '12px 24px',
-              borderRadius: '100px',
-              border: '1px solid #D6CEB8',
-              color: '#283618',
-              fontSize: '13px',
-              textDecoration: 'none'
-            }}
-          >
-            Report a Problem
-          </Link>
+          <>
+            <Link
+              href={`/orders/${order._id}/issue`}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '100px',
+                border: '1px solid #D6CEB8',
+                color: '#283618',
+                fontSize: '13px',
+                textDecoration: 'none'
+              }}
+            >
+              Report a Problem
+            </Link>
+
+            {order.items.map((item, i) => (
+              <a
+                key={i}
+                href={`/api/products/redirect/${item.productId}`}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '100px',
+                  border: '1px solid #D6CEB8',
+                  color: '#283618',
+                  fontSize: '13px',
+                  textDecoration: 'none'
+                }}
+              >
+                Review {item.name}
+              </a>
+            ))}
+          </>
         ) : null}
       </div>
     </div>
