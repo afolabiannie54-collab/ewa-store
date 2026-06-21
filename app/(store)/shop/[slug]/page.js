@@ -19,6 +19,7 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState('description')
   const [addedMessage, setAddedMessage] = useState('')
   const { data: session } = useSession()
+  const [inWishlist, setInWishlist] = useState(false)
 
   const [reviews, setReviews] = useState([])
   const [reviewRating, setReviewRating] = useState(5)
@@ -43,6 +44,7 @@ export default function ProductDetailPage() {
         const firstInStock = data.product.variants.find(v => v.stockQuantity > 0)
         setSelectedVariant(firstInStock || data.product.variants[0])
         fetchReviews(data.product._id)
+        if (session) checkWishlist(data.product._id)
       }
     } catch (err) {
       setError('Failed to load product')
@@ -57,6 +59,30 @@ export default function ProductDetailPage() {
       setReviews(data.reviews || [])
     } catch (err) {
       console.error('Failed to load reviews')
+    }
+  }
+
+  const checkWishlist = async (productId) => {
+    try {
+      const res = await fetch('/api/users/me/wishlist')
+      const data = await res.json()
+      setInWishlist(data.wishlist?.some(p => p._id === productId))
+    } catch (err) {
+      console.error('Failed to check wishlist')
+    }
+  }
+
+  const handleToggleWishlist = async () => {
+    if (inWishlist) {
+      await fetch(`/api/users/me/wishlist/${product._id}`, { method: 'DELETE' })
+      setInWishlist(false)
+    } else {
+      await fetch('/api/users/me/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product._id })
+      })
+      setInWishlist(true)
     }
   }
 
@@ -252,26 +278,44 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            disabled={maxStock === 0}
-            style={{
-              width: '100%',
-              padding: '16px',
-              borderRadius: '100px',
-              background: maxStock === 0 ? '#D6CEB8' : '#283618',
-              color: '#FEFAE0',
-              border: 'none',
-              fontSize: '13px',
-              fontWeight: 500,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              cursor: maxStock === 0 ? 'not-allowed' : 'pointer',
-              marginBottom: '12px'
-            }}
-          >
-            {maxStock === 0 ? 'Sold Out' : 'Add to Cart'}
-          </button>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
+            <button
+              onClick={handleAddToCart}
+              disabled={maxStock === 0}
+              style={{
+                flex: 1,
+                padding: '16px',
+                borderRadius: '100px',
+                background: maxStock === 0 ? '#D6CEB8' : '#283618',
+                color: '#FEFAE0',
+                border: 'none',
+                fontSize: '13px',
+                fontWeight: 500,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                cursor: maxStock === 0 ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {maxStock === 0 ? 'Sold Out' : 'Add to Cart'}
+            </button>
+
+            {session && (
+              <button
+                onClick={handleToggleWishlist}
+                style={{
+                  width: '52px',
+                  borderRadius: '100px',
+                  border: '1px solid #D6CEB8',
+                  background: inWishlist ? '#606C38' : 'transparent',
+                  color: inWishlist ? '#FEFAE0' : '#283618',
+                  fontSize: '18px',
+                  cursor: 'pointer'
+                }}
+              >
+                {inWishlist ? '♥' : '♡'}
+              </button>
+            )}
+          </div>
 
           {addedMessage && (
             <p style={{ fontSize: '13px', color: '#4A7C59', textAlign: 'center', marginBottom: '12px' }}>{addedMessage}</p>
