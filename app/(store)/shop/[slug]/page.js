@@ -18,7 +18,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1)
   const [activeTab, setActiveTab] = useState('description')
   const [addedMessage, setAddedMessage] = useState('')
-  const { data: session } = useSession()
+  const { data: session, status: sessionStatus } = useSession()
   const [inWishlist, setInWishlist] = useState(false)
 
   const [reviews, setReviews] = useState([])
@@ -32,6 +32,12 @@ export default function ProductDetailPage() {
     fetchProduct()
   }, [slug])
 
+  useEffect(() => {
+    if (sessionStatus === 'authenticated' && product) {
+      checkWishlist(product._id)
+    }
+  }, [sessionStatus, product])
+
   const fetchProduct = async () => {
     try {
       const res = await fetch(`/api/products/${slug}`)
@@ -44,7 +50,6 @@ export default function ProductDetailPage() {
         const firstInStock = data.product.variants.find(v => v.stockQuantity > 0)
         setSelectedVariant(firstInStock || data.product.variants[0])
         fetchReviews(data.product._id)
-        if (session) checkWishlist(data.product._id)
       }
     } catch (err) {
       setError('Failed to load product')
