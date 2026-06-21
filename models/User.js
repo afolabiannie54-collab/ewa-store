@@ -19,6 +19,9 @@ const UserSchema = new mongoose.Schema({
   isEmailVerified: { type: Boolean, default: false },
   verificationOTP: { type: String },
   verificationOTPExpiry: { type: Date },
+  pendingEmail: { type: String },
+  emailChangeOTP: { type: String },
+  emailChangeOTPExpiry: { type: Date },
   lastLoginAt: { type: Date },
   addresses: [AddressSchema],
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]
