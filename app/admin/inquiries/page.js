@@ -6,6 +6,10 @@ export default function AdminInquiriesPage() {
   const [inquiries, setInquiries] = useState([])
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState('')
+  const [replyingId, setReplyingId] = useState(null)
+  const [replyText, setReplyText] = useState('')
+  const [sending, setSending] = useState(false)
+  const [replyMessage, setReplyMessage] = useState('')
 
   useEffect(() => {
     fetchInquiries()
@@ -29,6 +33,39 @@ export default function AdminInquiriesPage() {
       body: JSON.stringify({ status })
     })
     fetchInquiries()
+  }
+
+  const startReply = (id) => {
+    setReplyingId(id)
+    setReplyText('')
+    setReplyMessage('')
+  }
+
+  const sendReply = async (id) => {
+    if (!replyText.trim()) return
+
+    setSending(true)
+    try {
+      const res = await fetch(`/api/admin/inquiries/${id}/reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: replyText })
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        setReplyMessage('Reply sent successfully')
+        setReplyText('')
+        fetchInquiries()
+        setTimeout(() => setReplyingId(null), 1500)
+      } else {
+        setReplyMessage(data.error || 'Failed to send reply')
+      }
+    } catch (err) {
+      setReplyMessage('Something went wrong')
+    }
+    setSending(false)
   }
 
   const statusColors = {
@@ -84,7 +121,7 @@ export default function AdminInquiriesPage() {
             {new Date(inquiry.createdAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: replyingId === inquiry._id ? '12px' : 0 }}>
             {inquiry.status !== 'In Progress' && (
               <button onClick={() => updateStatus(inquiry._id, 'In Progress')} style={{ padding: '8px 16px', borderRadius: '100px', background: 'transparent', color: '#3A5A8A', border: '1px solid #3A5A8A', fontSize: '12px', cursor: 'pointer' }}>
                 Mark In Progress
@@ -95,10 +132,37 @@ export default function AdminInquiriesPage() {
                 Mark Resolved
               </button>
             )}
-            <a href={`mailto:${inquiry.email}`} style={{ padding: '8px 16px', borderRadius: '100px', background: 'transparent', color: '#606C38', border: '1px solid #D6CEB8', fontSize: '12px', textDecoration: 'none' }}>
-              Reply by Email
-            </a>
+            <button
+              onClick={() => replyingId === inquiry._id ? setReplyingId(null) : startReply(inquiry._id)}
+              style={{ padding: '8px 16px', borderRadius: '100px', background: 'transparent', color: '#606C38', border: '1px solid #D6CEB8', fontSize: '12px', cursor: 'pointer' }}
+            >
+              {replyingId === inquiry._id ? 'Cancel' : 'Reply'}
+            </button>
           </div>
+
+          {replyingId === inquiry._id && (
+            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #D6CEB8' }}>
+              <textarea
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder="Type your reply here..."
+                rows={3}
+                style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #D6CEB8', fontSize: '13px', marginBottom: '10px' }}
+              />
+              {replyMessage && (
+                <p style={{ fontSize: '12px', color: replyMessage.includes('success') ? '#4A7C59' : '#C0392B', marginBottom: '10px' }}>
+                  {replyMessage}
+                </p>
+              )}
+              <button
+                onClick={() => sendReply(inquiry._id)}
+                disabled={sending}
+                style={{ padding: '8px 20px', borderRadius: '100px', background: '#283618', color: '#FEFAE0', border: 'none', fontSize: '12px', cursor: 'pointer' }}
+              >
+                {sending ? 'Sending...' : 'Send Reply'}
+              </button>
+            </div>
+          )}
         </div>
       ))}
 
