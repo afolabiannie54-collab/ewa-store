@@ -10,8 +10,9 @@ export async function GET(req, { params }) {
   try {
     await connectDB()
 
-    const { id } = await params
-    const reviews = await Review.find({ productId: id, isApproved: true })
+    const { slug } = await params
+    const productId = slug // value passed here is actually a product database ID, not a real slug
+    const reviews = await Review.find({ productId, isApproved: true })
       .populate('userId', 'name')
       .sort({ createdAt: -1 })
 
@@ -32,7 +33,8 @@ export async function POST(req, { params }) {
 
     await connectDB()
 
-    const { id } = await params
+    const { slug } = await params
+    const productId = slug // value passed here is actually a product database ID, not a real slug
     const { rating, comment } = await req.json()
 
     if (!rating || !comment) {
@@ -43,7 +45,6 @@ export async function POST(req, { params }) {
       return NextResponse.json({ error: 'Rating must be between 1 and 5' }, { status: 400 })
     }
 
-    // Find a delivered order belonging to this user (or their verified guest email) that contains this product
     const dbUser = await User.findById(user.id)
 
     const ownerCondition = dbUser.isEmailVerified
@@ -53,7 +54,7 @@ export async function POST(req, { params }) {
     const qualifyingOrder = await Order.findOne({
       ...ownerCondition,
       status: 'Delivered',
-      'items.productId': id
+      'items.productId': productId
     })
 
     if (!qualifyingOrder) {
@@ -62,14 +63,13 @@ export async function POST(req, { params }) {
       }, { status: 403 })
     }
 
-    // Check for existing review (one per product per customer)
-    const existingReview = await Review.findOne({ productId: id, userId: user.id })
+    const existingReview = await Review.findOne({ productId, userId: user.id })
     if (existingReview) {
       return NextResponse.json({ error: 'You have already reviewed this product' }, { status: 409 })
     }
 
     const review = await Review.create({
-      productId: id,
+      productId,
       userId: user.id,
       orderId: qualifyingOrder._id,
       rating,

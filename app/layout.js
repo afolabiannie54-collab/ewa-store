@@ -3,6 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import SessionWrapper from "@/components/SessionWrapper";
+import Footer from "@/components/Footer";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -28,9 +29,10 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col">
         <Script src="https://js.paystack.co/v1/inline.js" strategy="beforeInteractive" />
-        <SessionWrapper>
+       <SessionWrapper>
           <Navbar />
           {children}
+          <Footer />
         </SessionWrapper>
       </body>
     </html>
