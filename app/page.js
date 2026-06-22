@@ -80,7 +80,7 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="group relative h-[560px] md:h-auto flex items-end justify-center">
+          <div className="group relative -mx-6 md:mx-0 w-screen md:w-full h-[560px] md:h-auto flex items-end justify-center border-t-[2.5px] border-olive md:border-t-0">
             <div
               className="absolute bottom-[6%] w-[80%] md:w-[85%] h-[140px] md:h-[180px] rounded-[50%] transition-all duration-700 ease-out group-hover:scale-110 group-hover:opacity-70"
               style={{
@@ -88,7 +88,7 @@ export default function HomePage() {
               }}
             />
             <div
-              className="relative w-[350px] md:w-[600px] h-[105%] transition-transform duration-500 ease-out group-hover:-rotate-1 group-hover:scale-105"
+              className="relative w-[350px] md:w-[600px] h-full md:h-[105%] transition-transform duration-500 ease-out group-hover:-rotate-1 group-hover:scale-105"
               style={{ transformOrigin: 'bottom right' }}
             >
               <Image
@@ -118,13 +118,13 @@ export default function HomePage() {
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="aspect-[4/5] rounded-[20px] bg-cream/10 animate-pulse" />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
                 {featured.map(product => (
                   <ProductCard
                     key={product._id}
