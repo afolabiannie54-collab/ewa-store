@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import SessionWrapper from "@/components/SessionWrapper";
 import Footer from "@/components/Footer";
+import BackToTop from "@/components/BackToTop";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -29,10 +30,11 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col">
         <Script src="https://js.paystack.co/v1/inline.js" strategy="beforeInteractive" />
-       <SessionWrapper>
+      <SessionWrapper>
           <Navbar />
           {children}
           <Footer />
+          <BackToTop />
         </SessionWrapper>
       </body>
     </html>
