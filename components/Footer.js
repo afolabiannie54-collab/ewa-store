@@ -83,7 +83,7 @@ export default function Footer() {
 <div className="select-none -mb-6 sm:-mb-10 md:-mb-14 pt-4 pb-6 pointer-events-none">
         <p
           className="font-display font-bold text-cream/[0.08] text-center leading-none text-[30vw]"
-          style={{ letterSpacing: '-0.07em' }}
+          style={{ letterSpacing: '-0.08em' }}
         >
           Ewa
         </p>

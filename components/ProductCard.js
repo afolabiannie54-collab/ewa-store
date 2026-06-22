@@ -42,7 +42,7 @@ export default function ProductCard({ product, isWishlisted = false, onWishlistT
     <>
       <Link
         href={`/shop/${product.slug}`}
-        className="group block rounded-[20px] border-[1.5px] border-olive bg-surface overflow-hidden shadow-[0_12px_32px_-8px_rgba(0,0,0,0.35)] transition-shadow duration-300 hover:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.45)]"
+        className="group block rounded-[20px] border-[3px] border-olive bg-surface overflow-hidden shadow-[0_12px_32px_-8px_rgba(0,0,0,0.35)] transition-shadow duration-300 hover:shadow-[0_16px_40px_-8px_rgba(0,0,0,0.45)]"
       >
         <div className="relative aspect-[4/5]">
           {primaryImage && !imageError ? (
