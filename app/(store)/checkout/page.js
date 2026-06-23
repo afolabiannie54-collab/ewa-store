@@ -313,82 +313,69 @@ export default function CheckoutPage() {
           </div>
 
           {/* RIGHT: ORDER SUMMARY */}
-          <aside className="lg:sticky lg:top-8 lg:h-fit">
-            <div className="border-[1.5px] border-border rounded-[20px] p-7 bg-surface">
-              <h2 className="font-display font-bold text-forest text-[18px] mb-6">Order Summary</h2>
+          <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8 h-fit lg:sticky lg:top-8">
+            <h2 className="font-display font-bold text-forest text-[22px] mb-6">Order Summary</h2>
 
-              <div className="flex flex-col gap-4 mb-6 pb-6 border-b-[1.5px] border-border">
-                {items.map(item => (
-                  <div key={`${item.productId}-${item.size}`} className="flex justify-between text-[14px]">
-                    <span className="text-forest/70">{item.name} × {item.quantity}</span>
-                    <span className="font-medium text-forest">₦{(item.price * item.quantity).toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between text-[14px]">
-                  <span className="text-forest/60">Subtotal</span>
-                  <span className="text-forest">₦{subtotal.toLocaleString()}</span>
+            <div className="flex flex-col gap-3 mb-6 max-h-[240px] overflow-y-auto pr-1">
+              {items.map(item => (
+                <div key={`${item.productId}-${item.size}`} className="flex justify-between text-[14px] text-forest">
+                  <span className="text-forest/70">{item.name} ({item.size}) × {item.quantity}</span>
+                  <span className="font-medium whitespace-nowrap ml-3">₦{(item.price * item.quantity).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-[14px]">
-                  <span className="text-forest/60">Shipping</span>
-                  <span className="text-forest">₦{shippingCost.toLocaleString()}</span>
-                </div>
-                {discount > 0 && (
-                  <div className="flex justify-between text-[14px]">
-                    <span className="text-forest/60">Discount</span>
-                    <span className="text-olive font-medium">-₦{discount.toLocaleString()}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-6 pb-6 border-b-[1.5px] border-border">
-                <div className="flex justify-between">
-                  <span className="text-[15px] font-bold text-forest">Total</span>
-                  <span className="text-[18px] font-bold text-forest">₦{total.toLocaleString()}</span>
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <label className="text-[13px] font-bold uppercase tracking-wide text-forest/60 mb-2 block">Promo Code</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={promoInput}
-                    onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
-                    placeholder="Enter code"
-                    className="flex-1 rounded-[10px] border-[1.5px] border-border px-4 py-2.5 text-[13px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleApplyPromo}
-                    className="px-4 py-2.5 rounded-[10px] bg-olive text-cream text-[13px] font-bold uppercase tracking-wide hover:bg-forest transition-colors"
-                  >
-                    Apply
-                  </button>
-                </div>
-                {promoError && <p className="text-[12px] text-error mt-2">{promoError}</p>}
-                {promoApplied && <p className="text-[12px] text-success mt-2">✓ {promoApplied.code} applied</p>}
-              </div>
-
-              {error && <p className="text-[13px] text-error mb-4 text-center">{error}</p>}
-
-              <button
-                type="submit"
-                disabled={submitting || items.length === 0}
-                className="w-full rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-4 hover:bg-forest transition-colors disabled:bg-border disabled:text-muted disabled:cursor-not-allowed"
-              >
-                {submitting ? 'Processing...' : 'Proceed to Payment'}
-              </button>
-
-              <p className="text-[12px] text-forest/50 text-center mt-4">
-                Your payment is secure and encrypted
-              </p>
+              ))}
             </div>
-          </aside>
-        </form>
 
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text" placeholder="Promo code" value={promoInput}
+                onChange={(e) => setPromoInput(e.target.value)}
+                className="flex-1 rounded-[10px] border-[1.5px] border-border px-4 py-2.5 text-[13px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors"
+              />
+              <button
+                type="button"
+                onClick={handleApplyPromo}
+                className="rounded-[10px] bg-forest text-cream px-5 py-2.5 text-[13px] font-bold hover:bg-olive transition-colors"
+              >
+                Apply
+              </button>
+            </div>
+            {promoError && <p className="text-[12px] text-error mb-4">{promoError}</p>}
+            {promoApplied && <p className="text-[12px] font-medium text-success mb-4">Code applied: -₦{discount.toLocaleString()}</p>}
+
+            <div className="border-t-[1.5px] border-border pt-5 mt-2 flex flex-col gap-2.5">
+              <div className="flex justify-between text-[14px] text-forest">
+                <span>Subtotal</span><span className="font-medium">₦{subtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-[14px] text-forest">
+                <span>Shipping {shippingTier ? `(${shippingTier})` : ''}</span><span className="font-medium">₦{shippingCost.toLocaleString()}</span>
+              </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-[14px] text-success">
+                  <span>Discount</span><span className="font-medium">-₦{discount.toLocaleString()}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-[19px] font-display font-bold text-forest pt-2">
+                <span>Total</span><span>₦{total.toLocaleString()}</span>
+              </div>
+            </div>
+
+            {error && <p className="text-[13px] text-error mt-5">{error}</p>}
+
+            {!selectedState && (
+              <p className="text-[12px] text-forest/50 mt-5">
+                Select or enter a shipping address to continue.
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting || !selectedState}
+              className="w-full rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-[18px] mt-5 hover:bg-forest transition-colors disabled:bg-border disabled:text-muted disabled:cursor-not-allowed"
+            >
+              {submitting ? 'Processing...' : 'Pay Now'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   )
