@@ -104,7 +104,7 @@ export default function HomePage() {
         </div>
       </section>
 
-     {/* FEATURED — collapses entirely if no products are flagged */}
+      {/* FEATURED — collapses entirely if no products are flagged */}
       {!loading && featured.length === 0 ? null : (
         <section id="featured" className="bg-forest">
           <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-20">
@@ -138,6 +138,46 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* OUR STORY TEASER */}
+      <section className="relative min-h-[900px] md:min-h-[860px] overflow-hidden">
+        <Image
+          src="/about-teaser.jpg"
+          alt="Skincare made for melanin-rich skin"
+          fill
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-forest/60" />
+
+        <div className="relative z-10 h-full flex flex-col justify-end px-6 md:px-16 py-16 md:py-24">
+          <h2 className="font-display font-bold text-cream text-[42px] md:text-[72px] leading-[1.05] mb-7 max-w-[760px]" style={{ letterSpacing: '-0.02em' }}>
+            Built for Nigerian skin, in Nigerian heat
+          </h2>
+          <p className="text-[16px] md:text-[20px] text-cream/85 leading-relaxed mb-9 max-w-[560px]">
+            Most skincare is formulated for cooler, drier climates and quietly hopes it works here too. EWA started from the opposite direction — humidity, heat, and melanin-rich skin first, everything else built around that.
+          </p>
+
+          <Link
+            href="/about"
+            className="inline-block w-fit rounded-full bg-cream text-forest text-[15px] md:text-[16px] font-bold uppercase tracking-[0.1em] px-10 py-5 mb-14 hover:bg-olive hover:text-cream transition-colors"
+          >
+            Read Our Story
+          </Link>
+
+          <div className="flex flex-wrap md:flex-nowrap gap-3.5">
+            {['Climate-Adapted', 'Cruelty-Free', 'Clean Ingredients', 'Made for Melanin-Rich Skin'].map((label) => (
+              <span
+                key={label}
+                className="flex-shrink-0 rounded-full border-2 border-cream/40 bg-cream/10 backdrop-blur-sm px-5 py-2.5 text-[12px] md:text-[14px] font-bold uppercase tracking-wide text-cream transition-colors hover:bg-cream hover:text-forest hover:border-cream cursor-default"
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
     </div>
   )
 }
