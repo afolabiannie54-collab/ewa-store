@@ -14,7 +14,7 @@ function HeartIcon(props) {
   )
 }
 
-export default function ProductCard({ product, isWishlisted = false, onWishlistToggle }) {
+export default function ProductCard({ product, isWishlisted = false, onWishlistToggle, onQuickAdd }) {
   const { status } = useSession()
   const [imageError, setImageError] = useState(false)
   const [wishlistBusy, setWishlistBusy] = useState(false)
@@ -36,6 +36,13 @@ export default function ProductCard({ product, isWishlisted = false, onWishlistT
     setWishlistBusy(true)
     await onWishlistToggle(product._id, isWishlisted)
     setWishlistBusy(false)
+  }
+
+  const handleQuickAddClick = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!product.inStock || !onQuickAdd) return
+    onQuickAdd()
   }
 
   return (
@@ -95,9 +102,19 @@ export default function ProductCard({ product, isWishlisted = false, onWishlistT
           <h3 className="font-display font-bold text-forest text-[20px] md:text-[22px] leading-snug">
             {product.name}
           </h3>
-          <p className="mt-1.5 text-[16px] font-medium text-forest/70">
+          <p className="mt-1.5 mb-4 text-[16px] font-medium text-forest/70">
             From ₦{product.startingPrice?.toLocaleString() || 0}
           </p>
+
+          {onQuickAdd && (
+            <button
+              onClick={handleQuickAddClick}
+              disabled={!product.inStock}
+              className="w-full rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.08em] py-3 transition-colors hover:bg-forest disabled:bg-border disabled:text-muted disabled:cursor-not-allowed"
+            >
+              {product.inStock ? 'Add to Cart' : 'Sold Out'}
+            </button>
+          )}
         </div>
       </Link>
 

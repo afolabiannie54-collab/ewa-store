@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import ProductCard from '@/components/ProductCard'
+import QuickAddModal from '@/components/QuickAddModal'
 
 export default function HomePage() {
   const [featured, setFeatured] = useState([])
   const [loading, setLoading] = useState(true)
   const [wishlistIds, setWishlistIds] = useState([])
+  const [quickAddSlug, setQuickAddSlug] = useState(null)
 
   useEffect(() => {
     fetchFeatured()
@@ -131,6 +133,7 @@ export default function HomePage() {
                     product={product}
                     isWishlisted={wishlistIds.includes(product._id)}
                     onWishlistToggle={handleWishlistToggle}
+                    onQuickAdd={() => setQuickAddSlug(product.slug)}
                   />
                 ))}
               </div>
@@ -177,6 +180,12 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <QuickAddModal
+        slug={quickAddSlug}
+        isOpen={!!quickAddSlug}
+        onClose={() => setQuickAddSlug(null)}
+      />
 
     </div>
   )

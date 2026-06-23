@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
+import Image from 'next/image'
 
 function SearchIcon(props) {
   return (
@@ -64,6 +66,8 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [searchLoading, setSearchLoading] = useState(false)
 
   const accountRef = useRef(null)
 
@@ -77,12 +81,32 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      return
+    }
+    setSearchLoading(true)
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery.trim())}`)
+        const data = await res.json()
+        setSearchResults((data.products || []).slice(0, 6))
+      } catch (err) {
+        console.error('Search failed')
+      }
+      setSearchLoading(false)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
   const handleSearch = (e) => {
     e.preventDefault()
     if (searchQuery.trim()) {
       router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`)
       setSearchOpen(false)
       setSearchQuery('')
+      setSearchResults([])
     }
   }
 
@@ -198,20 +222,65 @@ export default function Navbar() {
       </nav>
 
       {searchOpen && (
-        <div className="fixed inset-0 z-[60] bg-forest/97 flex items-start justify-center pt-32 px-6" onClick={() => setSearchOpen(false)}>
-          <form onSubmit={handleSearch} onClick={(e) => e.stopPropagation()} className="w-full max-w-lg">
-            <input
-              autoFocus
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search products..."
-              className="w-full bg-transparent border-b-2 border-cream/40 focus:border-cream text-cream text-3xl font-display placeholder:text-cream/40 outline-none pb-4 transition-colors"
-            />
+        <div className="fixed inset-0 z-[60] bg-forest/97 flex items-start justify-center pt-32 px-6 overflow-y-auto" onClick={() => setSearchOpen(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg">
+            <form onSubmit={handleSearch}>
+              <input
+                autoFocus
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="w-full bg-transparent border-b-2 border-cream/40 focus:border-cream text-cream text-3xl font-display placeholder:text-cream/40 outline-none pb-4 transition-colors"
+              />
+            </form>
+
+            {searchQuery.trim() && (
+              <div className="mt-6">
+                {searchLoading ? (
+                  <p className="text-cream/50 text-[14px]">Searching...</p>
+                ) : searchResults.length === 0 ? (
+                  <p className="text-cream/50 text-[14px]">No products found.</p>
+                ) : (
+                  <div className="flex flex-col gap-1">
+                    {searchResults.map(product => (
+                      <Link
+                        key={product._id}
+                        href={`/shop/${product.slug}`}
+                        onClick={() => {
+                          setSearchOpen(false)
+                          setSearchQuery('')
+                          setSearchResults([])
+                        }}
+                        className="flex items-center gap-4 py-3 px-2 rounded-[12px] hover:bg-cream/10 transition-colors"
+                      >
+                        <div className="relative w-12 h-12 rounded-[8px] overflow-hidden bg-cream/10 flex-shrink-0">
+                          {product.images?.[0] && (
+                            <Image src={product.images[0]} alt={product.name} fill sizes="48px" className="object-cover" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-cream text-[15px] font-medium truncate">{product.name}</p>
+                          <p className="text-cream/50 text-[13px]">From ₦{product.startingPrice?.toLocaleString() || 0}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleSearch}
+                  className="mt-4 text-cream text-[14px] font-bold uppercase tracking-wide hover:text-olive transition-colors"
+                >
+                  See all results →
+                </button>
+              </div>
+            )}
+
             <button type="button" onClick={() => setSearchOpen(false)} className="mt-6 text-cream/70 text-[15px] font-medium hover:text-cream transition-colors">
               Cancel
             </button>
-          </form>
+          </div>
         </div>
       )}
 
