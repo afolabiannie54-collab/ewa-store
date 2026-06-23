@@ -3,7 +3,20 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import Link from 'next/link'
+import Image from 'next/image'
 import { addToGuestCart } from '@/lib/cart-client'
+import StarRating from '@/components/StarRating'
+import StarInput from '@/components/StarInput'
+import ProductCard from '@/components/ProductCard'
+
+function HeartIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M20.8 8.6c0 4.4-8.8 10.9-8.8 10.9S3.2 13 3.2 8.6a5 5 0 0 1 9-3 5 5 0 0 1 8.6 3Z" />
+    </svg>
+  )
+}
 
 export default function ProductDetailPage() {
   const params = useParams()
@@ -28,6 +41,8 @@ export default function ProductDetailPage() {
   const [reviewMessage, setReviewMessage] = useState('')
   const [submittingReview, setSubmittingReview] = useState(false)
 
+  const [relatedProducts, setRelatedProducts] = useState([])
+
   useEffect(() => {
     fetchProduct()
   }, [slug])
@@ -50,6 +65,7 @@ export default function ProductDetailPage() {
         const firstInStock = data.product.variants.find(v => v.stockQuantity > 0)
         setSelectedVariant(firstInStock || data.product.variants[0])
         fetchReviews(data.product._id)
+        fetchRelated(data.product.category, data.product._id)
       }
     } catch (err) {
       setError('Failed to load product')
@@ -67,6 +83,16 @@ export default function ProductDetailPage() {
     }
   }
 
+  const fetchRelated = async (category, currentProductId) => {
+    try {
+      const res = await fetch(`/api/products?category=${encodeURIComponent(category)}`)
+      const data = await res.json()
+      setRelatedProducts((data.products || []).filter(p => p._id !== currentProductId).slice(0, 3))
+    } catch (err) {
+      console.error('Failed to load related products')
+    }
+  }
+
   const checkWishlist = async (productId) => {
     try {
       const res = await fetch('/api/users/me/wishlist')
@@ -78,16 +104,20 @@ export default function ProductDetailPage() {
   }
 
   const handleToggleWishlist = async () => {
-    if (inWishlist) {
-      await fetch(`/api/users/me/wishlist/${product._id}`, { method: 'DELETE' })
-      setInWishlist(false)
-    } else {
-      await fetch('/api/users/me/wishlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: product._id })
-      })
-      setInWishlist(true)
+    try {
+      if (inWishlist) {
+        const res = await fetch(`/api/users/me/wishlist/${product._id}`, { method: 'DELETE' })
+        if (res.ok) setInWishlist(false)
+      } else {
+        const res = await fetch('/api/users/me/wishlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: product._id })
+        })
+        if (res.ok) setInWishlist(true)
+      }
+    } catch (err) {
+      console.error('Failed to update wishlist')
     }
   }
 
@@ -117,6 +147,7 @@ export default function ProductDetailPage() {
       } else {
         setReviewMessage(data.message)
         setReviewComment('')
+        fetchReviews(product._id)
       }
     } catch (err) {
       setReviewError('Something went wrong')
@@ -157,292 +188,310 @@ export default function ProductDetailPage() {
     setTimeout(() => setAddedMessage(''), 2000)
   }
 
-  if (loading) return <div style={{ padding: '40px' }}>Loading...</div>
-  if (error || !product) return <div style={{ padding: '40px' }}>Product not found.</div>
+  if (loading) {
+    return (
+      <div className="bg-cream min-h-screen flex items-center justify-center">
+        <p className="text-forest/50 text-[15px]">Loading...</p>
+      </div>
+    )
+  }
+
+  if (error || !product) {
+    return (
+      <div className="bg-cream min-h-screen flex items-center justify-center">
+        <p className="text-forest/60 text-[15px]">Product not found.</p>
+      </div>
+    )
+  }
 
   const maxStock = selectedVariant?.stockQuantity || 0
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 24px' }}>
+    <div className="bg-cream min-h-screen">
+      <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-10 md:py-14">
 
-      <p style={{ fontSize: '12px', color: '#7A7A5C', marginBottom: '24px' }}>
-        Home / Shop / {product.name}
-      </p>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px' }}>
-
-        {/* IMAGE GALLERY */}
-        <div>
-          <div style={{ aspectRatio: '1', background: '#FEFAE0', borderRadius: '20px', overflow: 'hidden', marginBottom: '12px' }}>
-            {product.images?.[selectedImage] && (
-              <img src={product.images[selectedImage]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            )}
-          </div>
-          {product.images?.length > 1 && (
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {product.images.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedImage(i)}
-                  style={{
-                    width: '64px', height: '64px', borderRadius: '12px', overflow: 'hidden',
-                    border: selectedImage === i ? '2px solid #606C38' : '1px solid #D6CEB8',
-                    padding: 0, cursor: 'pointer'
-                  }}
-                >
-                  <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </button>
-              ))}
-            </div>
-          )}
+        {/* BREADCRUMB */}
+        <div className="flex items-center gap-2 text-[13px] mb-10">
+          <Link href="/" className="text-forest/50 hover:text-olive transition-colors">Home</Link>
+          <span className="text-forest/30">/</span>
+          <Link href="/shop" className="text-forest/50 hover:text-olive transition-colors">Shop</Link>
+          <span className="text-forest/30">/</span>
+          <span className="text-forest font-medium">{product.name}</span>
         </div>
 
-        {/* PRODUCT INFO */}
-        <div>
-          <p style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#606C38', marginBottom: '8px' }}>
-            {product.category}
-          </p>
-          <h1 style={{ fontFamily: 'serif', fontSize: '32px', color: '#283618', marginBottom: '12px' }}>
-            {product.name}
-          </h1>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 mb-20">
 
-          {product.reviewCount > 0 && (
-            <p style={{ fontSize: '13px', color: '#7A7A5C', marginBottom: '16px' }}>
-              ★★★★★ {product.averageRating.toFixed(1)} ({product.reviewCount} reviews)
-            </p>
-          )}
-
-          <p style={{ fontSize: '24px', fontWeight: 600, color: '#283618', marginBottom: '20px' }}>
-            ₦{selectedVariant?.price.toLocaleString() || 0}
-          </p>
-
-          {(product.skinType?.length > 0 || product.skinConcern?.length > 0) && (
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '20px' }}>
-              {product.skinType?.map(t => (
-                <span key={t} style={{ fontSize: '11px', color: '#606C38', border: '1px solid #D6CEB8', padding: '4px 12px', borderRadius: '100px' }}>{t}</span>
-              ))}
-              {product.skinConcern?.map(c => (
-                <span key={c} style={{ fontSize: '11px', color: '#606C38', border: '1px solid #D6CEB8', padding: '4px 12px', borderRadius: '100px' }}>{c}</span>
-              ))}
-            </div>
-          )}
-
-          <p style={{ fontSize: '14px', color: '#283618', lineHeight: 1.6, marginBottom: '24px' }}>
-            {product.description}
-          </p>
-
-          {/* SIZE SELECTOR */}
-          {product.variants.length > 1 && (
-            <div style={{ marginBottom: '20px' }}>
-              <p style={{ fontSize: '12px', fontWeight: 500, color: '#283618', marginBottom: '8px' }}>Size</p>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {product.variants.map(v => (
+          {/* IMAGE GALLERY */}
+          <div className="flex gap-4">
+            {product.images?.length > 1 && (
+              <div className="flex flex-col gap-3 w-[72px] md:w-[88px] flex-shrink-0">
+                {product.images.map((img, i) => (
                   <button
-                    key={v.size}
-                    onClick={() => { setSelectedVariant(v); setQuantity(1) }}
-                    disabled={v.stockQuantity === 0}
-                    style={{
-                      padding: '10px 18px',
-                      borderRadius: '100px',
-                      border: selectedVariant?.size === v.size ? '1.5px solid #606C38' : '1px solid #D6CEB8',
-                      background: selectedVariant?.size === v.size ? '#606C38' : 'transparent',
-                      color: selectedVariant?.size === v.size ? '#FEFAE0' : v.stockQuantity === 0 ? '#D6CEB8' : '#283618',
-                      fontSize: '13px',
-                      cursor: v.stockQuantity === 0 ? 'not-allowed' : 'pointer',
-                      textDecoration: v.stockQuantity === 0 ? 'line-through' : 'none'
-                    }}
+                    key={i}
+                    onClick={() => setSelectedImage(i)}
+                    className={`relative aspect-square rounded-[14px] overflow-hidden transition-all ${
+                      selectedImage === i ? 'border-[2.5px] border-olive' : 'border-[1.5px] border-border hover:border-olive/50'
+                    }`}
                   >
-                    {v.size}
+                    <Image src={img} alt="" fill sizes="88px" className="object-cover" />
                   </button>
                 ))}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* QUANTITY */}
-          <div style={{ marginBottom: '24px' }}>
-            <p style={{ fontSize: '12px', fontWeight: 500, color: '#283618', marginBottom: '8px' }}>Quantity</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #D6CEB8', background: 'transparent', cursor: 'pointer' }}
-              >
-                −
-              </button>
-              <span style={{ fontSize: '14px', minWidth: '24px', textAlign: 'center' }}>{quantity}</span>
-              <button
-                onClick={() => setQuantity(Math.min(maxStock, quantity + 1))}
-                disabled={quantity >= maxStock}
-                style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #D6CEB8', background: 'transparent', cursor: 'pointer' }}
-              >
-                +
-              </button>
-              {maxStock > 0 && maxStock <= 10 && (
-                <span style={{ fontSize: '12px', color: '#C0392B' }}>Only {maxStock} left</span>
+            <div className="relative flex-1 aspect-square rounded-[24px] overflow-hidden bg-surface border-[1.5px] border-border">
+              {product.images?.[selectedImage] && (
+                <Image
+                  src={product.images[selectedImage]}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 1024px) 90vw, 45vw"
+                  priority
+                  className="object-cover"
+                />
               )}
             </div>
           </div>
+{/* PRODUCT INFO */}
+          <div className="border-2 border-olive rounded-[28px] p-8">
+            <p className="text-[13px] font-bold uppercase tracking-[0.2em] text-olive mb-5">
+              {product.category}
+            </p>
+            <h1 className="font-display font-bold text-forest text-[52px] md:text-[68px] leading-[0.95] mb-6" style={{ letterSpacing: '-0.03em' }}>
+              {product.name}
+            </h1>
 
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
-            <button
-              onClick={handleAddToCart}
-              disabled={maxStock === 0}
-              style={{
-                flex: 1,
-                padding: '16px',
-                borderRadius: '100px',
-                background: maxStock === 0 ? '#D6CEB8' : '#283618',
-                color: '#FEFAE0',
-                border: 'none',
-                fontSize: '13px',
-                fontWeight: 500,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                cursor: maxStock === 0 ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {maxStock === 0 ? 'Sold Out' : 'Add to Cart'}
-            </button>
-
-            {session && (
-              <button
-                onClick={handleToggleWishlist}
-                style={{
-                  width: '52px',
-                  borderRadius: '100px',
-                  border: '1px solid #D6CEB8',
-                  background: inWishlist ? '#606C38' : 'transparent',
-                  color: inWishlist ? '#FEFAE0' : '#283618',
-                  fontSize: '18px',
-                  cursor: 'pointer'
-                }}
-              >
-                {inWishlist ? '♥' : '♡'}
-              </button>
-            )}
-          </div>
-
-          {addedMessage && (
-            <p style={{ fontSize: '13px', color: '#4A7C59', textAlign: 'center', marginBottom: '12px' }}>{addedMessage}</p>
-          )}
-
-          <p style={{ fontSize: '11px', color: '#7A7A5C', textAlign: 'center' }}>
-            For external use only. Patch test before use.
-          </p>
-        </div>
-      </div>
-
-      {/* TABS */}
-      <div style={{ marginTop: '56px' }}>
-        <div style={{ display: 'flex', gap: '24px', borderBottom: '1px solid #D6CEB8', marginBottom: '24px' }}>
-          {['description', 'ingredients', 'how to use'].map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              style={{
-                padding: '12px 0',
-                background: 'transparent',
-                border: 'none',
-                borderBottom: activeTab === tab ? '2px solid #606C38' : '2px solid transparent',
-                color: activeTab === tab ? '#283618' : '#7A7A5C',
-                fontSize: '13px',
-                fontWeight: 500,
-                textTransform: 'capitalize',
-                cursor: 'pointer'
-              }}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        {activeTab === 'description' && (
-          <p style={{ fontSize: '14px', color: '#283618', lineHeight: 1.7, maxWidth: '600px' }}>{product.description}</p>
-        )}
-        {activeTab === 'ingredients' && (
-          <div style={{ maxWidth: '600px' }}>
-            {product.keyActives?.length > 0 && (
-              <p style={{ fontSize: '14px', color: '#283618', marginBottom: '12px' }}>
-                <strong>Key Actives:</strong> {product.keyActives.join(', ')}
-              </p>
-            )}
-            <p style={{ fontSize: '13px', color: '#7A7A5C', lineHeight: 1.7 }}>{product.ingredients || 'Full ingredient list not available.'}</p>
-          </div>
-        )}
-        {activeTab === 'how to use' && (
-          <div style={{ maxWidth: '600px' }}>
-            <p style={{ fontSize: '13px', color: '#606C38', marginBottom: '8px' }}>Usage: {product.usageTime}</p>
-            <p style={{ fontSize: '14px', color: '#283618', lineHeight: 1.7 }}>{product.howToUse || 'No usage instructions available.'}</p>
-          </div>
-        )}
-      </div>
-
-      {/* REVIEWS */}
-      <div style={{ marginTop: '56px', maxWidth: '600px' }}>
-        <h2 style={{ fontSize: '18px', fontFamily: 'serif', color: '#283618', marginBottom: '20px' }}>
-          Reviews {reviews.length > 0 && `(${reviews.length})`}
-        </h2>
-
-        {reviews.length === 0 ? (
-          <p style={{ fontSize: '13px', color: '#7A7A5C', marginBottom: '32px' }}>No reviews yet.</p>
-        ) : (
-          <div style={{ marginBottom: '32px' }}>
-            {reviews.map(review => (
-              <div key={review._id} style={{ borderBottom: '1px solid #D6CEB8', paddingBottom: '16px', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <p style={{ fontSize: '13px', fontWeight: 600, color: '#283618' }}>{review.userId?.name || 'Anonymous'}</p>
-                  <p style={{ fontSize: '13px', color: '#606C38' }}>{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</p>
-                </div>
-                <p style={{ fontSize: '13px', color: '#7A7A5C', lineHeight: 1.6 }}>{review.comment}</p>
-                <p style={{ fontSize: '11px', color: '#7A7A5C', marginTop: '6px' }}>
-                  {new Date(review.createdAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })}
-                </p>
+            {product.reviewCount > 0 && (
+              <div className="flex items-center gap-2.5 mb-7">
+                <StarRating rating={product.averageRating} size={17} />
+                <span className="text-[14px] text-forest/55">
+                  {product.averageRating.toFixed(1)} ({product.reviewCount} review{product.reviewCount !== 1 ? 's' : ''})
+                </span>
               </div>
-            ))}
-          </div>
-        )}
+            )}
 
-        {session ? (
-          <form onSubmit={handleSubmitReview} style={{ background: '#FFFFFF', border: '1px solid #D6CEB8', borderRadius: '16px', padding: '20px' }}>
-            <p style={{ fontSize: '13px', fontWeight: 600, color: '#283618', marginBottom: '12px' }}>Leave a Review</p>
+            <p className="text-[16px] text-forest/65 leading-relaxed mb-8 max-w-[440px]">
+              {product.description}
+            </p>
 
-            <div style={{ marginBottom: '12px' }}>
-              <select
-                value={reviewRating}
-                onChange={(e) => setReviewRating(Number(e.target.value))}
-                style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid #D6CEB8', fontSize: '13px' }}
-              >
-                {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} Star{n > 1 ? 's' : ''}</option>)}
-              </select>
+         <p className="text-[32px] md:text-[38px] font-display font-bold text-forest/80 mb-8 pb-8 border-b-[1.5px] border-border" style={{ letterSpacing: '-0.01em' }}>
+              ₦{selectedVariant?.price.toLocaleString() || 0}
+            </p>
+
+            {(product.skinType?.length > 0 || product.skinConcern?.length > 0) && (
+              <div className="flex flex-wrap gap-2 mb-7">
+                {product.skinType?.map(t => (
+                  <span key={t} className="rounded-full border-[1.5px] border-border px-4 py-1.5 text-[12px] font-medium text-forest/70">{t}</span>
+                ))}
+                {product.skinConcern?.map(c => (
+                  <span key={c} className="rounded-full border-[1.5px] border-border px-4 py-1.5 text-[12px] font-medium text-forest/70">{c}</span>
+                ))}
+              </div>
+            )}
+
+            {/* SIZE SELECTOR */}
+            {product.variants.length > 1 && (
+              <div className="mb-7">
+                <p className="text-[13px] font-bold uppercase tracking-wide text-forest/60 mb-3">Size</p>
+                <div className="flex flex-wrap gap-2.5">
+                  {product.variants.map(v => (
+                    <button
+                      key={v.size}
+                      onClick={() => { setSelectedVariant(v); setQuantity(1) }}
+                      disabled={v.stockQuantity === 0}
+                      className={`rounded-full px-5 py-2.5 text-[14px] font-bold transition-colors ${
+                        selectedVariant?.size === v.size
+                          ? 'bg-olive text-cream'
+                          : v.stockQuantity === 0
+                          ? 'border-[1.5px] border-border text-muted line-through cursor-not-allowed'
+                          : 'border-[1.5px] border-border text-forest hover:border-olive'
+                      }`}
+                    >
+                      {v.size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* QUANTITY */}
+            <div className="mb-8">
+              <p className="text-[13px] font-bold uppercase tracking-wide text-forest/60 mb-3">Quantity</p>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center rounded-full border-[1.5px] border-border">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-11 h-11 flex items-center justify-center text-forest text-[18px] hover:bg-surface transition-colors rounded-l-full"
+                  >
+                    −
+                  </button>
+                  <span className="w-12 text-center text-[15px] font-bold text-forest">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(Math.min(maxStock, quantity + 1))}
+                    disabled={quantity >= maxStock}
+                    className="w-11 h-11 flex items-center justify-center text-forest text-[18px] hover:bg-surface transition-colors rounded-r-full disabled:opacity-30"
+                  >
+                    +
+                  </button>
+                </div>
+                {maxStock > 0 && maxStock <= 10 && (
+                  <span className="text-[13px] font-medium text-error">Only {maxStock} left</span>
+                )}
+              </div>
             </div>
 
-            <textarea
-              value={reviewComment}
-              onChange={(e) => setReviewComment(e.target.value)}
-              placeholder="Share your experience with this product..."
-              rows={3}
-              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #D6CEB8', fontSize: '13px', marginBottom: '12px' }}
-            />
+            <div className="flex gap-3 mb-4">
+              <button
+                onClick={handleAddToCart}
+                disabled={maxStock === 0}
+                className="flex-1 rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-[18px] hover:bg-forest transition-colors disabled:bg-border disabled:text-muted disabled:cursor-not-allowed"
+              >
+                {maxStock === 0 ? 'Sold Out' : 'Add to Cart'}
+              </button>
 
-            {reviewError && <p style={{ color: '#C0392B', fontSize: '12px', marginBottom: '12px' }}>{reviewError}</p>}
-            {reviewMessage && <p style={{ color: '#4A7C59', fontSize: '12px', marginBottom: '12px' }}>{reviewMessage}</p>}
+              {session && (
+                <button
+                  onClick={handleToggleWishlist}
+                  aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+                  className={`w-[60px] flex-shrink-0 flex items-center justify-center rounded-full border-[1.5px] transition-colors ${
+                    inWishlist ? 'bg-olive border-olive text-cream' : 'border-border text-forest hover:border-olive'
+                  }`}
+                >
+                  <HeartIcon className="w-5 h-5" style={inWishlist ? { fill: 'currentColor' } : {}} />
+                </button>
+              )}
+            </div>
 
-            <button
-              type="submit"
-              disabled={submittingReview}
-              style={{
-                padding: '10px 24px', borderRadius: '100px', background: '#606C38',
-                color: '#FEFAE0', border: 'none', fontSize: '12px', fontWeight: 500, cursor: 'pointer'
-              }}
-            >
-              {submittingReview ? 'Submitting...' : 'Submit Review'}
-            </button>
-          </form>
-        ) : (
-          <p style={{ fontSize: '13px', color: '#7A7A5C' }}>
-            <a href="/login" style={{ color: '#606C38', fontWeight: 500 }}>Log in</a> to leave a review.
-          </p>
+            {addedMessage && (
+              <p className="text-[14px] font-medium text-success text-center mb-4">{addedMessage}</p>
+            )}
+
+            <p className="text-[12px] text-muted text-center">
+              For external use only. Patch test before use.
+            </p>
+          </div>
+        </div>
+
+        {/* TABS */}
+        <div className="mb-20">
+          <div className="flex gap-8 border-b-[1.5px] border-border mb-8">
+            {['description', 'ingredients', 'how to use'].map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`pb-4 text-[15px] font-bold uppercase tracking-wide capitalize transition-colors border-b-[2.5px] -mb-[1.5px] ${
+                  activeTab === tab ? 'border-olive text-forest' : 'border-transparent text-forest/40 hover:text-forest/70'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === 'description' && (
+            <p className="text-[16px] text-forest/75 leading-relaxed max-w-[640px]">
+              {product.description}
+            </p>
+          )}
+
+          {activeTab === 'ingredients' && (
+            <div className="max-w-[640px]">
+              {product.keyActives?.length > 0 && (
+                <p className="text-[16px] text-forest mb-4">
+                  <span className="font-bold">Key Actives:</span> {product.keyActives.join(', ')}
+                </p>
+              )}
+              <p className="text-[15px] text-forest/60 leading-relaxed">
+                {product.ingredients || 'Full ingredient list not available.'}
+              </p>
+            </div>
+          )}
+
+          {activeTab === 'how to use' && (
+            <div className="max-w-[640px]">
+              <p className="text-[13px] font-bold uppercase tracking-wide text-olive mb-3">
+                Usage: {product.usageTime}
+              </p>
+              <p className="text-[16px] text-forest/75 leading-relaxed">
+                {product.howToUse || 'No usage instructions available.'}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* REVIEWS */}
+        <div className="mb-20 max-w-[720px]">
+          <h2 className="font-display font-bold text-forest text-[28px] md:text-[34px] mb-8">
+            Reviews {reviews.length > 0 && `(${reviews.length})`}
+          </h2>
+
+          {reviews.length === 0 ? (
+            <p className="text-[15px] text-forest/50 mb-10">No reviews yet. Be the first to share your experience.</p>
+          ) : (
+            <div className="flex flex-col gap-6 mb-10">
+              {reviews.map(review => (
+                <div key={review._id} className="border-b-[1.5px] border-border pb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[15px] font-bold text-forest">{review.userId?.name || 'Anonymous'}</p>
+                    <StarRating rating={review.rating} size={15} />
+                  </div>
+                  <p className="text-[15px] text-forest/70 leading-relaxed mb-2">{review.comment}</p>
+                  <p className="text-[12px] text-muted">
+                    {new Date(review.createdAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {session ? (
+            <form onSubmit={handleSubmitReview} className="rounded-[20px] border-[1.5px] border-border bg-surface p-7">
+              <p className="text-[16px] font-bold text-forest mb-4">Leave a Review</p>
+
+              <div className="mb-5">
+                <StarInput value={reviewRating} onChange={setReviewRating} size={26} />
+              </div>
+
+              <textarea
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                placeholder="Share your experience with this product..."
+                rows={3}
+                className="w-full rounded-[12px] border-[1.5px] border-border px-4 py-3 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors mb-4 resize-none"
+              />
+
+              {reviewError && <p className="text-[13px] text-error mb-4">{reviewError}</p>}
+              {reviewMessage && <p className="text-[13px] text-success mb-4">{reviewMessage}</p>}
+
+              <button
+                type="submit"
+                disabled={submittingReview}
+                className="rounded-full bg-olive text-cream px-7 py-3 text-[13px] font-bold uppercase tracking-wide hover:bg-forest transition-colors disabled:opacity-50"
+              >
+                {submittingReview ? 'Submitting...' : 'Submit Review'}
+              </button>
+            </form>
+          ) : (
+            <p className="text-[15px] text-forest/60">
+              <Link href="/login" className="text-olive font-bold hover:underline">Log in</Link> to leave a review.
+            </p>
+          )}
+        </div>
+
+        {/* RELATED PRODUCTS */}
+        {relatedProducts.length > 0 && (
+          <div>
+            <h2 className="font-display font-bold text-forest text-[28px] md:text-[34px] mb-8">
+              You May Also Like
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+              {relatedProducts.map(related => (
+                <ProductCard key={related._id} product={related} />
+              ))}
+            </div>
+          </div>
         )}
+
       </div>
     </div>
   )
