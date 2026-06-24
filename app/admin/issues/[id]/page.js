@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import Loader from '@/components/Loader'
 
 export default function AdminIssueDetailPage() {
   const params = useParams()
@@ -64,7 +65,11 @@ export default function AdminIssueDetailPage() {
     setUpdating(false)
   }
 
-  if (loading) return <div style={{ padding: '40px' }}>Loading...</div>
+  if (loading) return (
+    <div style={{ padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#FEFAE0' }}>
+      <Loader size="lg" />
+    </div>
+  )
   if (error && !issue) return <div style={{ padding: '40px' }}>{error}</div>
 
   return (

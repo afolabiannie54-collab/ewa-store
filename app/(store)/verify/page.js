@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Loader from '@/components/Loader'
 
 function VerifyForm() {
   const router = useRouter()
@@ -168,7 +169,7 @@ function VerifyForm() {
               marginBottom: '16px'
             }}
           >
-            {loading ? 'Verifying...' : 'Verify Account'}
+            {loading ? <Loader size="sm" color="cream" /> : 'Verify Account'}
           </button>
         </form>
 
@@ -186,7 +187,7 @@ function VerifyForm() {
             textAlign: 'center'
           }}
         >
-          {resending ? 'Sending...' : "Didn't get a code? Resend"}
+          {resending ? <Loader size="sm" color="olive" /> : "Didn't get a code? Resend"}
         </button>
       </div>
     </div>
@@ -195,7 +196,11 @@ function VerifyForm() {
 
 export default function VerifyPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '40px' }}>Loading...</div>}>
+    <Suspense fallback={
+      <div className="bg-cream min-h-screen flex items-center justify-center">
+        <Loader size="lg" />
+      </div>
+    }>
       <VerifyForm />
     </Suspense>
   )

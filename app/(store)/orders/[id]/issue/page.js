@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Loader from '@/components/Loader'
 
 const REASON_HELPER_TEXT = {
   'Wrong Item Received': 'Please describe what you ordered and what you received instead. A photo of the item received is required.',
@@ -109,7 +110,11 @@ export default function ReportIssuePage() {
     }
   }
 
-  if (loading) return <div style={{ padding: '40px' }}>Loading...</div>
+  if (loading) return (
+    <div style={{ padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#FEFAE0' }}>
+      <Loader size="lg" />
+    </div>
+  )
   if (error && !order) return <div style={{ padding: '40px' }}>{error}</div>
 
   if (order.status !== 'Delivered') {
@@ -209,7 +214,7 @@ export default function ReportIssuePage() {
             cursor: submitting ? 'not-allowed' : 'pointer'
           }}
         >
-          {submitting ? 'Submitting...' : 'Submit Report'}
+          {submitting ? <Loader size="sm" color="cream" /> : 'Submit Report'}
         </button>
       </form>
     </div>

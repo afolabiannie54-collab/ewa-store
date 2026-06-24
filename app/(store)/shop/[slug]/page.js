@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
+import Loader from '@/components/Loader'
 import { addToGuestCart } from '@/lib/cart-client'
 import StarRating from '@/components/StarRating'
 import StarInput from '@/components/StarInput'
@@ -191,7 +192,7 @@ export default function ProductDetailPage() {
   if (loading) {
     return (
       <div className="bg-cream min-h-screen flex items-center justify-center">
-        <p className="text-forest/50 text-[15px]">Loading...</p>
+        <Loader size="lg" />
       </div>
     )
   }
@@ -468,7 +469,7 @@ export default function ProductDetailPage() {
                 disabled={submittingReview}
                 className="rounded-full bg-olive text-cream px-7 py-3 text-[13px] font-bold uppercase tracking-wide hover:bg-forest transition-colors disabled:opacity-50"
               >
-                {submittingReview ? 'Submitting...' : 'Submit Review'}
+                {submittingReview ? <Loader size="sm" color="cream" /> : 'Submit Review'}
               </button>
             </form>
           ) : (

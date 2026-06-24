@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Loader from '@/components/Loader'
 
 export default function AdminShippingPage() {
   const [rates, setRates] = useState([])
@@ -38,7 +39,11 @@ export default function AdminShippingPage() {
     fetchRates()
   }
 
-  if (loading) return <div style={{ padding: '40px' }}>Loading...</div>
+  if (loading) return (
+    <div className="bg-cream min-h-screen flex items-center justify-center">
+      <Loader size="lg" />
+    </div>
+  )
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '40px 24px' }}>

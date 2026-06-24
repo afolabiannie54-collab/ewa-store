@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import Image from 'next/image'
+import Loader from '@/components/Loader'
 
 function SearchIcon(props) {
   return (
@@ -238,7 +239,9 @@ export default function Navbar() {
             {searchQuery.trim() && (
               <div className="mt-6">
                 {searchLoading ? (
-                  <p className="text-cream/50 text-[14px]">Searching...</p>
+                  <div className="flex justify-center">
+                    <Loader size="sm" color="cream" />
+                  </div>
                 ) : searchResults.length === 0 ? (
                   <p className="text-cream/50 text-[14px]">No products found.</p>
                 ) : (

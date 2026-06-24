@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Image from 'next/image'
+import Loader from '@/components/Loader'
 
 const CATEGORIES = ['Cleanser', 'Moisturizer', 'Serum', 'Sunscreen', 'Treatment']
 const SKIN_TYPES = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']
@@ -161,7 +163,11 @@ export default function EditProductPage() {
     }
   }
 
-  if (fetching) return <div style={{ padding: '40px' }}>Loading product...</div>
+  if (fetching) return (
+    <div className="bg-cream min-h-screen flex items-center justify-center">
+      <Loader size="lg" />
+    </div>
+  )
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px' }}>
@@ -412,7 +418,7 @@ export default function EditProductPage() {
             opacity: loading ? 0.7 : 1
           }}
         >
-          {loading ? 'Saving...' : 'Save Changes'}
+          {loading ? <Loader size="sm" color="cream" /> : 'Save Changes'}
         </button>
       </form>
     </div>

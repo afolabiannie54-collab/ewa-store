@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Loader from '@/components/Loader'
 
 export default function AdminPromosPage() {
   const [promos, setPromos] = useState([])
@@ -188,7 +189,11 @@ export default function AdminPromosPage() {
         </button>
       </form>
 
-      {loading ? <p>Loading...</p> : (
+      {loading ? (
+        <div style={{ padding: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Loader size="sm" color="olive" />
+        </div>
+      ) : (
         <table style={{ width: '100%', borderCollapse: 'collapse', background: '#FFFFFF', borderRadius: '16px', overflow: 'hidden' }}>
           <thead>
             <tr style={{ background: '#283618' }}>

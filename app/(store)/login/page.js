@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
+import Loader from '@/components/Loader'
 
 function LoginForm() {
   const router = useRouter()
@@ -156,7 +157,7 @@ function LoginForm() {
               marginBottom: '16px'
             }}
           >
-            {loading ? 'Logging in...' : 'Log In'}
+            {loading ? <Loader size="sm" color="cream" /> : 'Log In'}
           </button>
         </form>
 
@@ -196,7 +197,11 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '40px' }}>Loading...</div>}>
+    <Suspense fallback={
+      <div className="bg-cream min-h-screen flex items-center justify-center">
+        <Loader size="lg" />
+      </div>
+    }>
       <LoginForm />
     </Suspense>
   )

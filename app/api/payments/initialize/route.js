@@ -2,6 +2,7 @@ import connectDB from '@/lib/mongodb'
 import Product from '@/models/Product'
 import PromoCode from '@/models/PromoCode'
 import ShippingRate from '@/models/ShippingRate'
+import Order from '@/models/Order'
 import { getShippingTier } from '@/lib/shipping'
 import { getCurrentUser } from '@/lib/auth'
 import { NextResponse } from 'next/server'
@@ -79,6 +80,24 @@ export async function POST(req) {
 
       if (!promo || !promo.active || new Date() > promo.expiryDate || promo.usedCount >= promo.usageLimit || subtotal < promo.minimumOrderAmount) {
         return NextResponse.json({ error: 'Promo code is no longer valid' }, { status: 400 })
+      }
+
+      if (promo.oneTimePerCustomer) {
+        const customerEmail = user ? user.email : guestEmail
+
+        if (customerEmail) {
+          const previousOrder = await Order.findOne({
+            promoCode: promo.code,
+            $or: [
+              { guestEmail: customerEmail },
+              { userId: user?.id }
+            ]
+          })
+
+          if (previousOrder) {
+            return NextResponse.json({ error: 'You\'ve already used this promo code' }, { status: 400 })
+          }
+        }
       }
 
       discount = promo.discountType === 'percentage'

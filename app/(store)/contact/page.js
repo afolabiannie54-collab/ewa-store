@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Loader from '@/components/Loader'
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', message: '' })
@@ -84,7 +85,7 @@ export default function ContactPage() {
               cursor: submitting ? 'not-allowed' : 'pointer'
             }}
           >
-            {submitting ? 'Sending...' : 'Send Message'}
+            {submitting ? <Loader size="sm" color="cream" /> : 'Send Message'}
           </button>
         </form>
       )}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import Loader from '@/components/Loader'
 
 export default function AccountPage() {
   const { data: session, status } = useSession()
@@ -133,7 +134,11 @@ export default function AccountPage() {
     setChangingPassword(false)
   }
 
-  if (status === 'loading' || loading) return <div style={{ padding: '40px' }}>Loading...</div>
+  if (status === 'loading' || loading) return (
+    <div className="bg-cream min-h-screen flex items-center justify-center">
+      <Loader size="lg" />
+    </div>
+  )
 
   if (status === 'unauthenticated') {
     return (
@@ -198,7 +203,7 @@ export default function AccountPage() {
           disabled={saving}
           style={{ padding: '12px 24px', borderRadius: '100px', background: '#606C38', color: '#FEFAE0', border: 'none', fontSize: '13px', cursor: 'pointer' }}
         >
-          {saving ? 'Saving...' : 'Save Changes'}
+          {saving ? <Loader size="sm" color="cream" /> : 'Save Changes'}
         </button>
 
         {emailChangePending && (
@@ -264,7 +269,7 @@ export default function AccountPage() {
           disabled={changingPassword}
           style={{ padding: '12px 24px', borderRadius: '100px', background: '#283618', color: '#FEFAE0', border: 'none', fontSize: '13px', cursor: 'pointer' }}
         >
-          {changingPassword ? 'Updating...' : 'Change Password'}
+          {changingPassword ? <Loader size="sm" color="cream" /> : 'Change Password'}
         </button>
       </form>
     </div>

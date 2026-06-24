@@ -3,6 +3,16 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import Loader from '@/components/Loader'
+import ConfirmModal from '@/components/ConfirmModal'
+
+const STATUS_STYLES = {
+  Pending: 'bg-cream text-forest border-cream/40',
+  Confirmed: 'bg-olive/20 text-cream border-cream/30',
+  Shipped: 'bg-cream/15 text-cream border-cream/30',
+  Delivered: 'bg-success/25 text-cream border-cream/30',
+  Cancelled: 'bg-error/20 text-cream border-cream/30'
+}
 
 export default function OrderDetailPage() {
   const params = useParams()
@@ -12,6 +22,8 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [cancelling, setCancelling] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [cancelMessage, setCancelMessage] = useState('')
 
   useEffect(() => {
     fetchOrder()
@@ -34,20 +46,19 @@ export default function OrderDetailPage() {
   }
 
   const handleCancel = async () => {
-    if (!confirm('Are you sure you want to cancel this order?')) return
-
     setCancelling(true)
     try {
       const res = await fetch(`/api/orders/${orderId}/cancel`, { method: 'POST' })
       const data = await res.json()
 
       if (!res.ok) {
-        alert(data.error)
+        setCancelMessage(data.error)
       } else {
+        setShowCancelModal(false)
         fetchOrder()
       }
     } catch (err) {
-      alert('Something went wrong')
+      setCancelMessage('Something went wrong')
     }
     setCancelling(false)
   }
@@ -55,192 +66,195 @@ export default function OrderDetailPage() {
   const statusSteps = ['Pending', 'Confirmed', 'Shipped', 'Delivered']
 
   if (loading) {
-    return <div style={{ padding: '40px' }}>Loading...</div>
+    return (
+      <div className="bg-cream min-h-screen flex items-center justify-center">
+        <Loader size="lg" />
+      </div>
+    )
   }
 
   if (error || !order) {
-    return <div style={{ padding: '40px' }}>{error || 'Order not found'}</div>
+    return (
+      <div className="bg-cream min-h-screen flex items-center justify-center px-6">
+        <p className="text-forest/60 text-[15px]">{error || 'Order not found'}</p>
+      </div>
+    )
   }
 
   const currentIndex = statusSteps.indexOf(order.status)
 
   return (
-    <div style={{ maxWidth: '700px', margin: '0 auto', padding: '40px 24px' }}>
-      <Link href="/orders" style={{ fontSize: '13px', color: '#7A7A5C', textDecoration: 'none' }}>
-        ← Back to orders
-      </Link>
+    <div className="bg-cream min-h-screen">
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', margin: '20px 0 32px' }}>
-        <div>
-          <h1 style={{ fontFamily: 'serif', fontSize: '24px', color: '#283618' }}>{order.orderNumber}</h1>
-          <p style={{ fontSize: '13px', color: '#7A7A5C', marginTop: '4px' }}>
-            Placed on {new Date(order.createdAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })}
+      {/* MASTHEAD */}
+      <div className="bg-forest">
+        <div className="max-w-[860px] mx-auto px-6 py-12 md:py-16">
+          <Link href="/orders" className="inline-block text-[13px] font-medium text-cream/60 hover:text-cream transition-colors mb-8">
+            ← Back to orders
+          </Link>
+
+          <div className="flex flex-wrap items-start justify-between gap-6">
+            <div>
+              <p className="text-[13px] font-bold uppercase tracking-[0.15em] text-cream/50 mb-3">
+                {new Date(order.createdAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </p>
+              <h1 className="font-display font-bold text-cream text-[40px] md:text-[56px] leading-none" style={{ letterSpacing: '-0.02em' }}>
+                {order.orderNumber}
+              </h1>
+            </div>
+
+            <span className={`flex-shrink-0 text-[12px] font-bold uppercase tracking-wide px-4 py-2 rounded-full border-[1.5px] ${STATUS_STYLES[order.status]}`}>
+              {order.status}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-[860px] mx-auto px-6 py-12 md:py-16">
+
+        {/* TIMELINE */}
+        {order.status === 'Cancelled' ? (
+          <div className="rounded-[16px] bg-error/10 border-[1.5px] border-error/25 px-6 py-5 mb-12">
+            <p className="text-[14px] font-medium text-error">This order was cancelled.</p>
+          </div>
+        ) : (
+          <div className="flex justify-between mb-12">
+            {statusSteps.map((step, i) => {
+              const isComplete = i <= currentIndex
+              const dateField = { Pending: 'createdAt', Confirmed: 'confirmedAt', Shipped: 'shippedAt', Delivered: 'deliveredAt' }[step]
+              const date = order[dateField]
+
+              return (
+                <div key={step} className="flex-1 text-center relative">
+                  {i > 0 && (
+                    <div className={`absolute top-[15px] right-1/2 left-[-50%] h-[2px] ${i <= currentIndex ? 'bg-olive' : 'bg-border'}`} />
+                  )}
+                  <div className={`relative w-8 h-8 rounded-full mx-auto mb-3 flex items-center justify-center ${isComplete ? 'bg-olive' : 'bg-border'}`}>
+                    {isComplete && <span className="text-cream text-[13px]">✓</span>}
+                  </div>
+                  <p className={`text-[13px] font-bold ${isComplete ? 'text-forest' : 'text-forest/35'}`}>{step}</p>
+                  {date && (
+                    <p className="text-[11px] text-forest/45 mt-1">
+                      {new Date(date).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* RECEIPT */}
+        <div className="rounded-[20px] border-[1.5px] border-border bg-surface overflow-hidden mb-7">
+          <div className="px-7 md:px-8 py-6 border-b-[1.5px] border-border">
+            <h2 className="font-display font-bold text-forest text-[19px]">Items</h2>
+          </div>
+
+          <div className="px-7 md:px-8 py-6 flex flex-col gap-5">
+            {order.items.map((item, i) => (
+              <div key={i} className="flex gap-4">
+                <div className="relative w-[64px] h-[64px] rounded-[12px] overflow-hidden bg-cream flex-shrink-0">
+                  {item.image && (
+                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-display font-bold text-forest text-[16px]">{item.name}</p>
+                  <p className="text-[13px] text-forest/50 mt-0.5">Size: {item.size} · Qty: {item.quantity}</p>
+                </div>
+                <p className="font-medium text-forest text-[15px] whitespace-nowrap">₦{(item.price * item.quantity).toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="px-7 md:px-8 py-6 border-t-[1.5px] border-border flex flex-col gap-2.5">
+            <div className="flex justify-between text-[14px] text-forest">
+              <span>Subtotal</span><span className="font-medium">₦{order.subtotal.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-[14px] text-forest">
+              <span>Shipping ({order.shippingTier})</span><span className="font-medium">₦{order.shippingCost.toLocaleString()}</span>
+            </div>
+            {order.discount > 0 && (
+              <div className="flex justify-between text-[14px] text-success">
+                <span>Discount {order.promoCode ? `(${order.promoCode})` : ''}</span><span className="font-medium">-₦{order.discount.toLocaleString()}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-[20px] font-display font-bold text-forest pt-3 mt-1 border-t-[1.5px] border-border">
+              <span>Total</span><span>₦{order.total.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* SHIPPING ADDRESS */}
+        <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8 mb-9">
+          <h2 className="font-display font-bold text-forest text-[19px] mb-4">Shipping Address</h2>
+          <p className="text-[14px] text-forest/75 leading-relaxed">
+            {order.shippingAddress.fullName}<br />
+            {order.shippingAddress.phone}<br />
+            {order.shippingAddress.street}, {order.shippingAddress.city}<br />
+            {order.shippingAddress.state}
           </p>
         </div>
 
-        {order.invoiceUrl ? (
-          <a
-            href={order.invoiceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              fontSize: '12px',
-              color: '#606C38',
-              fontWeight: 500,
-              textDecoration: 'none',
-              border: '1px solid #D6CEB8',
-              padding: '8px 16px',
-              borderRadius: '100px'
-            }}
-          >
-            Download Invoice
-          </a>
-        ) : null}
+        {/* ACTIONS */}
+        <div className="flex flex-wrap gap-3">
+          {order.invoiceUrl && (
+            <a
+              href={order.invoiceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full border-[1.5px] border-border text-forest text-[13px] font-bold uppercase tracking-wide px-7 py-3.5 hover:border-olive transition-colors"
+            >
+              Download Invoice
+            </a>
+          )}
+
+          {order.status === 'Pending' && (
+            <button
+              onClick={() => { setCancelMessage(''); setShowCancelModal(true) }}
+              className="rounded-full border-[1.5px] border-error text-error text-[13px] font-bold uppercase tracking-wide px-7 py-3.5 hover:bg-error hover:text-cream transition-colors"
+            >
+              Cancel Order
+            </button>
+          )}
+
+          {order.status === 'Delivered' && (
+            <>
+              <Link
+                href={`/orders/${order._id}/issue`}
+                className="rounded-full border-[1.5px] border-border text-forest text-[13px] font-bold uppercase tracking-wide px-7 py-3.5 hover:border-olive transition-colors"
+              >
+                Report a Problem
+              </Link>
+              {order.items.map((item, i) => (
+                <Link
+                  key={i}
+                  href={`/api/products/redirect/${item.productId}`}
+                  className="rounded-full border-[1.5px] border-border text-forest text-[13px] font-bold uppercase tracking-wide px-7 py-3.5 hover:border-olive transition-colors"
+                >
+                  Review {item.name}
+                </Link>
+              ))}
+            </>
+          )}
+        </div>
       </div>
 
-      {order.status === 'Cancelled' ? (
-        <div style={{ background: '#FBEAEA', color: '#C0392B', padding: '16px', borderRadius: '12px', marginBottom: '32px', fontSize: '14px' }}>
-          This order was cancelled.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px' }}>
-          {statusSteps.map((step, i) => {
-            const isComplete = i <= currentIndex
-            const dateField = { Pending: 'createdAt', Confirmed: 'confirmedAt', Shipped: 'shippedAt', Delivered: 'deliveredAt' }[step]
-            const date = order[dateField]
-
-            return (
-              <div key={step} style={{ textAlign: 'center', flex: 1 }}>
-                <div
-                  style={{
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '50%',
-                    margin: '0 auto 8px',
-                    background: isComplete ? '#606C38' : '#D6CEB8',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  {isComplete ? <span style={{ color: '#FEFAE0', fontSize: '12px' }}>✓</span> : null}
-                </div>
-                <p style={{ fontSize: '12px', fontWeight: 500, color: isComplete ? '#283618' : '#7A7A5C' }}>{step}</p>
-                {date ? (
-                  <p style={{ fontSize: '10px', color: '#7A7A5C', marginTop: '2px' }}>
-                    {new Date(date).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}
-                  </p>
-                ) : null}
-              </div>
-            )
-          })}
+      <ConfirmModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={handleCancel}
+        title="Cancel this order?"
+        message="This can't be undone. Your order will be cancelled and won't be processed any further."
+        confirmLabel="Cancel Order"
+        danger
+        loading={cancelling}
+      />
+      {cancelMessage && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-full bg-error text-cream text-[13px] font-medium px-6 py-3 shadow-lg">
+          {cancelMessage}
         </div>
       )}
-
-      <div style={{ background: '#FFFFFF', border: '1px solid #D6CEB8', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#283618', marginBottom: '16px' }}>Items</h2>
-
-        {order.items.map((item, i) => (
-          <div key={i} style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '10px', background: '#FEFAE0', overflow: 'hidden', flexShrink: 0 }}>
-              {item.image ? (
-                <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : null}
-            </div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: '13px', color: '#283618' }}>{item.name}</p>
-              <p style={{ fontSize: '12px', color: '#7A7A5C' }}>Size: {item.size} · Qty: {item.quantity}</p>
-            </div>
-            <p style={{ fontSize: '13px', fontWeight: 600, color: '#283618' }}>₦{(item.price * item.quantity).toLocaleString()}</p>
-          </div>
-        ))}
-
-        <div style={{ borderTop: '1px solid #D6CEB8', paddingTop: '16px', marginTop: '8px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}>
-            <span>Subtotal</span>
-            <span>₦{order.subtotal.toLocaleString()}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}>
-            <span>Shipping ({order.shippingTier})</span>
-            <span>₦{order.shippingCost.toLocaleString()}</span>
-          </div>
-          {order.discount > 0 ? (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px', color: '#4A7C59' }}>
-              <span>Discount {order.promoCode ? `(${order.promoCode})` : ''}</span>
-              <span>-₦{order.discount.toLocaleString()}</span>
-            </div>
-          ) : null}
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 600, marginTop: '8px' }}>
-            <span>Total</span>
-            <span>₦{order.total.toLocaleString()}</span>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ background: '#FFFFFF', border: '1px solid #D6CEB8', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#283618', marginBottom: '12px' }}>Shipping Address</h2>
-        <p style={{ fontSize: '13px', color: '#283618', lineHeight: 1.6 }}>
-          {order.shippingAddress.fullName}<br />
-          {order.shippingAddress.phone}<br />
-          {order.shippingAddress.street}, {order.shippingAddress.city}<br />
-          {order.shippingAddress.state}
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-        {order.status === 'Pending' ? (
-          <button
-            onClick={handleCancel}
-            disabled={cancelling}
-            style={{
-              padding: '12px 24px',
-              borderRadius: '100px',
-              border: '1px solid #C0392B',
-              background: 'transparent',
-              color: '#C0392B',
-              fontSize: '13px',
-              cursor: 'pointer'
-            }}
-          >
-            {cancelling ? 'Cancelling...' : 'Cancel Order'}
-          </button>
-        ) : null}
-
-        {order.status === 'Delivered' ? (
-          <>
-            <Link
-              href={`/orders/${order._id}/issue`}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '100px',
-                border: '1px solid #D6CEB8',
-                color: '#283618',
-                fontSize: '13px',
-                textDecoration: 'none'
-              }}
-            >
-              Report a Problem
-            </Link>
-
-            {order.items.map((item, i) => (
-              <a
-                key={i}
-                href={`/api/products/redirect/${item.productId}`}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '100px',
-                  border: '1px solid #D6CEB8',
-                  color: '#283618',
-                  fontSize: '13px',
-                  textDecoration: 'none'
-                }}
-              >
-                Review {item.name}
-              </a>
-            ))}
-          </>
-        ) : null}
-      </div>
     </div>
   )
 }

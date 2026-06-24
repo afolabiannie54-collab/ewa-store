@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Loader from '@/components/Loader'
 
 export default function AdminInquiriesPage() {
   const [inquiries, setInquiries] = useState([])
@@ -76,7 +77,11 @@ export default function AdminInquiriesPage() {
 
   const filteredInquiries = filterStatus ? inquiries.filter(i => i.status === filterStatus) : inquiries
 
-  if (loading) return <div style={{ padding: '40px' }}>Loading inquiries...</div>
+  if (loading) return (
+    <div className="bg-cream min-h-screen flex items-center justify-center">
+      <Loader size="lg" />
+    </div>
+  )
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px' }}>
@@ -159,7 +164,7 @@ export default function AdminInquiriesPage() {
                 disabled={sending}
                 style={{ padding: '8px 20px', borderRadius: '100px', background: '#283618', color: '#FEFAE0', border: 'none', fontSize: '12px', cursor: 'pointer' }}
               >
-                {sending ? 'Sending...' : 'Send Reply'}
+                {sending ? <Loader size="sm" color="cream" /> : 'Send Reply'}
               </button>
             </div>
           )}

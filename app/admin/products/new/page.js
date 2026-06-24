@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import Loader from '@/components/Loader'
 
 const CATEGORIES = ['Cleanser', 'Moisturizer', 'Serum', 'Sunscreen', 'Treatment']
 const SKIN_TYPES = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']
@@ -382,7 +384,7 @@ export default function NewProductPage() {
             opacity: loading ? 0.7 : 1
           }}
         >
-          {loading ? 'Creating...' : 'Create Product'}
+          {loading ? <Loader size="sm" color="cream" /> : 'Create Product'}
         </button>
       </form>
     </div>

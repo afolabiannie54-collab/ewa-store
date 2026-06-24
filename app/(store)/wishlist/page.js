@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import Loader from '@/components/Loader'
 
 export default function WishlistPage() {
   const { status } = useSession()
@@ -38,7 +39,11 @@ export default function WishlistPage() {
     return Math.min(...variants.map(v => v.price))
   }
 
-  if (status === 'loading' || loading) return <div style={{ padding: '40px' }}>Loading...</div>
+  if (status === 'loading' || loading) return (
+    <div className="bg-cream min-h-screen flex items-center justify-center">
+      <Loader size="lg" />
+    </div>
+  )
 
   if (status === 'unauthenticated') {
     return (

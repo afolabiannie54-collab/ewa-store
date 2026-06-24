@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Loader from '@/components/Loader'
 import { NIGERIAN_STATES } from '@/lib/shipping'
 
 export default function AddressesPage() {
@@ -76,7 +77,11 @@ export default function AddressesPage() {
     fetchAddresses()
   }
 
-  if (loading) return <div style={{ padding: '40px' }}>Loading...</div>
+  if (loading) return (
+    <div className="bg-cream min-h-screen flex items-center justify-center">
+      <Loader size="lg" />
+    </div>
+  )
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '40px 24px' }}>

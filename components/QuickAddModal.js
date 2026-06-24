@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useSession } from 'next-auth/react'
+import Loader from '@/components/Loader'
 import { addToGuestCart } from '@/lib/cart-client'
 
 function CloseIcon(props) {
@@ -103,7 +104,7 @@ export default function QuickAddModal({ slug, isOpen, onClose }) {
 
         {loading || !product ? (
           <div className="p-10 flex items-center justify-center min-h-[300px]">
-            <span className="text-forest/50 text-[14px]">Loading...</span>
+            <Loader size="sm" color="olive" />
           </div>
         ) : (
           <>
@@ -177,7 +178,7 @@ export default function QuickAddModal({ slug, isOpen, onClose }) {
                 disabled={!selectedVariant || selectedVariant.stockQuantity === 0 || adding}
                 className="w-full rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-4 hover:bg-forest transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {message || (selectedVariant?.stockQuantity === 0 ? 'Out of Stock' : adding ? 'Adding...' : 'Add to Cart')}
+                {message || (selectedVariant?.stockQuantity === 0 ? 'Out of Stock' : adding ? <Loader size="sm" color="cream" /> : 'Add to Cart')}
               </button>
             </div>
           </>

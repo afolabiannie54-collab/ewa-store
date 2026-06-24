@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Loader from '@/components/Loader'
 
 export default function AdminOrderDetailPage() {
   const params = useParams()
@@ -64,7 +65,11 @@ export default function AdminOrderDetailPage() {
     Shipped: 'Delivered'
   }
 
-  if (loading) return <div style={{ padding: '40px' }}>Loading...</div>
+  if (loading) return (
+    <div style={{ padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#FEFAE0' }}>
+      <Loader size="lg" />
+    </div>
+  )
   if (error && !order) return <div style={{ padding: '40px' }}>{error}</div>
 
   const nextStatus = nextStatusMap[order.status]
@@ -126,7 +131,7 @@ export default function AdminOrderDetailPage() {
               color: '#FEFAE0', border: 'none', fontSize: '13px', cursor: 'pointer'
             }}
           >
-            {updating ? 'Updating...' : `Mark as ${nextStatus}`}
+            {updating ? <Loader size="sm" color="cream" /> : `Mark as ${nextStatus}`}
           </button>
         )}
 
