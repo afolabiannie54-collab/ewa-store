@@ -26,7 +26,7 @@ export async function POST(req) {
     await requireAdmin()
     await connectDB()
 
-    const { code, discountType, discountValue, minimumOrderAmount, expiryDate, usageLimit } = await req.json()
+    const { code, discountType, discountValue, minimumOrderAmount, expiryDate, usageLimit, oneTimePerCustomer } = await req.json()
 
     if (!code || !discountType || !discountValue || !expiryDate || !usageLimit) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -44,6 +44,7 @@ export async function POST(req) {
       minimumOrderAmount: minimumOrderAmount || 0,
       expiryDate,
       usageLimit,
+      oneTimePerCustomer: !!oneTimePerCustomer,
       active: true
     })
 

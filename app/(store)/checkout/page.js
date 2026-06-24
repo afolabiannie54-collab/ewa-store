@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Loader from '@/components/Loader'
+import FieldError from '@/components/FieldError'
 import { getGuestCart, clearGuestCart } from '@/lib/cart-client'
+import { isValidEmail, isRequired } from '@/lib/validation'
 import { NIGERIAN_STATES, getShippingTier } from '@/lib/shipping'
 
 export default function CheckoutPage() {
@@ -15,6 +18,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
 
   const [addresses, setAddresses] = useState([])
   const [selectedAddressId, setSelectedAddressId] = useState('')
@@ -77,6 +81,34 @@ export default function CheckoutPage() {
     }
   }
 
+  const validate = () => {
+    const errors = {}
+
+    // Validate guest contact details (only if not logged in)
+    if (!session) {
+      if (!isRequired(form.guestName)) errors.guestName = 'Name is required'
+      if (!isRequired(form.guestEmail)) {
+        errors.guestEmail = 'Email is required'
+      } else if (!isValidEmail(form.guestEmail)) {
+        errors.guestEmail = 'Please enter a valid email'
+      }
+      if (!isRequired(form.guestPhone)) errors.guestPhone = 'Phone is required'
+    }
+
+    // Validate shipping address
+    if (useNewAddress) {
+      if (!isRequired(form.fullName)) errors.fullName = 'Full name is required'
+      if (!isRequired(form.phone)) errors.phone = 'Phone is required'
+      if (!isRequired(form.street)) errors.street = 'Street address is required'
+      if (!isRequired(form.city)) errors.city = 'City is required'
+      if (!isRequired(form.state)) errors.state = 'State is required'
+    } else {
+      if (!selectedAddressId) errors.selectedAddress = 'Please select an address'
+    }
+
+    return errors
+  }
+
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
   const selectedState = useNewAddress
@@ -97,7 +129,7 @@ export default function CheckoutPage() {
       const res = await fetch('/api/promos/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: promoInput, subtotal })
+         body: JSON.stringify({ code: promoInput, subtotal, guestEmail: form.guestEmail })
       })
       const data = await res.json()
 
@@ -116,6 +148,13 @@ export default function CheckoutPage() {
     e.preventDefault()
     setError('')
 
+    // Validate form
+    const errors = validate()
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      return
+    }
+
     if (items.length === 0) {
       setError('Your cart is empty')
       return
@@ -123,10 +162,6 @@ export default function CheckoutPage() {
 
     let shippingAddress
     if (useNewAddress) {
-      if (!form.fullName || !form.phone || !form.street || !form.city || !form.state) {
-        setError('Please fill in all address fields')
-        return
-      }
       shippingAddress = {
         fullName: form.fullName,
         phone: form.phone,
@@ -141,11 +176,6 @@ export default function CheckoutPage() {
         return
       }
       shippingAddress = addr
-    }
-
-    if (!session && (!form.guestEmail || !form.guestName || !form.guestPhone)) {
-      setError('Please fill in your contact details')
-      return
     }
 
     setSubmitting(true)
@@ -198,7 +228,7 @@ export default function CheckoutPage() {
   if (loading) {
     return (
       <div className="bg-cream min-h-screen flex items-center justify-center">
-        <p className="text-forest/50 text-[15px]">Loading checkout...</p>
+        <Loader size="lg" />
       </div>
     )
   }
@@ -224,7 +254,7 @@ export default function CheckoutPage() {
           Checkout
         </h1>
 
-        <form onSubmit={handlePayment} className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 lg:gap-14">
+        <form onSubmit={handlePayment} noValidate className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 lg:gap-14">
 
           {/* LEFT: CONTACT + ADDRESS */}
           <div>
@@ -232,21 +262,36 @@ export default function CheckoutPage() {
               <div className="mb-10">
                 <h2 className="font-display font-bold text-forest text-[22px] mb-5">Contact Details</h2>
                 <div className="flex flex-col gap-3">
-                  <input
-                    type="text" placeholder="Full Name" value={form.guestName}
-                    onChange={(e) => setForm({ ...form, guestName: e.target.value })}
-                    className="w-full rounded-[12px] border-[1.5px] border-border px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors"
-                  />
-                  <input
-                    type="email" placeholder="Email" value={form.guestEmail}
-                    onChange={(e) => setForm({ ...form, guestEmail: e.target.value })}
-                    className="w-full rounded-[12px] border-[1.5px] border-border px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors"
-                  />
-                  <input
-                    type="tel" placeholder="Phone" value={form.guestPhone}
-                    onChange={(e) => setForm({ ...form, guestPhone: e.target.value })}
-                    className="w-full rounded-[12px] border-[1.5px] border-border px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors"
-                  />
+                  <div>
+                    <input
+                      type="text" placeholder="Full Name" value={form.guestName}
+                      onChange={(e) => setForm({ ...form, guestName: e.target.value })}
+                      className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
+                        fieldErrors.guestName ? 'border-error' : 'border-border'
+                      }`}
+                    />
+                    <FieldError message={fieldErrors.guestName} />
+                  </div>
+                  <div>
+                    <input
+                      type="text" placeholder="Email" value={form.guestEmail}
+                      onChange={(e) => setForm({ ...form, guestEmail: e.target.value })}
+                      className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
+                        fieldErrors.guestEmail ? 'border-error' : 'border-border'
+                      }`}
+                    />
+                    <FieldError message={fieldErrors.guestEmail} />
+                  </div>
+                  <div>
+                    <input
+                      type="tel" placeholder="Phone" value={form.guestPhone}
+                      onChange={(e) => setForm({ ...form, guestPhone: e.target.value })}
+                      className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
+                        fieldErrors.guestPhone ? 'border-error' : 'border-border'
+                      }`}
+                    />
+                    <FieldError message={fieldErrors.guestPhone} />
+                  </div>
                 </div>
               </div>
             )}
@@ -280,34 +325,59 @@ export default function CheckoutPage() {
 
             {useNewAddress && (
               <div className="flex flex-col gap-3">
-                <input
-                  type="text" placeholder="Full Name" value={form.fullName}
-                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                  className="w-full rounded-[12px] border-[1.5px] border-border px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors"
-                />
-                <input
-                  type="tel" placeholder="Phone" value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className="w-full rounded-[12px] border-[1.5px] border-border px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors"
-                />
-                <input
-                  type="text" placeholder="Street Address" value={form.street}
-                  onChange={(e) => setForm({ ...form, street: e.target.value })}
-                  className="w-full rounded-[12px] border-[1.5px] border-border px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors"
-                />
-                <input
-                  type="text" placeholder="City" value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  className="w-full rounded-[12px] border-[1.5px] border-border px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors"
-                />
-                <select
-                  value={form.state}
-                  onChange={(e) => setForm({ ...form, state: e.target.value })}
-                  className="w-full rounded-[12px] border-[1.5px] border-border px-5 py-3.5 text-[14px] text-forest focus:border-olive outline-none transition-colors cursor-pointer"
-                >
-                  <option value="">Select State</option>
-                  {NIGERIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+                <div>
+                  <input
+                    type="text" placeholder="Full Name" value={form.fullName}
+                    onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                    className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
+                      fieldErrors.fullName ? 'border-error' : 'border-border'
+                    }`}
+                  />
+                  <FieldError message={fieldErrors.fullName} />
+                </div>
+                <div>
+                  <input
+                    type="tel" placeholder="Phone" value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
+                      fieldErrors.phone ? 'border-error' : 'border-border'
+                    }`}
+                  />
+                  <FieldError message={fieldErrors.phone} />
+                </div>
+                <div>
+                  <input
+                    type="text" placeholder="Street Address" value={form.street}
+                    onChange={(e) => setForm({ ...form, street: e.target.value })}
+                    className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
+                      fieldErrors.street ? 'border-error' : 'border-border'
+                    }`}
+                  />
+                  <FieldError message={fieldErrors.street} />
+                </div>
+                <div>
+                  <input
+                    type="text" placeholder="City" value={form.city}
+                    onChange={(e) => setForm({ ...form, city: e.target.value })}
+                    className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
+                      fieldErrors.city ? 'border-error' : 'border-border'
+                    }`}
+                  />
+                  <FieldError message={fieldErrors.city} />
+                </div>
+                <div>
+                  <select
+                    value={form.state}
+                    onChange={(e) => setForm({ ...form, state: e.target.value })}
+                    className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest focus:border-olive outline-none transition-colors cursor-pointer ${
+                      fieldErrors.state ? 'border-error' : 'border-border'
+                    }`}
+                  >
+                    <option value="">Select State</option>
+                    {NIGERIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <FieldError message={fieldErrors.state} />
+                </div>
               </div>
             )}
           </div>
@@ -372,7 +442,7 @@ export default function CheckoutPage() {
               disabled={submitting || !selectedState}
               className="w-full rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-[18px] mt-5 hover:bg-forest transition-colors disabled:bg-border disabled:text-muted disabled:cursor-not-allowed"
             >
-              {submitting ? 'Processing...' : 'Pay Now'}
+              {submitting ? <Loader size="sm" color="cream" /> : 'Pay Now'}
             </button>
           </div>
         </form>

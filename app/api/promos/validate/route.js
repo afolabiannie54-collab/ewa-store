@@ -1,12 +1,15 @@
+
 import connectDB from '@/lib/mongodb'
 import PromoCode from '@/models/PromoCode'
+import Order from '@/models/Order'
+import { getCurrentUser } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
 export async function POST(req) {
   try {
     await connectDB()
 
-    const { code, subtotal } = await req.json()
+    const { code, subtotal, guestEmail } = await req.json()
 
     if (!code) {
       return NextResponse.json({ error: 'Promo code is required' }, { status: 400 })
@@ -36,6 +39,25 @@ export async function POST(req) {
       }, { status: 400 })
     }
 
+    if (promo.oneTimePerCustomer) {
+      const user = await getCurrentUser()
+      const customerEmail = user ? user.email : guestEmail
+
+      if (customerEmail) {
+        const previousOrder = await Order.findOne({
+          promoCode: promo.code,
+          $or: [
+            { guestEmail: customerEmail },
+            { userId: user?._id }
+          ]
+        })
+
+        if (previousOrder) {
+          return NextResponse.json({ error: 'You\'ve already used this promo code' }, { status: 400 })
+        }
+      }
+    }
+
     let discount = 0
     if (promo.discountType === 'percentage') {
       discount = Math.round((subtotal * promo.discountValue) / 100)
@@ -43,7 +65,6 @@ export async function POST(req) {
       discount = promo.discountValue
     }
 
-    // Never let discount exceed the subtotal
     discount = Math.min(discount, subtotal)
 
     return NextResponse.json({

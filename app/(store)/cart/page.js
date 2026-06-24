@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
+import Loader from '@/components/Loader'
 import { getGuestCart, updateGuestCartItem, removeFromGuestCart } from '@/lib/cart-client'
 import EmptyCartIllustration from '@/components/EmptyCartIllustration'
 
@@ -94,7 +95,7 @@ export default function CartPage() {
   if (loading) {
     return (
       <div className="bg-cream min-h-screen flex items-center justify-center">
-        <p className="text-forest/50 text-[15px]">Loading cart...</p>
+        <Loader size="lg" />
       </div>
     )
   }

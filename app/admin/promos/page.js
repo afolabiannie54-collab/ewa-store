@@ -13,7 +13,8 @@ export default function AdminPromosPage() {
     discountValue: '',
     minimumOrderAmount: '',
     expiryDate: '',
-    usageLimit: ''
+    usageLimit: '',
+    oneTimePerCustomer: false
   })
 
   useEffect(() => {
@@ -54,7 +55,7 @@ export default function AdminPromosPage() {
         return
       }
 
-      setForm({ code: '', discountType: 'percentage', discountValue: '', minimumOrderAmount: '', expiryDate: '', usageLimit: '' })
+      setForm({ code: '', discountType: 'percentage', discountValue: '', minimumOrderAmount: '', expiryDate: '', usageLimit: '', oneTimePerCustomer: false })
       fetchPromos()
 
     } catch (err) {
@@ -67,6 +68,15 @@ export default function AdminPromosPage() {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ active: !promo.active })
+    })
+    fetchPromos()
+  }
+
+  const toggleOneTimePerCustomer = async (promo) => {
+    await fetch(`/api/admin/promos/${promo._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ oneTimePerCustomer: !promo.oneTimePerCustomer })
     })
     fetchPromos()
   }
@@ -153,6 +163,18 @@ export default function AdminPromosPage() {
           />
         </div>
 
+        <div>
+          <label style={{ fontSize: '12px', display: 'block', marginBottom: '6px' }}>One Per Customer</label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', fontSize: '13px' }}>
+            <input
+              type="checkbox"
+              checked={form.oneTimePerCustomer}
+              onChange={(e) => setForm({ ...form, oneTimePerCustomer: e.target.checked })}
+            />
+            Limit to one use per email
+          </label>
+        </div>
+
         {error && <p style={{ color: '#C0392B', fontSize: '13px', gridColumn: '1 / -1' }}>{error}</p>}
 
         <button
@@ -175,6 +197,7 @@ export default function AdminPromosPage() {
               <th style={{ padding: '12px', color: '#FEFAE0', fontSize: '12px', textAlign: 'left' }}>Used</th>
               <th style={{ padding: '12px', color: '#FEFAE0', fontSize: '12px', textAlign: 'left' }}>Expires</th>
               <th style={{ padding: '12px', color: '#FEFAE0', fontSize: '12px', textAlign: 'left' }}>Active</th>
+              <th style={{ padding: '12px', color: '#FEFAE0', fontSize: '12px', textAlign: 'left' }}>One Per Customer</th>
               <th style={{ padding: '12px', color: '#FEFAE0', fontSize: '12px', textAlign: 'left' }}>Actions</th>
             </tr>
           </thead>
@@ -189,6 +212,9 @@ export default function AdminPromosPage() {
                 <td style={{ padding: '12px', fontSize: '13px' }}>{new Date(promo.expiryDate).toLocaleDateString()}</td>
                 <td style={{ padding: '12px' }}>
                   <input type="checkbox" checked={promo.active} onChange={() => toggleActive(promo)} />
+                </td>
+                <td style={{ padding: '12px' }}>
+                  <input type="checkbox" checked={!!promo.oneTimePerCustomer} onChange={() => toggleOneTimePerCustomer(promo)} />
                 </td>
                 <td style={{ padding: '12px' }}>
                   <button onClick={() => handleDelete(promo._id)} style={{ color: '#C0392B', fontSize: '12px', background: 'transparent', border: 'none', cursor: 'pointer' }}>

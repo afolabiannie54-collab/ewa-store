@@ -2,6 +2,17 @@
 
 import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Loader from '@/components/Loader'
+import FieldError from '@/components/FieldError'
+import { isValidEmail, isRequired } from '@/lib/validation'
+
+function TrackIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M3 12h4l3-9 4 18 3-9h4" />
+    </svg>
+  )
+}
 
 function TrackOrderContent() {
   const searchParams = useSearchParams()
@@ -11,11 +22,28 @@ function TrackOrderContent() {
   const [order, setOrder] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({})
+
+  const validate = () => {
+    const errors = {}
+    if (!isRequired(orderNumber)) errors.orderNumber = 'Please enter your order number'
+    if (!isRequired(email)) {
+      errors.email = 'Please enter your email'
+    } else if (!isValidEmail(email)) {
+      errors.email = 'Please enter a valid email address'
+    }
+    return errors
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setOrder(null)
+
+    const errors = validate()
+    setFieldErrors(errors)
+    if (Object.keys(errors).length > 0) return
+
     setLoading(true)
 
     try {
@@ -42,91 +70,130 @@ function TrackOrderContent() {
   const statusSteps = ['Pending', 'Confirmed', 'Shipped', 'Delivered']
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '60px 24px' }}>
-      <h1 style={{ fontFamily: 'serif', fontSize: '28px', color: '#283618', marginBottom: '8px' }}>Track Your Order</h1>
-      <p style={{ color: '#7A7A5C', fontSize: '14px', marginBottom: '32px' }}>
-        Enter your order number and email to see your order status.
-      </p>
+    <div className="bg-forest min-h-screen">
+      <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-16 md:py-24">
 
-      <form onSubmit={handleSubmit} style={{ marginBottom: '32px' }}>
-        <input
-          type="text"
-          placeholder="Order Number (e.g. EWA-2026-12345)"
-          value={orderNumber}
-          onChange={(e) => setOrderNumber(e.target.value)}
-          required
-          style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #D6CEB8', marginBottom: '12px' }}
-        />
-        <input
-          type="email"
-          placeholder="Email used at checkout"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #D6CEB8', marginBottom: '16px' }}
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: '100%', padding: '14px', borderRadius: '100px',
-            background: '#606C38', color: '#FEFAE0', border: 'none',
-            fontSize: '13px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase',
-            cursor: loading ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {loading ? 'Searching...' : 'Track Order'}
-        </button>
-      </form>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
 
-      {error && <p style={{ color: '#C0392B', fontSize: '13px', marginBottom: '24px' }}>{error}</p>}
+          {/* LEFT: BIG STATEMENT */}
+          <div>
+            <div className="w-14 h-14 rounded-full bg-cream/10 flex items-center justify-center mb-8">
+              <TrackIcon className="w-6 h-6 text-cream" />
+            </div>
+            <h1 className="font-display font-bold text-cream text-[52px] md:text-[76px] leading-[0.95] mb-6" style={{ letterSpacing: '-0.03em' }}>
+              Where&apos;s your<br />order?
+            </h1>
+            <p className="text-cream/60 text-[16px] leading-relaxed max-w-[400px]">
+              Pop in your order number and the email you checked out with — we&apos;ll pull up exactly where things stand.
+            </p>
+          </div>
 
-      {order && (
-        <div style={{ background: '#FFFFFF', borderRadius: '20px', border: '1px solid #D6CEB8', padding: '24px' }}>
-          <p style={{ fontSize: '12px', color: '#7A7A5C', marginBottom: '4px' }}>Order Number</p>
-          <p style={{ fontSize: '16px', fontWeight: 600, color: '#283618', marginBottom: '20px' }}>{order.orderNumber}</p>
+          {/* RIGHT: FORM CARD */}
+          <div>
+            <div className="rounded-[24px] bg-cream p-8 md:p-10">
+              <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2.5">Order Number</label>
+                  <input
+                    type="text"
+                    placeholder="EWA-2026-12345"
+                    value={orderNumber}
+                    onChange={(e) => setOrderNumber(e.target.value)}
+                    className={`w-full rounded-[12px] border-[2px] bg-surface px-5 py-4 text-[15px] text-forest placeholder:text-forest/35 outline-none transition-colors ${
+                      fieldErrors.orderNumber ? 'border-error' : 'border-forest/20 focus:border-olive'
+                    }`}
+                  />
+                  <FieldError message={fieldErrors.orderNumber} />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2.5">Email</label>
+                  <input
+                    type="text"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={`w-full rounded-[12px] border-[2px] bg-surface px-5 py-4 text-[15px] text-forest placeholder:text-forest/35 outline-none transition-colors ${
+                      fieldErrors.email ? 'border-error' : 'border-forest/20 focus:border-olive'
+                    }`}
+                  />
+                  <FieldError message={fieldErrors.email} />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-[18px] mt-2 hover:bg-forest transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {loading ? <Loader size="sm" color="cream" /> : 'Track My Order'}
+                </button>
+              </form>
 
-          {order.status === 'Cancelled' ? (
-            <p style={{ color: '#C0392B', fontSize: '14px', marginBottom: '20px' }}>This order was cancelled.</p>
-          ) : (
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
-              {statusSteps.map((step, i) => {
-                const currentIndex = statusSteps.indexOf(order.status)
-                const isComplete = i <= currentIndex
-                return (
-                  <div key={step} style={{ textAlign: 'center', flex: 1 }}>
-                    <div style={{
-                      width: '24px', height: '24px', borderRadius: '50%', margin: '0 auto 8px',
-                      background: isComplete ? '#606C38' : '#D6CEB8'
-                    }} />
-                    <p style={{ fontSize: '11px', color: isComplete ? '#283618' : '#7A7A5C' }}>{step}</p>
+              {error && <p className="text-[13px] text-error mt-5">{error}</p>}
+            </div>
+
+            {order && (
+              <div className="rounded-[24px] border-[1.5px] border-cream/20 bg-cream/[0.06] p-8 md:p-10 mt-6">
+                <p className="text-[12px] font-bold uppercase tracking-wide text-cream/40 mb-1.5">Order Number</p>
+                <p className="font-display font-bold text-cream text-[24px] mb-8">{order.orderNumber}</p>
+
+                {order.status === 'Cancelled' ? (
+                  <p className="text-[14px] font-medium text-error mb-8">This order was cancelled.</p>
+                ) : (
+                  <div className="flex justify-between mb-9">
+                    {statusSteps.map((step, i) => {
+                      const currentIndex = statusSteps.indexOf(order.status)
+                      const isComplete = i <= currentIndex
+                      return (
+                        <div key={step} className="flex-1 text-center relative">
+                          {i > 0 && (
+                            <div className={`absolute top-3 right-1/2 left-[-50%] h-[2px] ${i <= currentIndex ? 'bg-olive' : 'bg-cream/15'}`} />
+                          )}
+                          <div className={`relative w-6 h-6 rounded-full mx-auto mb-2.5 ${isComplete ? 'bg-olive' : 'bg-cream/15'}`} />
+                          <p className={`text-[12px] font-medium ${isComplete ? 'text-cream' : 'text-cream/35'}`}>{step}</p>
+                        </div>
+                      )
+                    })}
                   </div>
-                )
-              })}
-            </div>
-          )}
+                )}
 
-          <div style={{ borderTop: '1px solid #D6CEB8', paddingTop: '16px' }}>
-            {order.items.map((item, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}>
-                <span>{item.name} ({item.size}) × {item.quantity}</span>
-                <span>₦{(item.price * item.quantity).toLocaleString()}</span>
+                <div className="border-t-[1.5px] border-cream/15 pt-5 flex flex-col gap-2.5">
+                  {order.items.map((item, i) => (
+                    <div key={i} className="flex justify-between text-[14px] text-cream/80">
+                      <span>{item.name} ({item.size}) × {item.quantity}</span>
+                      <span className="font-medium whitespace-nowrap ml-3">₦{(item.price * item.quantity).toLocaleString()}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-[19px] font-display font-bold text-cream pt-3 mt-1 border-t-[1.5px] border-cream/15">
+                    <span>Total</span>
+                    <span>₦{order.total.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {order.invoiceUrl && (
+                  <a
+                    href={order.invoiceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-center w-full rounded-full border-[1.5px] border-cream/30 text-cream text-[13px] font-bold uppercase tracking-[0.1em] py-3.5 mt-7 hover:border-cream transition-colors"
+                  >
+                    Download Invoice
+                  </a>
+                )}
               </div>
-            ))}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: 600, marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #D6CEB8' }}>
-              <span>Total</span>
-              <span>₦{order.total.toLocaleString()}</span>
-            </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
 
 export default function TrackOrderPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '40px' }}>Loading...</div>}>
+    <Suspense fallback={
+      <div className="bg-forest min-h-screen flex items-center justify-center">
+        <Loader size="lg" color="cream" />
+      </div>
+    }>
       <TrackOrderContent />
     </Suspense>
   )

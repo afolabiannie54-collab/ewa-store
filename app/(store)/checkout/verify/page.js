@@ -3,10 +3,31 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Loader from '@/components/Loader'
+
+function OrderConfirmedIllustration() {
+  return (
+    <svg width="220" height="220" viewBox="0 0 220 220" aria-hidden="true">
+      <circle cx="110" cy="110" r="85" fill="none" stroke="#606C38" strokeWidth="2.5" opacity="0.5" />
+      <circle cx="110" cy="110" r="65" fill="#606C38" opacity="0.08" />
+      <path
+        d="M75 112 L98 138 L148 82"
+        fill="none"
+        stroke="#283618"
+        strokeWidth="6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="35" cy="50" r="9" fill="#606C38" opacity="0.2" />
+      <circle cx="190" cy="60" r="13" fill="#283618" opacity="0.1" />
+      <circle cx="185" cy="175" r="7" fill="#606C38" opacity="0.25" />
+      <circle cx="30" cy="170" r="11" fill="#283618" opacity="0.15" />
+    </svg>
+  )
+}
 
 function VerifyContent() {
   const searchParams = useSearchParams()
-  const router = useRouter()
   const reference = searchParams.get('reference')
 
   const [status, setStatus] = useState('checking') // checking | found | failed
@@ -36,7 +57,6 @@ function VerifyContent() {
         setOrder(data.order)
         setStatus('found')
       } else if (attempts < 8) {
-        // Webhook might not have fired yet — retry a few times with delay
         setAttempts(prev => prev + 1)
         setTimeout(checkOrder, 2000)
       } else {
@@ -49,62 +69,94 @@ function VerifyContent() {
 
   if (status === 'checking') {
     return (
-      <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-        <h1 style={{ fontFamily: 'serif', fontSize: '24px', color: '#283618', marginBottom: '12px' }}>
-          Confirming your payment...
-        </h1>
-        <p style={{ color: '#7A7A5C', fontSize: '14px' }}>This usually takes a few seconds. Please don't close this page.</p>
+      <div className="bg-cream min-h-screen flex items-center justify-center px-6">
+        <div className="text-center">
+          <Loader size="lg" className="mb-7" />
+          <h1 className="font-display font-bold text-forest text-[26px] md:text-[30px] mb-3" style={{ letterSpacing: '-0.01em' }}>
+            Confirming your payment...
+          </h1>
+          <p className="text-forest/55 text-[14px]">This usually takes a few seconds. Please don&apos;t close this page.</p>
+        </div>
       </div>
     )
   }
 
   if (status === 'failed') {
     return (
-      <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-        <h1 style={{ fontFamily: 'serif', fontSize: '24px', color: '#C0392B', marginBottom: '12px' }}>
-          We couldn't confirm your order
-        </h1>
-        <p style={{ color: '#7A7A5C', fontSize: '14px', marginBottom: '20px' }}>
-          If you were charged, please contact us with this reference: <strong>{reference}</strong>
-        </p>
-        <Link href="/" style={{ color: '#606C38', fontWeight: 500 }}>Return home</Link>
+      <div className="bg-cream min-h-screen flex items-center justify-center px-6">
+        <div className="text-center max-w-[440px]">
+          <h1 className="font-display font-bold text-error text-[26px] md:text-[30px] mb-3" style={{ letterSpacing: '-0.01em' }}>
+            We couldn&apos;t confirm your order
+          </h1>
+          <p className="text-forest/55 text-[14px] leading-relaxed mb-7">
+            If you were charged, please contact us with this reference: <strong className="text-forest">{reference}</strong>
+          </p>
+          <Link href="/" className="inline-block rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors">
+            Return Home
+          </Link>
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-      <h1 style={{ fontFamily: 'serif', fontSize: '28px', color: '#283618', marginBottom: '12px' }}>
-        Order Confirmed!
-      </h1>
-      <p style={{ color: '#7A7A5C', fontSize: '14px', marginBottom: '8px' }}>
-        Your order number is
-      </p>
-      <p style={{ fontSize: '22px', fontWeight: 600, color: '#606C38', marginBottom: '32px' }}>
-        {order.orderNumber}
-      </p>
-      <p style={{ color: '#7A7A5C', fontSize: '13px', marginBottom: '24px' }}>
-        A confirmation email has been sent to you. You can track your order anytime.
-      </p>
-      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-        <Link
-          href={`/track-order?orderNumber=${order.orderNumber}`}
-          style={{
-            padding: '12px 28px', borderRadius: '100px', background: '#606C38',
-            color: '#FEFAE0', fontSize: '13px', fontWeight: 500, textDecoration: 'none'
-          }}
-        >
-          Track Order
-        </Link>
-        <Link
-          href="/shop"
-          style={{
-            padding: '12px 28px', borderRadius: '100px', border: '1px solid #D6CEB8',
-            color: '#283618', fontSize: '13px', fontWeight: 500, textDecoration: 'none'
-          }}
-        >
-          Continue Shopping
-        </Link>
+    <div className="bg-cream min-h-screen">
+      <div className="max-w-[600px] mx-auto px-6 py-16 md:py-20 text-center">
+
+        <div className="flex justify-center mb-2">
+          <OrderConfirmedIllustration />
+        </div>
+
+        <h1 className="font-display font-bold text-forest text-[36px] md:text-[44px] leading-none mb-3" style={{ letterSpacing: '-0.02em' }}>
+          Order Confirmed!
+        </h1>
+        <p className="text-forest/55 text-[15px] mb-1">Your order number is</p>
+        <p className="font-display font-bold text-olive text-[24px] mb-8">
+          {order.orderNumber}
+        </p>
+
+        {/* RECEIPT */}
+        <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8 text-left mb-9">
+          <div className="flex flex-col gap-3 mb-5">
+            {order.items.map((item, i) => (
+              <div key={i} className="flex justify-between text-[14px] text-forest">
+                <span className="text-forest/70">{item.name} ({item.size}) × {item.quantity}</span>
+                <span className="font-medium whitespace-nowrap ml-3">₦{(item.price * item.quantity).toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t-[1.5px] border-border pt-4 flex flex-col gap-2.5">
+            <div className="flex justify-between text-[14px] text-forest">
+              <span>Subtotal</span><span className="font-medium">₦{order.subtotal.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-[14px] text-forest">
+              <span>Shipping</span><span className="font-medium">₦{order.shippingCost.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-[18px] font-display font-bold text-forest pt-2">
+              <span>Total</span><span>₦{order.total.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-forest/55 text-[13px] mb-8">
+          A confirmation email has been sent to you. You can track your order anytime.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link
+            href={`/track-order?orderNumber=${order.orderNumber}`}
+            className="rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors"
+          >
+            Track Order
+          </Link>
+          <Link
+            href="/shop"
+            className="rounded-full border-[1.5px] border-border text-forest text-[13px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:border-olive transition-colors"
+          >
+            Continue Shopping
+          </Link>
+        </div>
       </div>
     </div>
   )
@@ -112,7 +164,11 @@ function VerifyContent() {
 
 export default function VerifyPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '40px' }}>Loading...</div>}>
+    <Suspense fallback={
+      <div className="bg-cream min-h-screen flex items-center justify-center">
+        <Loader size="lg" />
+      </div>
+    }>
       <VerifyContent />
     </Suspense>
   )

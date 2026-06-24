@@ -3,6 +3,15 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import Loader from '@/components/Loader'
+
+const STATUS_STYLES = {
+  Pending: 'bg-cream text-forest border-border',
+  Confirmed: 'bg-olive/15 text-olive border-olive/30',
+  Shipped: 'bg-forest/10 text-forest border-forest/20',
+  Delivered: 'bg-success/15 text-success border-success/30',
+  Cancelled: 'bg-error/10 text-error border-error/30'
+}
 
 export default function OrdersPage() {
   const { data: session, status } = useSession()
@@ -28,66 +37,69 @@ export default function OrdersPage() {
     setLoading(false)
   }
 
-  const statusColors = {
-    Pending: { bg: '#FFF3CD', text: '#8A6D00' },
-    Confirmed: { bg: '#E3F2E8', text: '#4A7C59' },
-    Shipped: { bg: '#E3EAF2', text: '#3A5A8A' },
-    Delivered: { bg: '#EAF3EC', text: '#4A7C59' },
-    Cancelled: { bg: '#FBEAEA', text: '#C0392B' }
+  if (status === 'loading' || loading) {
+    return (
+      <div className="bg-cream min-h-screen flex items-center justify-center">
+        <Loader size="lg" />
+      </div>
+    )
   }
-
-  if (status === 'loading' || loading) return <div style={{ padding: '40px' }}>Loading...</div>
 
   if (status === 'unauthenticated') {
     return (
-      <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-        <p style={{ color: '#7A7A5C', marginBottom: '16px' }}>Please log in to view your orders.</p>
-        <Link href="/login" style={{ color: '#606C38', fontWeight: 500 }}>Log in →</Link>
+      <div className="bg-cream min-h-screen flex items-center justify-center px-6">
+        <div className="text-center">
+          <p className="text-forest/60 text-[16px] mb-6">Please log in to view your orders.</p>
+          <Link href="/login" className="inline-block rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors">
+            Log In
+          </Link>
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px' }}>
-      <h1 style={{ fontFamily: 'serif', fontSize: '28px', color: '#283618', marginBottom: '32px' }}>Your Orders</h1>
+    <div className="bg-cream min-h-screen">
+      <div className="max-w-[860px] mx-auto px-6 py-12 md:py-16">
 
-      {orders.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 0' }}>
-          <p style={{ color: '#7A7A5C', marginBottom: '16px' }}>You haven't placed any orders yet.</p>
-          <Link href="/shop" style={{ color: '#606C38', fontWeight: 500 }}>Start shopping →</Link>
-        </div>
-      ) : (
-        <div>
-          {orders.map(order => (
-            <Link
-              key={order._id}
-              href={`/orders/${order._id}`}
-              style={{
-                display: 'block', background: '#FFFFFF', border: '1px solid #D6CEB8',
-                borderRadius: '16px', padding: '20px 24px', marginBottom: '16px', textDecoration: 'none'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                <div>
-                  <p style={{ fontSize: '14px', fontWeight: 600, color: '#283618' }}>{order.orderNumber}</p>
-                  <p style={{ fontSize: '12px', color: '#7A7A5C', marginTop: '4px' }}>
-                    {new Date(order.createdAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })}
-                  </p>
-                </div>
-                <span style={{
-                  fontSize: '11px', fontWeight: 500, padding: '4px 12px', borderRadius: '100px',
-                  background: statusColors[order.status]?.bg, color: statusColors[order.status]?.text
-                }}>
-                  {order.status}
-                </span>
-              </div>
-              <p style={{ fontSize: '13px', color: '#7A7A5C' }}>
-                {order.items.length} item{order.items.length > 1 ? 's' : ''} · ₦{order.total.toLocaleString()}
-              </p>
+        <h1 className="font-display font-bold text-forest text-[44px] md:text-[56px] leading-none mb-12" style={{ letterSpacing: '-0.02em' }}>
+          Your Orders
+        </h1>
+
+        {orders.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-forest/60 text-[16px] mb-6">You haven&apos;t placed any orders yet.</p>
+            <Link href="/shop" className="inline-block rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors">
+              Start Shopping
             </Link>
-          ))}
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {orders.map(order => (
+              <Link
+                key={order._id}
+                href={`/orders/${order._id}`}
+                className="block rounded-[18px] border-[1.5px] border-border bg-surface p-6 hover:border-olive transition-colors"
+              >
+                <div className="flex justify-between items-start mb-3 gap-4">
+                  <div>
+                    <p className="font-display font-bold text-forest text-[18px]">{order.orderNumber}</p>
+                    <p className="text-[13px] text-forest/50 mt-1">
+                      {new Date(order.createdAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                  </div>
+                  <span className={`flex-shrink-0 text-[11px] font-bold uppercase tracking-wide px-3.5 py-1.5 rounded-full border-[1.5px] ${STATUS_STYLES[order.status]}`}>
+                    {order.status}
+                  </span>
+                </div>
+                <p className="text-[14px] text-forest/70">
+                  {order.items.length} item{order.items.length > 1 ? 's' : ''} · <span className="font-bold text-forest">₦{order.total.toLocaleString()}</span>
+                </p>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
