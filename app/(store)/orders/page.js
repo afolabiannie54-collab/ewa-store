@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Loader from '@/components/Loader'
+import EmptyOrdersIllustration from '@/components/EmptyOrdersIllustration'
 
 const STATUS_STYLES = {
   Pending: 'bg-cream text-forest border-border',
@@ -62,14 +63,25 @@ export default function OrdersPage() {
     <div className="bg-cream min-h-screen">
       <div className="max-w-[860px] mx-auto px-6 py-12 md:py-16">
 
-        <h1 className="font-display font-bold text-forest text-[44px] md:text-[56px] leading-none mb-12" style={{ letterSpacing: '-0.02em' }}>
-          Your Orders
-        </h1>
+        {orders.length > 0 && (
+          <h1 className="font-display font-bold text-forest text-[44px] md:text-[56px] leading-none mb-12" style={{ letterSpacing: '-0.02em' }}>
+            Your Orders
+          </h1>
+        )}
 
         {orders.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-forest/60 text-[16px] mb-6">You haven&apos;t placed any orders yet.</p>
-            <Link href="/shop" className="inline-block rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors">
+          <div className="flex flex-col items-center text-center py-12 md:py-20">
+            <EmptyOrdersIllustration />
+            <h2 className="font-display font-bold text-forest text-[26px] md:text-[30px] mt-6 mb-3" style={{ letterSpacing: '-0.01em' }}>
+              No orders yet
+            </h2>
+            <p className="text-[15px] text-forest/55 leading-relaxed max-w-[360px] mb-9">
+              Looks like you haven&apos;t placed any orders yet. Let&apos;s find something your skin will love.
+            </p>
+            <Link
+              href="/shop"
+              className="inline-block rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-10 py-[17px] hover:bg-forest transition-colors"
+            >
               Start Shopping
             </Link>
           </div>

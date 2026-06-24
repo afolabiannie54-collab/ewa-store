@@ -198,16 +198,13 @@ export default function OrderDetailPage() {
 
         {/* ACTIONS */}
         <div className="flex flex-wrap gap-3">
-          {order.invoiceUrl && (
-            <a
-              href={order.invoiceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-full border-[1.5px] border-border text-forest text-[13px] font-bold uppercase tracking-wide px-7 py-3.5 hover:border-olive transition-colors"
-            >
-              Download Invoice
-            </a>
-          )}
+          <a
+            href={`/api/orders/${orderId}/invoice`}
+            download
+            className="rounded-full border-[1.5px] border-border text-forest text-[13px] font-bold uppercase tracking-wide px-7 py-3.5 hover:border-olive transition-colors"
+          >
+            Download Invoice
+          </a>
 
           {order.status === 'Pending' && (
             <button

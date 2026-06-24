@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Loader from '@/components/Loader'
+import StarRating from '@/components/StarRating'
+import StarInput from '@/components/StarInput'
+import ConfirmModal from '@/components/ConfirmModal'
 
 export default function MyReviewsPage() {
   const { status } = useSession()
@@ -12,6 +15,9 @@ export default function MyReviewsPage() {
   const [editingId, setEditingId] = useState(null)
   const [editRating, setEditRating] = useState(5)
   const [editComment, setEditComment] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -43,99 +49,145 @@ export default function MyReviewsPage() {
   }
 
   const saveEdit = async (productId, reviewId) => {
+    setSaving(true)
     await fetch(`/api/products/${productId}/reviews/${reviewId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rating: editRating, comment: editComment })
     })
     setEditingId(null)
+    setSaving(false)
     fetchReviews()
   }
 
-  const handleDelete = async (productId, reviewId) => {
-    if (!confirm('Delete this review?')) return
-    await fetch(`/api/products/${productId}/reviews/${reviewId}`, { method: 'DELETE' })
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    await fetch(`/api/products/${deleteTarget.productId}/reviews/${deleteTarget.reviewId}`, { method: 'DELETE' })
+    setDeleting(false)
+    setDeleteTarget(null)
     fetchReviews()
   }
 
-  if (status === 'loading' || loading) return (
-    <div className="bg-cream min-h-screen flex items-center justify-center">
-      <Loader size="lg" />
-    </div>
-  )
+  if (status === 'loading' || loading) {
+    return (
+      <div className="bg-cream min-h-screen flex items-center justify-center">
+        <Loader size="lg" />
+      </div>
+    )
+  }
 
   if (status === 'unauthenticated') {
     return (
-      <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-        <p style={{ color: '#7A7A5C', marginBottom: '16px' }}>Please log in to view your reviews.</p>
-        <Link href="/login" style={{ color: '#606C38', fontWeight: 500 }}>Log in →</Link>
+      <div className="bg-cream min-h-screen flex items-center justify-center px-6">
+        <div className="text-center">
+          <p className="text-forest/60 text-[16px] mb-6">Please log in to view your reviews.</p>
+          <Link href="/login" className="inline-block rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors">
+            Log In
+          </Link>
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: '700px', margin: '0 auto', padding: '40px 24px' }}>
-      <h1 style={{ fontFamily: 'serif', fontSize: '28px', color: '#283618', marginBottom: '32px' }}>My Reviews</h1>
+    <div className="bg-cream min-h-screen">
+      <div className="max-w-[760px] mx-auto px-6 py-12 md:py-16">
 
-      {reviews.length === 0 ? (
-        <p style={{ color: '#7A7A5C', textAlign: 'center', padding: '60px 0' }}>You haven't written any reviews yet.</p>
-      ) : (
-        reviews.map(review => (
-          <div key={review._id} style={{ background: '#FFFFFF', border: '1px solid #D6CEB8', borderRadius: '16px', padding: '20px', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <Link href={`/shop/${review.productId?.slug}`} style={{ fontSize: '14px', fontWeight: 600, color: '#283618', textDecoration: 'none' }}>
-                {review.productId?.name}
-              </Link>
-              <span style={{
-                fontSize: '11px', padding: '4px 10px', borderRadius: '100px',
-                background: review.isApproved ? '#E3F2E8' : '#FFF3CD',
-                color: review.isApproved ? '#4A7C59' : '#8A6D00'
-              }}>
-                {review.isApproved ? 'Approved' : 'Pending Review'}
-              </span>
-            </div>
+        <h1 className="font-display font-bold text-forest text-[44px] md:text-[60px] leading-none mb-2" style={{ letterSpacing: '-0.02em' }}>
+          My Reviews
+        </h1>
+        <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-12">
+          {reviews.length} review{reviews.length !== 1 ? 's' : ''}
+        </p>
 
-            {editingId === review._id ? (
-              <div>
-                <select
-                  value={editRating}
-                  onChange={(e) => setEditRating(Number(e.target.value))}
-                  style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid #D6CEB8', fontSize: '13px', marginBottom: '10px' }}
-                >
-                  {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} Star{n > 1 ? 's' : ''}</option>)}
-                </select>
-                <textarea
-                  value={editComment}
-                  onChange={(e) => setEditComment(e.target.value)}
-                  rows={3}
-                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #D6CEB8', fontSize: '13px', marginBottom: '10px' }}
-                />
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={() => saveEdit(review.productId._id, review._id)} style={{ padding: '8px 16px', borderRadius: '100px', background: '#606C38', color: '#FEFAE0', border: 'none', fontSize: '12px', cursor: 'pointer' }}>
-                    Save
-                  </button>
-                  <button onClick={cancelEdit} style={{ padding: '8px 16px', borderRadius: '100px', background: 'transparent', color: '#7A7A5C', border: '1px solid #D6CEB8', fontSize: '12px', cursor: 'pointer' }}>
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <p style={{ fontSize: '13px', color: '#606C38', marginBottom: '6px' }}>{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</p>
-                <p style={{ fontSize: '13px', color: '#283618', marginBottom: '12px' }}>{review.comment}</p>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={() => startEdit(review)} style={{ padding: '8px 16px', borderRadius: '100px', background: 'transparent', color: '#606C38', border: '1px solid #D6CEB8', fontSize: '12px', cursor: 'pointer' }}>
-                    Edit
-                  </button>
-                  <button onClick={() => handleDelete(review.productId._id, review._id)} style={{ padding: '8px 16px', borderRadius: '100px', background: 'transparent', color: '#C0392B', border: '1px solid #C0392B', fontSize: '12px', cursor: 'pointer' }}>
-                    Delete
-                  </button>
-                </div>
-              </>
-            )}
+        {reviews.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-forest/60 text-[16px]">You haven&apos;t written any reviews yet.</p>
           </div>
-        ))
-      )}
+        ) : (
+          <div className="flex flex-col gap-5">
+            {reviews.map(review => (
+              <div key={review._id} className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8">
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <Link
+                    href={`/shop/${review.productId?.slug}`}
+                    className="font-display font-bold text-forest text-[19px] md:text-[21px] hover:text-olive transition-colors"
+                  >
+                    {review.productId?.name}
+                  </Link>
+                  <span className={`flex-shrink-0 text-[11px] font-bold uppercase tracking-wide px-3.5 py-1.5 rounded-full border-[1.5px] ${
+                    review.isApproved ? 'bg-success/15 text-success border-success/30' : 'bg-cream text-forest border-border'
+                  }`}>
+                    {review.isApproved ? 'Approved' : 'Pending Review'}
+                  </span>
+                </div>
+
+                {editingId === review._id ? (
+                  <div>
+                    <div className="mb-4">
+                      <StarInput value={editRating} onChange={setEditRating} size={24} />
+                    </div>
+                    <textarea
+                      value={editComment}
+                      onChange={(e) => setEditComment(e.target.value)}
+                      rows={3}
+                      className="w-full rounded-[12px] border-[1.5px] border-border px-4 py-3 text-[14px] text-forest focus:border-olive outline-none transition-colors mb-4 resize-none"
+                    />
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => saveEdit(review.productId._id, review._id)}
+                        disabled={saving}
+                        className="rounded-full bg-olive text-cream px-6 py-2.5 text-[13px] font-bold uppercase tracking-wide hover:bg-forest transition-colors disabled:opacity-60"
+                      >
+                        {saving ? <Loader size="sm" color="cream" /> : 'Save'}
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        className="rounded-full border-[1.5px] border-border text-forest px-6 py-2.5 text-[13px] font-bold uppercase tracking-wide hover:border-olive transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-3">
+                      <StarRating rating={review.rating} size={16} />
+                    </div>
+                    <p className="text-[14px] text-forest/75 leading-relaxed mb-5">{review.comment}</p>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => startEdit(review)}
+                        className="rounded-full border-[1.5px] border-border text-forest px-6 py-2.5 text-[13px] font-bold uppercase tracking-wide hover:border-olive transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget({ productId: review.productId._id, reviewId: review._id })}
+                        className="rounded-full border-[1.5px] border-error text-error px-6 py-2.5 text-[13px] font-bold uppercase tracking-wide hover:bg-error hover:text-cream transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="Delete this review?"
+        message="This can't be undone. Your review will be permanently removed from this product."
+        confirmLabel="Delete Review"
+        danger
+        loading={deleting}
+      />
     </div>
   )
 }
