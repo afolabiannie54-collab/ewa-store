@@ -375,12 +375,12 @@ export default function ProductDetailPage() {
 
         {/* TABS */}
         <div className="mb-20">
-          <div className="flex gap-8 border-b-[1.5px] border-border mb-8">
+          <div className="flex gap-4 md:gap-8 border-b-[1.5px] border-border mb-8 overflow-x-auto">
             {['description', 'ingredients', 'how to use'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`pb-4 text-[15px] font-bold uppercase tracking-wide capitalize transition-colors border-b-[2.5px] -mb-[1.5px] ${
+                className={`flex-shrink-0 pb-4 text-[13px] md:text-[15px] font-bold uppercase tracking-wide capitalize transition-colors border-b-[2.5px] -mb-[1.5px] ${
                   activeTab === tab ? 'border-olive text-forest' : 'border-transparent text-forest/40 hover:text-forest/70'
                 }`}
               >
