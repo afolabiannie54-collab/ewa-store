@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import SessionWrapper from "@/components/SessionWrapper";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
+import SageChatWidget from "@/components/SageChatWidget";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -35,6 +36,7 @@ export default function RootLayout({ children }) {
           {children}
           <Footer />
           <BackToTop />
+          <SageChatWidget />
         </SessionWrapper>
       </body>
     </html>
