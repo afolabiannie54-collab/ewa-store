@@ -5,7 +5,6 @@ import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import Loader from '@/components/Loader'
 
-const CATEGORIES = ['Cleanser', 'Moisturizer', 'Serum', 'Sunscreen', 'Treatment']
 const SKIN_TYPES = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']
 const SKIN_CONCERNS = ['Acne', 'Aging', 'Hyperpigmentation', 'Hydration', 'Brightening']
 
@@ -17,6 +16,8 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState('')
+  const [categories, setCategories] = useState([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
 
   const [form, setForm] = useState({
     name: '',
@@ -38,6 +39,11 @@ export default function EditProductPage() {
 
   useEffect(() => {
     fetchProduct()
+    fetch('/api/admin/categories')
+      .then(r => r.json())
+      .then(data => setCategories((data.categories || []).filter(c => c.active)))
+      .catch(() => {})
+      .finally(() => setCategoriesLoading(false))
   }, [])
 
   const fetchProduct = async () => {
@@ -223,7 +229,11 @@ export default function EditProductPage() {
             onChange={(e) => setForm({ ...form, category: e.target.value })}
             style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #D6CEB8', fontSize: '14px' }}
           >
-            {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            {categoriesLoading
+              ? <option value="" disabled>Loading...</option>
+              : categories.length === 0
+                ? <option value="" disabled>No active categories</option>
+                : categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
           </select>
         </div>
 

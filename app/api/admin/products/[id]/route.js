@@ -1,5 +1,6 @@
 import connectDB from '@/lib/mongodb'
 import Product from '@/models/Product'
+import Category from '@/models/Category'
 import { uploadImage, deleteImage } from '@/lib/cloudinary'
 import { requireAdmin } from '@/lib/auth'
 import { NextResponse } from 'next/server'
@@ -44,6 +45,13 @@ export async function PUT(req, { params }) {
 
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    }
+
+    if (category) {
+      const validCategory = await Category.findOne({ name: category, active: true })
+      if (!validCategory) {
+        return NextResponse.json({ error: 'Selected category does not exist or is inactive.' }, { status: 400 })
+      }
     }
 
     if (slug && slug !== product.slug) {

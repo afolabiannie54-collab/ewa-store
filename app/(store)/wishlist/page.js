@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Loader from '@/components/Loader'
+import EmptyWishlistIllustration from '@/components/EmptyWishlistIllustration'
 
 export default function WishlistPage() {
   const { status } = useSession()
@@ -39,65 +40,87 @@ export default function WishlistPage() {
     return Math.min(...variants.map(v => v.price))
   }
 
-  if (status === 'loading' || loading) return (
-    <div className="bg-cream min-h-screen flex items-center justify-center">
-      <Loader size="lg" />
-    </div>
-  )
+  if (status === 'loading' || loading) {
+    return (
+      <div className="bg-cream min-h-screen flex items-center justify-center">
+        <Loader size="lg" />
+      </div>
+    )
+  }
 
   if (status === 'unauthenticated') {
     return (
-      <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-        <p style={{ color: '#7A7A5C', marginBottom: '16px' }}>Please log in to view your wishlist.</p>
-        <Link href="/login" style={{ color: '#606C38', fontWeight: 500 }}>Log in →</Link>
+      <div className="bg-cream min-h-screen flex items-center justify-center px-6">
+        <div className="text-center">
+          <p className="text-forest/60 text-[16px] mb-6">Please log in to view your wishlist.</p>
+          <Link href="/login" className="inline-block rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors">
+            Log In
+          </Link>
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 24px' }}>
-      <h1 style={{ fontFamily: 'serif', fontSize: '28px', color: '#283618', marginBottom: '8px' }}>My Wishlist</h1>
+    <div className="bg-cream min-h-screen">
+      <div className="max-w-[900px] mx-auto px-6 py-12 md:py-16">
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', marginTop: '20px' }}>
-        <Link href="/account" style={{ padding: '8px 16px', borderRadius: '100px', border: '1px solid #D6CEB8', color: '#283618', fontSize: '12px', textDecoration: 'none' }}>Profile</Link>
-        <Link href="/account/addresses" style={{ padding: '8px 16px', borderRadius: '100px', border: '1px solid #D6CEB8', color: '#283618', fontSize: '12px', textDecoration: 'none' }}>Addresses</Link>
-        <Link href="/wishlist" style={{ padding: '8px 16px', borderRadius: '100px', background: '#606C38', color: '#FEFAE0', fontSize: '12px', textDecoration: 'none' }}>Wishlist</Link>
-      </div>
+        <h1 className="font-display font-bold text-forest text-[44px] md:text-[56px] leading-none mb-8" style={{ letterSpacing: '-0.02em' }}>
+          My Wishlist
+        </h1>
 
-      {wishlist.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 0' }}>
-          <p style={{ color: '#7A7A5C', marginBottom: '16px' }}>Your wishlist is empty.</p>
-          <Link href="/shop" style={{ color: '#606C38', fontWeight: 500 }}>Browse products →</Link>
+        <div className="flex gap-2 mb-10">
+          <Link href="/account" className="px-4 py-2 rounded-full border-[1.5px] border-border text-forest text-[12px] font-medium hover:border-olive transition-colors">Profile</Link>
+          <Link href="/account/addresses" className="px-4 py-2 rounded-full border-[1.5px] border-border text-forest text-[12px] font-medium hover:border-olive transition-colors">Addresses</Link>
+          <span className="px-4 py-2 rounded-full bg-olive text-cream text-[12px] font-medium">Wishlist</span>
         </div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-          {wishlist.map(product => (
-            <div key={product._id} style={{ background: '#FFFFFF', border: '1px solid #D6CEB8', borderRadius: '20px', overflow: 'hidden' }}>
-              <Link href={`/shop/${product.slug}`} style={{ textDecoration: 'none' }}>
-                <div style={{ aspectRatio: '1', background: '#FEFAE0' }}>
-                  {product.images?.[0] && (
-                    <img src={product.images[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  )}
-                </div>
-              </Link>
-              <div style={{ padding: '16px' }}>
-                <Link href={`/shop/${product.slug}`} style={{ textDecoration: 'none' }}>
-                  <p style={{ fontSize: '14px', color: '#283618', fontWeight: 500, marginBottom: '8px' }}>{product.name}</p>
+
+        {wishlist.length === 0 ? (
+          <div className="flex flex-col items-center text-center py-12 md:py-20">
+            <EmptyWishlistIllustration />
+            <h2 className="font-display font-bold text-forest text-[26px] md:text-[30px] mt-6 mb-3" style={{ letterSpacing: '-0.01em' }}>
+              Make a wish
+            </h2>
+            <p className="text-[15px] text-forest/55 leading-relaxed max-w-[360px] mb-9">
+              Save the products you love and find them here whenever you&apos;re ready to treat yourself.
+            </p>
+            <Link
+              href="/shop"
+              className="inline-block rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-10 py-[17px] hover:bg-forest transition-colors"
+            >
+              Explore the Shop
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+            {wishlist.map(product => (
+              <div key={product._id} className="rounded-[20px] border-[1.5px] border-border bg-surface overflow-hidden">
+                <Link href={`/shop/${product.slug}`}>
+                  <div className="aspect-square bg-cream">
+                    {product.images?.[0] && (
+                      <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+                    )}
+                  </div>
                 </Link>
-                <p style={{ fontSize: '15px', color: '#283618', fontWeight: 600, marginBottom: '12px' }}>
-                  From ₦{getStartingPrice(product.variants).toLocaleString()}
-                </p>
-                <button
-                  onClick={() => handleRemove(product._id)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '100px', background: 'transparent', color: '#C0392B', border: '1px solid #C0392B', fontSize: '12px', cursor: 'pointer' }}
-                >
-                  Remove
-                </button>
+                <div className="p-4">
+                  <Link href={`/shop/${product.slug}`}>
+                    <p className="text-[14px] font-medium text-forest mb-1.5 hover:text-olive transition-colors">{product.name}</p>
+                  </Link>
+                  <p className="text-[15px] font-bold text-forest mb-4">
+                    From ₦{getStartingPrice(product.variants).toLocaleString()}
+                  </p>
+                  <button
+                    onClick={() => handleRemove(product._id)}
+                    className="w-full rounded-full border-[1.5px] border-error text-error text-[12px] font-bold uppercase tracking-wide py-2 hover:bg-error hover:text-cream transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

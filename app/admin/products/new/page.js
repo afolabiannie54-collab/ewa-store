@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Loader from '@/components/Loader'
 
-const CATEGORIES = ['Cleanser', 'Moisturizer', 'Serum', 'Sunscreen', 'Treatment']
 const SKIN_TYPES = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']
 const SKIN_CONCERNS = ['Acne', 'Aging', 'Hyperpigmentation', 'Hydration', 'Brightening']
 
@@ -13,12 +12,14 @@ export default function NewProductPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [categories, setCategories] = useState([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
 
   const [form, setForm] = useState({
     name: '',
     slug: '',
     description: '',
-    category: 'Cleanser',
+    category: '',
     skinType: [],
     skinConcern: [],
     ingredients: '',
@@ -31,6 +32,18 @@ export default function NewProductPage() {
 
   const [images, setImages] = useState([])
   const [variants, setVariants] = useState([{ size: '', price: '', stockQuantity: '' }])
+
+  useEffect(() => {
+    fetch('/api/admin/categories')
+      .then(r => r.json())
+      .then(data => {
+        const active = (data.categories || []).filter(c => c.active)
+        setCategories(active)
+        if (active.length > 0) setForm(prev => ({ ...prev, category: prev.category || active[0].name }))
+      })
+      .catch(() => {})
+      .finally(() => setCategoriesLoading(false))
+  }, [])
 
   const handleNameChange = (e) => {
     const name = e.target.value
@@ -183,7 +196,11 @@ export default function NewProductPage() {
             onChange={(e) => setForm({ ...form, category: e.target.value })}
             style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #D6CEB8', fontSize: '14px' }}
           >
-            {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            {categoriesLoading
+              ? <option value="" disabled>Loading...</option>
+              : categories.length === 0
+                ? <option value="" disabled>No active categories</option>
+                : categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
           </select>
         </div>
 

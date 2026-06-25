@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation'
 import ProductCard from '@/components/ProductCard'
 import QuickAddModal from '@/components/QuickAddModal'
 
-const CATEGORIES = ['Cleanser', 'Moisturizer', 'Serum', 'Sunscreen', 'Treatment']
 const SKIN_TYPES = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']
 const SKIN_CONCERNS = ['Acne', 'Aging', 'Hyperpigmentation', 'Hydration', 'Brightening']
 
@@ -30,6 +29,7 @@ function ShopContent() {
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [categories, setCategories] = useState([])
   const [wishlistIds, setWishlistIds] = useState([])
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
@@ -54,6 +54,10 @@ function ShopContent() {
 
   useEffect(() => {
     fetchWishlist()
+    fetch('/api/categories')
+      .then(r => r.json())
+      .then(data => setCategories((data.categories || []).map(c => c.name)))
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -142,7 +146,7 @@ function ShopContent() {
           >
             All
           </button>
-          {CATEGORIES.map(cat => (
+          {categories.map(cat => (
             <button
               key={cat}
               onClick={() => updateFilter('category', cat)}
