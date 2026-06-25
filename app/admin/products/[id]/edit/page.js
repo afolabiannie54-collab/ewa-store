@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import Image from 'next/image'
 import Loader from '@/components/Loader'
+import FieldError from '@/components/FieldError'
+import { isRequired } from '@/lib/validation'
 
 const SKIN_TYPES = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']
 const SKIN_CONCERNS = ['Acne', 'Aging', 'Hyperpigmentation', 'Hydration', 'Brightening']
@@ -18,12 +19,13 @@ export default function EditProductPage() {
   const [error, setError] = useState('')
   const [categories, setCategories] = useState([])
   const [categoriesLoading, setCategoriesLoading] = useState(true)
+  const [fieldErrors, setFieldErrors] = useState({})
 
   const [form, setForm] = useState({
     name: '',
     slug: '',
     description: '',
-    category: 'Cleanser',
+    category: '',
     skinType: [],
     skinConcern: [],
     ingredients: '',
@@ -95,34 +97,36 @@ export default function EditProductPage() {
     const files = Array.from(e.target.files)
     files.forEach(file => {
       const reader = new FileReader()
-      reader.onloadend = () => {
-        setImages(prev => [...prev, reader.result])
-      }
+      reader.onloadend = () => setImages(prev => [...prev, reader.result])
       reader.readAsDataURL(file)
     })
   }
 
-  const removeImage = (index) => {
-    setImages(images.filter((_, i) => i !== index))
-  }
-
-  const addVariant = () => {
-    setVariants([...variants, { size: '', price: '', stockQuantity: '' }])
-  }
-
-  const removeVariant = (index) => {
-    setVariants(variants.filter((_, i) => i !== index))
-  }
-
+  const removeImage = (index) => setImages(images.filter((_, i) => i !== index))
+  const addVariant = () => setVariants([...variants, { size: '', price: '', stockQuantity: '' }])
+  const removeVariant = (index) => setVariants(variants.filter((_, i) => i !== index))
   const updateVariant = (index, field, value) => {
     const updated = [...variants]
     updated[index][field] = value
     setVariants(updated)
   }
 
+  const validate = () => {
+    const errors = {}
+    if (!isRequired(form.name)) errors.name = 'Product name is required'
+    if (!isRequired(form.slug)) errors.slug = 'Slug is required'
+    if (!isRequired(form.description)) errors.description = 'Description is required'
+    if (!isRequired(form.category)) errors.category = 'Please select a category'
+    return errors
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    const errors = validate()
+    setFieldErrors(errors)
+    if (Object.keys(errors).length > 0) return
 
     if (images.length === 0) {
       setError('At least one product image is required')
@@ -162,274 +166,297 @@ export default function EditProductPage() {
       }
 
       router.push('/admin/products')
-
     } catch (err) {
       setError('Something went wrong. Please try again.')
       setLoading(false)
     }
   }
 
-  if (fetching) return (
-    <div className="bg-cream min-h-screen flex items-center justify-center">
-      <Loader size="lg" />
-    </div>
-  )
+  const inputClass = (hasError) =>
+    `w-full rounded-[12px] border-[2px] bg-cream px-5 py-3.5 text-[14px] text-forest placeholder:text-forest/35 outline-none transition-colors ${
+      hasError ? 'border-error' : 'border-forest/15 focus:border-olive'
+    }`
+
+  const variantInputClass = 'rounded-[8px] border-[1.5px] border-forest/15 bg-cream px-3 py-2 text-[13px] text-forest placeholder:text-forest/35 focus:border-olive outline-none transition-colors'
+
+  if (fetching) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader size="lg" />
+      </div>
+    )
+  }
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px' }}>
-      <h1 style={{ fontFamily: 'serif', fontSize: '28px', color: '#283618', marginBottom: '24px' }}>
+    <div className="px-8 md:px-12 py-10 md:py-14">
+
+      <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-3">Catalog</p>
+      <h1 className="font-display font-bold text-forest text-[40px] md:text-[48px] leading-none mb-10" style={{ letterSpacing: '-0.02em' }}>
         Edit Product
       </h1>
 
       {error && (
-        <div style={{ background: '#FBEAEA', color: '#C0392B', padding: '12px 16px', borderRadius: '12px', fontSize: '13px', marginBottom: '20px' }}>
+        <div className="rounded-[14px] bg-error/10 border-[1.5px] border-error/25 px-5 py-4 text-[13px] text-error mb-7">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '6px' }}>Product Name</label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #D6CEB8', fontSize: '14px' }}
-          />
-        </div>
+          {/* LEFT — main form */}
+          <div className="flex flex-col gap-6">
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '6px' }}>Slug</label>
-          <input
-            type="text"
-            value={form.slug}
-            onChange={(e) => setForm({ ...form, slug: e.target.value })}
-            required
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #D6CEB8', fontSize: '14px' }}
-          />
-        </div>
+            {/* BASIC INFO */}
+            <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8">
+              <h2 className="font-display font-bold text-forest text-[18px] mb-6">Basic Information</h2>
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '6px' }}>Description</label>
-          <textarea
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            required
-            rows={4}
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #D6CEB8', fontSize: '14px' }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '6px' }}>Category</label>
-          <select
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #D6CEB8', fontSize: '14px' }}
-          >
-            {categoriesLoading
-              ? <option value="" disabled>Loading...</option>
-              : categories.length === 0
-                ? <option value="" disabled>No active categories</option>
-                : categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
-          </select>
-        </div>
-
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '8px' }}>Skin Type</label>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {SKIN_TYPES.map(type => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => toggleArrayField('skinType', type)}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '100px',
-                  border: form.skinType.includes(type) ? '1px solid #606C38' : '1px solid #D6CEB8',
-                  background: form.skinType.includes(type) ? '#606C38' : 'transparent',
-                  color: form.skinType.includes(type) ? '#FEFAE0' : '#283618',
-                  fontSize: '12px',
-                  cursor: 'pointer'
-                }}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '8px' }}>Skin Concern</label>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {SKIN_CONCERNS.map(concern => (
-              <button
-                key={concern}
-                type="button"
-                onClick={() => toggleArrayField('skinConcern', concern)}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '100px',
-                  border: form.skinConcern.includes(concern) ? '1px solid #606C38' : '1px solid #D6CEB8',
-                  background: form.skinConcern.includes(concern) ? '#606C38' : 'transparent',
-                  color: form.skinConcern.includes(concern) ? '#FEFAE0' : '#283618',
-                  fontSize: '12px',
-                  cursor: 'pointer'
-                }}
-              >
-                {concern}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '6px' }}>Ingredients (full INCI list)</label>
-          <textarea
-            value={form.ingredients}
-            onChange={(e) => setForm({ ...form, ingredients: e.target.value })}
-            rows={3}
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #D6CEB8', fontSize: '14px' }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '6px' }}>Key Actives (comma separated)</label>
-          <input
-            type="text"
-            value={form.keyActives}
-            onChange={(e) => setForm({ ...form, keyActives: e.target.value })}
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #D6CEB8', fontSize: '14px' }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '6px' }}>How To Use</label>
-          <textarea
-            value={form.howToUse}
-            onChange={(e) => setForm({ ...form, howToUse: e.target.value })}
-            rows={2}
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #D6CEB8', fontSize: '14px' }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '6px' }}>Usage Time</label>
-          <select
-            value={form.usageTime}
-            onChange={(e) => setForm({ ...form, usageTime: e.target.value })}
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #D6CEB8', fontSize: '14px' }}
-          >
-            <option value="AM">AM</option>
-            <option value="PM">PM</option>
-            <option value="Both">Both</option>
-          </select>
-        </div>
-
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '8px' }}>Product Images</label>
-          <input type="file" accept="image/*" multiple onChange={handleImageUpload} />
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '12px' }}>
-            {images.map((img, i) => (
-              <div key={i} style={{ position: 'relative' }}>
-                <img src={img} alt="" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />
-                <button
-                  type="button"
-                  onClick={() => removeImage(i)}
-                  style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#C0392B', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', fontSize: '12px', cursor: 'pointer' }}
-                >
-                  ×
-                </button>
+              <div className="mb-4">
+                <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Product Name</label>
+                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass(fieldErrors.name)} />
+                <FieldError message={fieldErrors.name} />
               </div>
-            ))}
-          </div>
-        </div>
 
-        <div style={{ marginBottom: '24px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '8px' }}>Variants (size, price, stock)</label>
-          {variants.map((variant, i) => (
-            <div key={i} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-              <input
-                type="text"
-                placeholder="Size (e.g. 30ml)"
-                value={variant.size}
-                onChange={(e) => updateVariant(i, 'size', e.target.value)}
-                style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: '1px solid #D6CEB8', fontSize: '13px' }}
-              />
-              <input
-                type="number"
-                placeholder="Price"
-                value={variant.price}
-                onChange={(e) => updateVariant(i, 'price', e.target.value)}
-                style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: '1px solid #D6CEB8', fontSize: '13px' }}
-              />
-              <input
-                type="number"
-                placeholder="Stock"
-                value={variant.stockQuantity}
-                onChange={(e) => updateVariant(i, 'stockQuantity', e.target.value)}
-                style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: '1px solid #D6CEB8', fontSize: '13px' }}
-              />
-              {variants.length > 1 && (
-                <button type="button" onClick={() => removeVariant(i)} style={{ background: 'transparent', border: 'none', color: '#C0392B', cursor: 'pointer' }}>
-                  Remove
-                </button>
+              <div className="mb-4">
+                <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Slug</label>
+                <input type="text" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className={inputClass(fieldErrors.slug)} />
+                <FieldError message={fieldErrors.slug} />
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Description</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  rows={4}
+                  className={`${inputClass(fieldErrors.description)} resize-none`}
+                />
+                <FieldError message={fieldErrors.description} />
+              </div>
+            </div>
+
+            {/* CLASSIFICATION */}
+            <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8">
+              <h2 className="font-display font-bold text-forest text-[18px] mb-6">Classification</h2>
+
+              <div className="mb-6">
+                <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Category</label>
+                {categoriesLoading ? (
+                  <p className="text-[13px] text-forest/50">Loading categories...</p>
+                ) : categories.length === 0 ? (
+                  <p className="text-[13px] text-error">No categories available — add one first.</p>
+                ) : (
+                  <select
+                    value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                    className={`${inputClass(fieldErrors.category)} cursor-pointer`}
+                  >
+                    {categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
+                  </select>
+                )}
+                <FieldError message={fieldErrors.category} />
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-3">Skin Type</label>
+                <div className="flex flex-wrap gap-2">
+                  {SKIN_TYPES.map(type => (
+                    <button
+                      key={type} type="button" onClick={() => toggleArrayField('skinType', type)}
+                      className={`rounded-full px-4 py-2 text-[13px] font-medium transition-colors ${
+                        form.skinType.includes(type) ? 'bg-olive text-cream' : 'border-[1.5px] border-border text-forest hover:border-olive'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-3">Skin Concern</label>
+                <div className="flex flex-wrap gap-2">
+                  {SKIN_CONCERNS.map(concern => (
+                    <button
+                      key={concern} type="button" onClick={() => toggleArrayField('skinConcern', concern)}
+                      className={`rounded-full px-4 py-2 text-[13px] font-medium transition-colors ${
+                        form.skinConcern.includes(concern) ? 'bg-olive text-cream' : 'border-[1.5px] border-border text-forest hover:border-olive'
+                      }`}
+                    >
+                      {concern}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* PRODUCT DETAILS */}
+            <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8">
+              <h2 className="font-display font-bold text-forest text-[18px] mb-6">Product Details</h2>
+
+              <div className="mb-4">
+                <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Ingredients (full INCI list)</label>
+                <textarea
+                  value={form.ingredients}
+                  onChange={(e) => setForm({ ...form, ingredients: e.target.value })}
+                  rows={3}
+                  className={`${inputClass(false)} resize-none`}
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Key Actives (comma separated)</label>
+                <input
+                  type="text"
+                  value={form.keyActives}
+                  onChange={(e) => setForm({ ...form, keyActives: e.target.value })}
+                  className={inputClass(false)}
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">How To Use</label>
+                <textarea
+                  value={form.howToUse}
+                  onChange={(e) => setForm({ ...form, howToUse: e.target.value })}
+                  rows={2}
+                  className={`${inputClass(false)} resize-none`}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Usage Time</label>
+                <select
+                  value={form.usageTime}
+                  onChange={(e) => setForm({ ...form, usageTime: e.target.value })}
+                  className={`${inputClass(false)} cursor-pointer`}
+                >
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                  <option value="Both">Both</option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+
+          {/* RIGHT — sticky sidebar */}
+          <div className="flex flex-col gap-5 lg:sticky lg:top-6">
+
+            {/* IMAGES */}
+            <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-6">
+              <h2 className="font-display font-bold text-forest text-[16px] mb-1">Images</h2>
+              <p className="text-[12px] text-forest/50 mb-4">At least 1 image required</p>
+
+              <label className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-border px-5 py-2 text-[12px] font-bold text-forest cursor-pointer hover:border-olive transition-colors">
+                + Add Images
+                <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
+              </label>
+
+              {images.length > 0 && (
+                <div className="flex gap-2 flex-wrap mt-4">
+                  {images.map((img, i) => (
+                    <div key={i} className="relative w-[58px] h-[58px] rounded-[10px] overflow-hidden border-[1.5px] border-border flex-shrink-0">
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(i)}
+                        aria-label="Remove image"
+                        className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-forest text-cream text-[10px] flex items-center justify-center hover:bg-error transition-colors leading-none"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-          ))}
-          <button
-            type="button"
-            onClick={addVariant}
-            style={{ fontSize: '12px', color: '#606C38', background: 'transparent', border: 'none', cursor: 'pointer', marginTop: '4px' }}
-          >
-            + Add another size
-          </button>
-        </div>
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, marginBottom: '6px' }}>Status</label>
-          <select
-            value={form.status}
-            onChange={(e) => setForm({ ...form, status: e.target.value })}
-            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #D6CEB8', fontSize: '14px' }}
-          >
-            <option value="Draft">Draft</option>
-            <option value="Active">Active</option>
-            <option value="Archived">Archived</option>
-          </select>
-        </div>
+            {/* PRICING & STOCK */}
+            <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-6">
+              <h2 className="font-display font-bold text-forest text-[16px] mb-1">Pricing & Stock</h2>
+              <p className="text-[12px] text-forest/50 mb-4">At least one size variant</p>
 
-        <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input
-            type="checkbox"
-            checked={form.isFeatured}
-            onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })}
-          />
-          <label style={{ fontSize: '13px' }}>Feature this product on homepage</label>
-        </div>
+              <div className="flex flex-col gap-2.5">
+                {variants.map((variant, i) => (
+                  <div key={i} className="rounded-[10px] border-[1.5px] border-forest/10 p-3 relative">
+                    {variants.length > 1 && (
+                      <button
+                        type="button" onClick={() => removeVariant(i)}
+                        aria-label="Remove variant"
+                        className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full text-error/60 hover:bg-error/10 transition-colors text-[15px] leading-none"
+                      >
+                        ×
+                      </button>
+                    )}
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <input
+                        type="text" placeholder="Size (30ml)" value={variant.size}
+                        onChange={(e) => updateVariant(i, 'size', e.target.value)}
+                        className={`${variantInputClass} col-span-3`}
+                      />
+                      <input
+                        type="number" placeholder="Price" value={variant.price}
+                        onChange={(e) => updateVariant(i, 'price', e.target.value)}
+                        className={`${variantInputClass} col-span-2`}
+                      />
+                      <input
+                        type="number" placeholder="Qty" value={variant.stockQuantity}
+                        onChange={(e) => updateVariant(i, 'stockQuantity', e.target.value)}
+                        className={variantInputClass}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: '100%',
-            padding: '14px',
-            borderRadius: '100px',
-            background: '#606C38',
-            color: '#FEFAE0',
-            border: 'none',
-            fontSize: '13px',
-            fontWeight: 500,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.7 : 1
-          }}
-        >
-          {loading ? <Loader size="sm" color="cream" /> : 'Save Changes'}
-        </button>
+              <button
+                type="button"
+                onClick={addVariant}
+                className="mt-3 text-[12px] font-bold text-olive hover:underline"
+              >
+                + Add another size
+              </button>
+            </div>
+
+            {/* VISIBILITY */}
+            <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-6">
+              <h2 className="font-display font-bold text-forest text-[16px] mb-5">Visibility</h2>
+
+              <div className="mb-4">
+                <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Status</label>
+                <select
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  className={`${inputClass(false)} cursor-pointer`}
+                >
+                  <option value="Draft">Draft</option>
+                  <option value="Active">Active</option>
+                  <option value="Archived">Archived</option>
+                </select>
+              </div>
+
+              <label className="flex items-center gap-2.5 text-[13px] font-medium text-forest cursor-pointer">
+                <input
+                  type="checkbox" checked={form.isFeatured}
+                  onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })}
+                  className="accent-olive w-4 h-4"
+                />
+                Feature on homepage
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] py-4 hover:bg-forest transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {loading ? <Loader size="sm" color="cream" /> : 'Save Changes'}
+            </button>
+
+          </div>
+
+        </div>
       </form>
     </div>
   )

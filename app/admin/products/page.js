@@ -2,11 +2,29 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Loader from '@/components/Loader'
+import ConfirmModal from '@/components/ConfirmModal'
+
+function StarIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 2.5l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.7L12 2.5Z" />
+    </svg>
+  )
+}
+
+const STATUS_STYLES = {
+  Active: 'bg-success/15 text-success border-success/30',
+  Draft: 'bg-olive/15 text-olive border-olive/30',
+  Archived: 'bg-border/40 text-forest/50 border-border'
+}
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     fetchProducts()
@@ -28,19 +46,19 @@ export default function AdminProductsPage() {
     setLoading(false)
   }
 
-  const handleDelete = async (id, name) => {
-    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return
-
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
     try {
-      const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/admin/products/${deleteTarget._id}`, { method: 'DELETE' })
       if (res.ok) {
-        setProducts(products.filter(p => p._id !== id))
-      } else {
-        alert('Failed to delete product')
+        setProducts(products.filter(p => p._id !== deleteTarget._id))
+        setDeleteTarget(null)
       }
     } catch (err) {
-      alert('Something went wrong')
+      console.error('Failed to delete product')
     }
+    setDeleting(false)
   }
 
   const toggleFeatured = async (product) => {
@@ -54,114 +72,142 @@ export default function AdminProductsPage() {
         fetchProducts()
       }
     } catch (err) {
-      alert('Failed to update')
+      console.error('Failed to update')
     }
   }
 
   const getPriceRange = (variants) => {
-    if (!variants || variants.length === 0) return 'No variants'
+    if (!variants || variants.length === 0) return '—'
     const prices = variants.map(v => v.price)
     const min = Math.min(...prices)
     const max = Math.max(...prices)
-    return min === max ? `₦${min.toLocaleString()}` : `₦${min.toLocaleString()} - ₦${max.toLocaleString()}`
+    return min === max ? `₦${min.toLocaleString()}` : `₦${min.toLocaleString()} – ₦${max.toLocaleString()}`
   }
 
-  const getStockStatus = (variants) => {
-    if (!variants || variants.length === 0) return 'No stock'
-    const totalStock = variants.reduce((sum, v) => sum + v.stockQuantity, 0)
-    return totalStock > 0 ? `${totalStock} in stock` : 'Out of stock'
+  const getStockInfo = (variants) => {
+    if (!variants || variants.length === 0) return { total: 0, label: 'No stock' }
+    const total = variants.reduce((sum, v) => sum + v.stockQuantity, 0)
+    return { total, label: total > 0 ? `${total} in stock` : 'Out of stock' }
   }
 
-  if (loading) return <div style={{ padding: '40px' }}>Loading products...</div>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader size="lg" />
+      </div>
+    )
+  }
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 style={{ fontFamily: 'serif', fontSize: '28px', color: '#283618' }}>Products</h1>
+    <div className="px-8 md:px-12 py-10 md:py-14">
+
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-12">
+        <div>
+          <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-3">Catalog</p>
+          <h1 className="font-display font-bold text-forest text-[40px] md:text-[52px] leading-none" style={{ letterSpacing: '-0.02em' }}>
+            Products
+          </h1>
+        </div>
         <Link
           href="/admin/products/new"
-          style={{
-            background: '#606C38',
-            color: '#FEFAE0',
-            padding: '12px 24px',
-            borderRadius: '100px',
-            fontSize: '13px',
-            fontWeight: 500,
-            textDecoration: 'none'
-          }}
+          className="rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-wide px-7 py-3.5 hover:bg-forest transition-colors"
         >
           + Add Product
         </Link>
       </div>
 
-      {error && <div style={{ color: '#C0392B', marginBottom: '16px' }}>{error}</div>}
+      {error && <p className="text-[13px] text-error mb-6">{error}</p>}
 
-      <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid #D6CEB8', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <div className="rounded-[20px] border-[1.5px] border-border bg-surface overflow-hidden shadow-[0_10px_28px_-10px_rgba(40,54,24,0.1)]">
+        <table className="w-full">
           <thead>
-            <tr style={{ background: '#283618' }}>
-              <th style={{ padding: '14px 16px', textAlign: 'left', color: '#FEFAE0', fontSize: '12px', fontWeight: 500 }}>Image</th>
-              <th style={{ padding: '14px 16px', textAlign: 'left', color: '#FEFAE0', fontSize: '12px', fontWeight: 500 }}>Name</th>
-              <th style={{ padding: '14px 16px', textAlign: 'left', color: '#FEFAE0', fontSize: '12px', fontWeight: 500 }}>Category</th>
-              <th style={{ padding: '14px 16px', textAlign: 'left', color: '#FEFAE0', fontSize: '12px', fontWeight: 500 }}>Price</th>
-              <th style={{ padding: '14px 16px', textAlign: 'left', color: '#FEFAE0', fontSize: '12px', fontWeight: 500 }}>Stock</th>
-              <th style={{ padding: '14px 16px', textAlign: 'left', color: '#FEFAE0', fontSize: '12px', fontWeight: 500 }}>Status</th>
-              <th style={{ padding: '14px 16px', textAlign: 'left', color: '#FEFAE0', fontSize: '12px', fontWeight: 500 }}>Featured</th>
-              <th style={{ padding: '14px 16px', textAlign: 'left', color: '#FEFAE0', fontSize: '12px', fontWeight: 500 }}>Actions</th>
+            <tr className="bg-forest">
+              <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Product</th>
+              <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Category</th>
+              <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Price</th>
+              <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Stock</th>
+              <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Status</th>
+              <th className="text-center px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Featured</th>
+              <th className="px-6 py-4" />
             </tr>
           </thead>
           <tbody>
-            {products.map(product => (
-              <tr key={product._id} style={{ borderBottom: '1px solid #D6CEB8' }}>
-                <td style={{ padding: '12px 16px' }}>
-                  {product.images?.[0] ? (
-                    <img src={product.images[0]} alt="" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px' }} />
-                  ) : (
-                    <div style={{ width: '48px', height: '48px', background: '#FEFAE0', borderRadius: '8px' }} />
-                  )}
-                </td>
-                <td style={{ padding: '12px 16px', fontSize: '13px', color: '#283618' }}>{product.name}</td>
-                <td style={{ padding: '12px 16px', fontSize: '13px', color: '#7A7A5C' }}>{product.category}</td>
-                <td style={{ padding: '12px 16px', fontSize: '13px', color: '#283618' }}>{getPriceRange(product.variants)}</td>
-                <td style={{ padding: '12px 16px', fontSize: '13px', color: '#7A7A5C' }}>{getStockStatus(product.variants)}</td>
-                <td style={{ padding: '12px 16px' }}>
-                  <span style={{
-                    fontSize: '11px',
-                    padding: '4px 10px',
-                    borderRadius: '100px',
-                    background: product.status === 'Active' ? '#EAF3EC' : product.status === 'Draft' ? '#FFF3CD' : '#F0F0F0',
-                    color: product.status === 'Active' ? '#4A7C59' : product.status === 'Draft' ? '#8A6D00' : '#7A7A5C'
-                  }}>
-                    {product.status}
-                  </span>
-                </td>
-                <td style={{ padding: '12px 16px' }}>
-                  <input
-                    type="checkbox"
-                    checked={product.isFeatured}
-                    onChange={() => toggleFeatured(product)}
-                  />
-                </td>
-                <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
-                  <Link href={`/admin/products/${product._id}/edit`} style={{ color: '#606C38', fontSize: '12px', marginRight: '12px' }}>
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(product._id, product.name)}
-                    style={{ color: '#C0392B', fontSize: '12px', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {products.map((product, i) => {
+              const stock = getStockInfo(product.variants)
+              return (
+                <tr
+                  key={product._id}
+                  className={`group hover:bg-cream/60 transition-colors ${i < products.length - 1 ? 'border-b-[1.5px] border-border' : ''}`}
+                >
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="relative w-12 h-12 rounded-[10px] overflow-hidden border-[1.5px] border-border bg-cream flex-shrink-0">
+                        {product.images?.[0] ? (
+                          <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
+                        ) : null}
+                      </div>
+                      <span className="font-display font-bold text-forest text-[15px]">{product.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-[13px] text-forest/60">{product.category}</td>
+                  <td className="px-6 py-4 text-[14px] font-medium text-forest">{getPriceRange(product.variants)}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${stock.total > 0 ? 'bg-success' : 'bg-error'}`} />
+                      <span className="text-[13px] text-forest/70">{stock.label}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`text-[11px] font-bold uppercase tracking-wide px-3 py-1.5 rounded-full border-[1.5px] ${STATUS_STYLES[product.status]}`}>
+                      {product.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <button
+                      onClick={() => toggleFeatured(product)}
+                      aria-label={product.isFeatured ? 'Remove from featured' : 'Mark as featured'}
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-cream transition-colors"
+                    >
+                      <StarIcon
+                        className="w-[18px] h-[18px] transition-colors"
+                        style={product.isFeatured ? { fill: 'var(--color-olive)', stroke: 'var(--color-olive)' } : { stroke: 'rgba(40,54,24,0.3)' }}
+                      />
+                    </button>
+                  </td>
+                  <td className="px-6 py-4 text-right whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Link href={`/admin/products/${product._id}/edit`} className="text-[13px] font-bold text-olive hover:underline">
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => setDeleteTarget(product)}
+                        className="text-[13px] font-bold text-error hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
+
+        {products.length === 0 && (
+          <p className="text-center text-forest/50 text-[14px] py-16">No products yet. Add your first one.</p>
+        )}
       </div>
 
-      {products.length === 0 && (
-        <p style={{ textAlign: 'center', color: '#7A7A5C', padding: '40px' }}>No products yet. Add your first one.</p>
-      )}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title={`Delete "${deleteTarget?.name}"?`}
+        message="This product will be permanently removed from your catalog. This cannot be undone."
+        confirmLabel="Delete Product"
+        danger
+        loading={deleting}
+      />
     </div>
   )
 }

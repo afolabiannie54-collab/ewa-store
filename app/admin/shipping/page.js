@@ -8,10 +8,9 @@ export default function AdminShippingPage() {
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState(null)
   const [editValue, setEditValue] = useState('')
+  const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    fetchRates()
-  }, [])
+  useEffect(() => { fetchRates() }, [])
 
   const fetchRates = async () => {
     try {
@@ -29,56 +28,84 @@ export default function AdminShippingPage() {
     setEditValue(String(rate.rate))
   }
 
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditValue('')
+  }
+
   const saveEdit = async (id) => {
+    setSaving(true)
     await fetch(`/api/admin/shipping/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rate: Number(editValue) })
     })
     setEditingId(null)
+    setSaving(false)
     fetchRates()
   }
 
   if (loading) return (
-    <div className="bg-cream min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <Loader size="lg" />
     </div>
   )
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '40px 24px' }}>
-      <h1 style={{ fontFamily: 'serif', fontSize: '28px', color: '#283618', marginBottom: '8px' }}>Shipping Rates</h1>
-      <p style={{ color: '#7A7A5C', fontSize: '14px', marginBottom: '32px' }}>Set delivery costs by region</p>
+    <div className="px-8 md:px-12 py-10 md:py-14">
 
-      {rates.map(rate => (
-        <div key={rate._id} style={{ background: '#FFFFFF', border: '1px solid #D6CEB8', borderRadius: '16px', padding: '20px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <p style={{ fontSize: '14px', fontWeight: 600, color: '#283618' }}>{rate.tier}</p>
+      <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-3">Logistics</p>
+      <h1 className="font-display font-bold text-forest text-[40px] md:text-[48px] leading-none mb-3" style={{ letterSpacing: '-0.02em' }}>
+        Shipping Rates
+      </h1>
+      <p className="text-[14px] text-forest/50 font-medium mb-10">Set delivery costs per region</p>
+
+      <div className="flex flex-col gap-4 max-w-[640px]">
+        {rates.map(rate => (
+          <div key={rate._id} className="rounded-[20px] border-[1.5px] border-border bg-surface p-6 md:p-7 flex items-center justify-between gap-6">
+            <div>
+              <p className="text-[16px] font-bold text-forest">{rate.tier}</p>
+            </div>
+
+            {editingId === rate._id ? (
+              <div className="flex items-center gap-2.5">
+                <span className="text-[14px] font-bold text-forest/50">₦</span>
+                <input
+                  type="number"
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="w-[110px] rounded-[10px] border-[2px] border-olive bg-cream px-3.5 py-2.5 text-[14px] font-bold text-forest outline-none"
+                  autoFocus
+                />
+                <button
+                  onClick={() => saveEdit(rate._id)}
+                  disabled={saving}
+                  className="rounded-full bg-olive text-cream text-[12px] font-bold uppercase tracking-wide px-5 py-2.5 hover:bg-forest transition-colors disabled:opacity-60"
+                >
+                  {saving ? <Loader size="sm" color="cream" /> : 'Save'}
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  className="rounded-full border-[1.5px] border-border text-forest/60 text-[12px] font-bold uppercase tracking-wide px-5 py-2.5 hover:border-olive transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <p className="font-display font-bold text-forest text-[24px]">₦{rate.rate.toLocaleString()}</p>
+                <button
+                  onClick={() => startEdit(rate)}
+                  className="rounded-full border-[1.5px] border-border text-forest text-[12px] font-bold uppercase tracking-wide px-5 py-2.5 hover:border-olive transition-colors"
+                >
+                  Edit
+                </button>
+              </div>
+            )}
           </div>
+        ))}
+      </div>
 
-          {editingId === rate._id ? (
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <span>₦</span>
-              <input
-                type="number"
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                style={{ width: '100px', padding: '8px 12px', borderRadius: '10px', border: '1px solid #D6CEB8' }}
-              />
-              <button onClick={() => saveEdit(rate._id)} style={{ padding: '8px 16px', borderRadius: '100px', background: '#606C38', color: '#FEFAE0', border: 'none', fontSize: '12px', cursor: 'pointer' }}>
-                Save
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <p style={{ fontSize: '16px', fontWeight: 600, color: '#283618' }}>₦{rate.rate.toLocaleString()}</p>
-              <button onClick={() => startEdit(rate)} style={{ padding: '8px 16px', borderRadius: '100px', background: 'transparent', color: '#606C38', border: '1px solid #D6CEB8', fontSize: '12px', cursor: 'pointer' }}>
-                Edit
-              </button>
-            </div>
-          )}
-        </div>
-      ))}
     </div>
   )
 }
