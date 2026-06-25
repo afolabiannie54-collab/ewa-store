@@ -81,8 +81,8 @@ function VerifyForm() {
   }
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center px-6 py-16">
-      <div className="w-full max-w-[420px] rounded-[20px] border-[1.5px] border-border bg-surface p-8 md:p-10 shadow-[0_16px_40px_-12px_rgba(40,54,24,0.15)]">
+    <div className="min-h-screen bg-forest flex items-center justify-center px-6 py-16">
+      <div className="w-full max-w-[420px] rounded-[24px] bg-surface p-8 md:p-10" style={{ boxShadow: '0 24px 80px -16px rgba(0,0,0,0.35)' }}>
 
         <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-3">Verification</p>
         <h1 className="font-display font-bold text-forest text-[32px] leading-none mb-3" style={{ letterSpacing: '-0.02em' }}>
@@ -124,7 +124,7 @@ function VerifyForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-[16px] hover:bg-forest transition-colors disabled:opacity-70 disabled:cursor-not-allowed mb-4"
+            className="w-full rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-5 hover:bg-forest transition-colors disabled:opacity-70 disabled:cursor-not-allowed mb-4"
           >
             {loading ? <Loader size="sm" color="cream" /> : 'Verify Account'}
           </button>

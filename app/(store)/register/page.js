@@ -19,6 +19,22 @@ function GoogleIcon(props) {
   )
 }
 
+function EyeIcon() {
+  return (
+    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+    </svg>
+  )
+}
+
+function EyeOffIcon() {
+  return (
+    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  )
+}
+
 function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -28,6 +44,8 @@ function RegisterForm() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -93,43 +111,14 @@ function RegisterForm() {
     }`
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen bg-forest flex items-center justify-center px-5 py-14">
+      <div className="w-full max-w-[480px]">
 
-      {/* LEFT: DARK PANEL */}
-      <div className="hidden lg:flex relative w-1/2 bg-forest overflow-hidden items-center justify-center p-16">
-        <div
-          className="absolute w-[600px] h-[600px] rounded-full -top-32 -left-32"
-          style={{ background: 'radial-gradient(circle, rgba(96,108,56,0.35) 0%, rgba(96,108,56,0.08) 50%, transparent 75%)' }}
-        />
-        <div
-          className="absolute w-[500px] h-[500px] rounded-full -bottom-40 -right-20"
-          style={{ background: 'radial-gradient(circle, rgba(254,250,224,0.06) 0%, transparent 70%)' }}
-        />
-        <div className="relative z-10 max-w-[420px]">
-          <Link href="/" className="font-display font-bold text-cream text-[32px] mb-8 inline-block" style={{ letterSpacing: '-0.04em' }}>
-            Ewa
-          </Link>
-          <h2 className="font-display font-bold text-cream text-[42px] leading-[1.1] mb-5" style={{ letterSpacing: '-0.02em' }}>
-            Join thousands taking their skincare seriously
-          </h2>
-          <p className="text-cream/60 text-[16px] leading-relaxed">
-            Save your favorites, track orders, and get a routine that actually fits your skin.
-          </p>
-        </div>
-      </div>
+        <div className="rounded-[24px] bg-surface p-8 md:p-10" style={{ boxShadow: '0 24px 80px -16px rgba(0,0,0,0.35)' }}>
 
-      {/* RIGHT: FORM */}
-      <div className="flex-1 bg-cream flex items-center justify-center px-6 py-16">
-        <div className="w-full max-w-[420px]">
-
-          <Link href="/" className="lg:hidden font-display font-bold text-forest text-[28px] mb-10 inline-block" style={{ letterSpacing: '-0.04em' }}>
-            Ewa
-          </Link>
-
-          <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-3">Create Account</p>
-          <h1 className="font-display font-bold text-forest text-[36px] md:text-[40px] leading-none mb-8" style={{ letterSpacing: '-0.02em' }}>
-            Get Started
-          </h1>
+          <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-2">Create Account</p>
+          <h1 className="font-display font-bold text-forest text-[32px] leading-none mb-1.5" style={{ letterSpacing: '-0.02em' }}>Get Started</h1>
+          <p className="text-[14px] text-forest/50 mb-7">Join the EWA community.</p>
 
           {error && (
             <div className="rounded-[12px] bg-error/10 border-[1.5px] border-error/25 px-5 py-4 text-[13px] text-error mb-6">
@@ -160,33 +149,54 @@ function RegisterForm() {
 
             <div className="mb-4">
               <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Password</label>
-              <input
-                type="password" name="password" value={form.password} onChange={handleChange}
-                placeholder="Min. 8 characters"
-                className={inputClass(fieldErrors.password)}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'} name="password" value={form.password} onChange={handleChange}
+                  placeholder="Min. 8 characters"
+                  className={`${inputClass(fieldErrors.password)} pr-12`}
+                />
+                <button
+                  type="button" tabIndex={-1}
+                  onClick={() => setShowPassword(p => !p)}
+                  className="text-forest/35 hover:text-forest/70 transition-colors"
+                  style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', lineHeight: 0 }}
+                >
+                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
               <FieldError message={fieldErrors.password} />
             </div>
 
             <div className="mb-7">
               <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Confirm Password</label>
-              <input
-                type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange}
-                className={inputClass(fieldErrors.confirmPassword)}
-              />
+              <div className="relative">
+                <input
+                  type={showConfirm ? 'text' : 'password'} name="confirmPassword" value={form.confirmPassword} onChange={handleChange}
+                  placeholder="••••••••"
+                  className={`${inputClass(fieldErrors.confirmPassword)} pr-12`}
+                />
+                <button
+                  type="button" tabIndex={-1}
+                  onClick={() => setShowConfirm(p => !p)}
+                  className="text-forest/35 hover:text-forest/70 transition-colors"
+                  style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', lineHeight: 0 }}
+                >
+                  {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
               <FieldError message={fieldErrors.confirmPassword} />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-[16px] hover:bg-forest transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-5 hover:bg-forest transition-colors disabled:opacity-70 disabled:cursor-not-allowed mb-6"
             >
               {loading ? <Loader size="sm" color="cream" /> : 'Create Account'}
             </button>
           </form>
 
-          <div className="flex items-center gap-3 my-7">
+          <div className="flex items-center gap-3 mb-6">
             <div className="flex-1 h-px bg-border" />
             <span className="text-[12px] font-bold text-forest/40 uppercase tracking-wide">Or</span>
             <div className="flex-1 h-px bg-border" />
@@ -194,18 +204,19 @@ function RegisterForm() {
 
           <button
             onClick={() => signIn('google', { callbackUrl })}
-            className="w-full flex items-center justify-center gap-3 rounded-full border-[1.5px] border-border bg-surface text-forest py-[14px] text-[14px] font-medium hover:bg-cream transition-colors"
+            className="w-full flex items-center justify-center gap-3 rounded-full border-[1.5px] border-border bg-surface text-forest py-5 text-[14px] font-bold hover:bg-cream transition-colors"
           >
             <GoogleIcon />
             Continue with Google
           </button>
 
-          <p className="text-center text-[14px] text-forest/60 mt-8">
+          <p className="text-center text-[14px] text-forest/60 mt-7">
             Already have an account?{' '}
             <Link href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`} className="text-olive font-bold hover:underline">
               Log in
             </Link>
           </p>
+
         </div>
       </div>
     </div>
