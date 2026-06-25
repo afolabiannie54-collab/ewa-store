@@ -133,7 +133,7 @@ function ShopContent() {
           Shop
         </h1>
         <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-10">
-          {loading ? 'Loading...' : `${products.length} product${products.length !== 1 ? 's' : ''}`}
+          {loading ? 'Loading products' : `${products.length} product${products.length !== 1 ? 's' : ''}`}
         </p>
 
 {/* CATEGORY PILLS */}

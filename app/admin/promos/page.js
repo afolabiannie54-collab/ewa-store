@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react'
 import Loader from '@/components/Loader'
 import ConfirmModal from '@/components/ConfirmModal'
 import AdminEmptyState from '@/components/AdminEmptyState'
+import FieldError from '@/components/FieldError'
+import { isRequired } from '@/lib/validation'
 
 export default function AdminPromosPage() {
   const [promos, setPromos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({})
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
 
@@ -36,9 +39,23 @@ export default function AdminPromosPage() {
     setLoading(false)
   }
 
+  const validate = () => {
+    const errors = {}
+    if (!isRequired(form.code)) errors.code = 'Code is required'
+    if (!isRequired(form.discountValue)) errors.discountValue = 'Value is required'
+    if (!isRequired(form.expiryDate)) errors.expiryDate = 'Expiry date is required'
+    if (!isRequired(form.usageLimit)) errors.usageLimit = 'Usage limit is required'
+    return errors
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    const errors = validate()
+    setFieldErrors(errors)
+    if (Object.keys(errors).length > 0) return
+
     setSubmitting(true)
     try {
       const res = await fetch('/api/admin/promos', {
@@ -58,6 +75,7 @@ export default function AdminPromosPage() {
         return
       }
       setForm({ code: '', discountType: 'percentage', discountValue: '', minimumOrderAmount: '', expiryDate: '', usageLimit: '', oneTimePerCustomer: false })
+      setFieldErrors({})
       fetchPromos()
     } catch (err) {
       setError('Something went wrong')
@@ -111,11 +129,12 @@ export default function AdminPromosPage() {
             <div>
               <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Code</label>
               <input
-                type="text" required placeholder="e.g. SAVE20"
+                type="text" placeholder="e.g. SAVE20"
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-                className={inputClass}
+                className={fieldErrors.code ? inputClass.replace('border-forest/15', 'border-error') : inputClass}
               />
+              <FieldError message={fieldErrors.code} />
             </div>
 
             <div>
@@ -135,11 +154,12 @@ export default function AdminPromosPage() {
                 Value {form.discountType === 'percentage' ? '(%)' : '(₦)'}
               </label>
               <input
-                type="number" required min="0"
+                type="number" min="0"
                 value={form.discountValue}
                 onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
-                className={inputClass}
+                className={fieldErrors.discountValue ? inputClass.replace('border-forest/15', 'border-error') : inputClass}
               />
+              <FieldError message={fieldErrors.discountValue} />
             </div>
 
             <div>
@@ -155,21 +175,23 @@ export default function AdminPromosPage() {
             <div>
               <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Expiry Date</label>
               <input
-                type="date" required
+                type="date"
                 value={form.expiryDate}
                 onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
-                className={inputClass}
+                className={fieldErrors.expiryDate ? inputClass.replace('border-forest/15', 'border-error') : inputClass}
               />
+              <FieldError message={fieldErrors.expiryDate} />
             </div>
 
             <div>
               <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Usage Limit</label>
               <input
-                type="number" required min="1"
+                type="number" min="1"
                 value={form.usageLimit}
                 onChange={(e) => setForm({ ...form, usageLimit: e.target.value })}
-                className={inputClass}
+                className={fieldErrors.usageLimit ? inputClass.replace('border-forest/15', 'border-error') : inputClass}
               />
+              <FieldError message={fieldErrors.usageLimit} />
             </div>
 
           </div>
