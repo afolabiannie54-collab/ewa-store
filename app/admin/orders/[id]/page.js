@@ -1,13 +1,26 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Loader from '@/components/Loader'
 
+const statusStyle = {
+  Pending: { background: '#FFF3CD', color: '#8A6D00' },
+  Confirmed: { background: '#E3F2E8', color: '#4A7C59' },
+  Shipped: { background: '#E3EAF2', color: '#3A5A8A' },
+  Delivered: { background: '#EAF3EC', color: '#4A7C59' },
+  Cancelled: { background: '#FBEAEA', color: '#C0392B' },
+}
+
+const nextStatusMap = {
+  Pending: 'Confirmed',
+  Confirmed: 'Shipped',
+  Shipped: 'Delivered',
+}
+
 export default function AdminOrderDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const orderId = params.id
 
   const [order, setOrder] = useState(null)
@@ -15,20 +28,14 @@ export default function AdminOrderDetailPage() {
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    fetchOrder()
-  }, [orderId])
+  useEffect(() => { fetchOrder() }, [orderId])
 
   const fetchOrder = async () => {
     try {
       const res = await fetch(`/api/admin/orders/${orderId}`)
       const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error)
-      } else {
-        setOrder(data.order)
-      }
+      if (!res.ok) setError(data.error)
+      else setOrder(data.order)
     } catch (err) {
       setError('Failed to load order')
     }
@@ -38,110 +45,139 @@ export default function AdminOrderDetailPage() {
   const handleStatusUpdate = async (newStatus) => {
     setUpdating(true)
     setError('')
-
     try {
       const res = await fetch(`/api/admin/orders/${orderId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       })
-
       const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error)
-      } else {
-        fetchOrder()
-      }
+      if (!res.ok) setError(data.error)
+      else fetchOrder()
     } catch (err) {
       setError('Something went wrong')
     }
     setUpdating(false)
   }
 
-  const nextStatusMap = {
-    Pending: 'Confirmed',
-    Confirmed: 'Shipped',
-    Shipped: 'Delivered'
-  }
-
   if (loading) return (
-    <div style={{ padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#FEFAE0' }}>
+    <div className="min-h-screen flex items-center justify-center">
       <Loader size="lg" />
     </div>
   )
-  if (error && !order) return <div style={{ padding: '40px' }}>{error}</div>
+  if (error && !order) return (
+    <div className="px-8 md:px-12 py-10 text-[14px] text-forest/60">{error}</div>
+  )
 
   const nextStatus = nextStatusMap[order.status]
 
   return (
-    <div style={{ maxWidth: '700px', margin: '0 auto', padding: '40px 24px' }}>
-      <Link href="/admin/orders" style={{ fontSize: '13px', color: '#7A7A5C', textDecoration: 'none' }}>← Back to orders</Link>
+    <div className="px-8 md:px-12 py-10 md:py-14">
 
-      <h1 style={{ fontFamily: 'serif', fontSize: '24px', color: '#283618', margin: '20px 0 8px' }}>{order.orderNumber}</h1>
-      <p style={{ fontSize: '13px', color: '#7A7A5C', marginBottom: '32px' }}>
-        Placed on {new Date(order.createdAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })}
+      <Link href="/admin/orders" className="inline-flex items-center gap-1.5 text-[13px] font-bold text-forest/40 hover:text-olive transition-colors mb-8">
+        ← Orders
+      </Link>
+
+      <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-3">Fulfillment</p>
+      <h1 className="font-display font-bold text-forest text-[40px] md:text-[48px] leading-none mb-2" style={{ letterSpacing: '-0.02em' }}>
+        {order.orderNumber}
+      </h1>
+      <p className="text-[13px] text-forest/50 font-medium mb-10">
+        Placed {new Date(order.createdAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' })}
       </p>
 
-      <div style={{ background: '#FFFFFF', border: '1px solid #D6CEB8', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#283618', marginBottom: '12px' }}>Customer</h2>
-        <p style={{ fontSize: '13px', color: '#283618' }}>
-          {order.guestName || order.userId?.name} {order.guestEmail && '(Guest)'}
-        </p>
-        <p style={{ fontSize: '13px', color: '#7A7A5C' }}>{order.guestEmail || order.userId?.email}</p>
-        <p style={{ fontSize: '13px', color: '#7A7A5C' }}>{order.guestPhone || order.shippingAddress.phone}</p>
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
 
-      <div style={{ background: '#FFFFFF', border: '1px solid #D6CEB8', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#283618', marginBottom: '16px' }}>Items</h2>
-        {order.items.map((item, i) => (
-          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}>
-            <span>{item.name} ({item.size}) × {item.quantity}</span>
-            <span>₦{(item.price * item.quantity).toLocaleString()}</span>
+        {/* LEFT */}
+        <div className="flex flex-col gap-6">
+
+          {/* Customer */}
+          <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8">
+            <h2 className="font-display font-bold text-forest text-[18px] mb-5">Customer</h2>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-olive/15 flex items-center justify-center flex-shrink-0 text-olive font-bold text-[15px]">
+                {(order.guestName || order.userId?.name || '?')[0].toUpperCase()}
+              </div>
+              <div>
+                <p className="text-[15px] font-bold text-forest leading-tight">
+                  {order.guestName || order.userId?.name}
+                  {order.guestEmail && (
+                    <span className="ml-2 text-[10px] font-bold uppercase tracking-wide bg-border text-forest/50 rounded-full px-2 py-0.5">Guest</span>
+                  )}
+                </p>
+                <p className="text-[13px] text-forest/50 mt-0.5">{order.guestEmail || order.userId?.email}</p>
+                <p className="text-[13px] text-forest/50">{order.guestPhone || order.shippingAddress?.phone}</p>
+              </div>
+            </div>
           </div>
-        ))}
-        <div style={{ borderTop: '1px solid #D6CEB8', paddingTop: '12px', marginTop: '8px', display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
-          <span>Total</span><span>₦{order.total.toLocaleString()}</span>
+
+          {/* Items */}
+          <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8">
+            <h2 className="font-display font-bold text-forest text-[18px] mb-5">Order Items</h2>
+            <div className="flex flex-col divide-y divide-border">
+              {order.items.map((item, i) => (
+                <div key={i} className="flex justify-between items-center py-3.5 first:pt-0 last:pb-0">
+                  <div>
+                    <p className="text-[14px] font-bold text-forest">{item.name}</p>
+                    <p className="text-[12px] text-forest/50 mt-0.5">{item.size} · Qty {item.quantity}</p>
+                  </div>
+                  <p className="text-[14px] font-bold text-forest">₦{(item.price * item.quantity).toLocaleString()}</p>
+                </div>
+              ))}
+            </div>
+            <div className="border-t-[1.5px] border-border mt-4 pt-4 flex justify-between items-baseline">
+              <p className="text-[12px] font-bold uppercase tracking-wide text-forest/50">Order Total</p>
+              <p className="font-display font-bold text-forest text-[24px]">₦{order.total.toLocaleString()}</p>
+            </div>
+          </div>
+
+          {/* Shipping */}
+          <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8">
+            <h2 className="font-display font-bold text-forest text-[18px] mb-5">Shipping Address</h2>
+            <p className="text-[14px] font-bold text-forest mb-1">{order.shippingAddress.fullName}</p>
+            <p className="text-[13px] text-forest/60 leading-relaxed">
+              {order.shippingAddress.street}<br />
+              {order.shippingAddress.city}, {order.shippingAddress.state}
+            </p>
+          </div>
+
         </div>
-      </div>
 
-      <div style={{ background: '#FFFFFF', border: '1px solid #D6CEB8', borderRadius: '16px', padding: '24px', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#283618', marginBottom: '12px' }}>Shipping Address</h2>
-        <p style={{ fontSize: '13px', color: '#283618', lineHeight: 1.6 }}>
-          {order.shippingAddress.fullName}<br/>
-          {order.shippingAddress.street}, {order.shippingAddress.city}<br/>
-          {order.shippingAddress.state}
-        </p>
-      </div>
+        {/* RIGHT sidebar */}
+        <div className="flex flex-col gap-5 lg:sticky lg:top-6">
 
-      <div style={{ background: '#FFFFFF', border: '1px solid #D6CEB8', borderRadius: '16px', padding: '24px' }}>
-        <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#283618', marginBottom: '16px' }}>Status</h2>
-        <p style={{ fontSize: '13px', color: '#7A7A5C', marginBottom: '16px' }}>
-          Current status: <strong style={{ color: '#283618' }}>{order.status}</strong>
-        </p>
+          <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-6">
+            <h2 className="font-display font-bold text-forest text-[16px] mb-4">Order Status</h2>
 
-        {error && <p style={{ color: '#C0392B', fontSize: '13px', marginBottom: '12px' }}>{error}</p>}
+            <span
+              className="inline-flex rounded-full px-4 py-1.5 text-[12px] font-bold uppercase tracking-wide"
+              style={statusStyle[order.status] || { background: '#D6CEB8', color: '#283618' }}
+            >
+              {order.status}
+            </span>
 
-        {nextStatus && (
-          <button
-            onClick={() => handleStatusUpdate(nextStatus)}
-            disabled={updating}
-            style={{
-              padding: '12px 24px', borderRadius: '100px', background: '#606C38',
-              color: '#FEFAE0', border: 'none', fontSize: '13px', cursor: 'pointer'
-            }}
-          >
-            {updating ? <Loader size="sm" color="cream" /> : `Mark as ${nextStatus}`}
-          </button>
-        )}
+            {error && <p className="text-[13px] text-error mt-4">{error}</p>}
 
-        {!nextStatus && order.status !== 'Cancelled' && (
-          <p style={{ fontSize: '13px', color: '#4A7C59' }}>This order has completed its lifecycle.</p>
-        )}
+            {nextStatus && (
+              <button
+                onClick={() => handleStatusUpdate(nextStatus)}
+                disabled={updating}
+                className="w-full mt-5 rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-wide py-4 hover:bg-forest transition-colors disabled:opacity-60"
+              >
+                {updating ? <Loader size="sm" color="cream" /> : `Mark as ${nextStatus}`}
+              </button>
+            )}
 
-        {order.status === 'Cancelled' && (
-          <p style={{ fontSize: '13px', color: '#C0392B' }}>This order was cancelled by the customer.</p>
-        )}
+            {!nextStatus && order.status !== 'Cancelled' && (
+              <p className="text-[13px] text-forest/50 mt-4">Order lifecycle complete.</p>
+            )}
+            {order.status === 'Cancelled' && (
+              <p className="text-[13px] text-error mt-4">Cancelled by customer.</p>
+            )}
+          </div>
+
+        </div>
+
       </div>
     </div>
   )

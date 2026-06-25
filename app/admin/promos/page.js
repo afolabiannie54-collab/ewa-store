@@ -2,11 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import Loader from '@/components/Loader'
+import ConfirmModal from '@/components/ConfirmModal'
+import AdminEmptyState from '@/components/AdminEmptyState'
 
 export default function AdminPromosPage() {
   const [promos, setPromos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   const [form, setForm] = useState({
     code: '',
@@ -18,9 +23,7 @@ export default function AdminPromosPage() {
     oneTimePerCustomer: false
   })
 
-  useEffect(() => {
-    fetchPromos()
-  }, [])
+  useEffect(() => { fetchPromos() }, [])
 
   const fetchPromos = async () => {
     try {
@@ -36,7 +39,7 @@ export default function AdminPromosPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-
+    setSubmitting(true)
     try {
       const res = await fetch('/api/admin/promos', {
         method: 'POST',
@@ -48,20 +51,18 @@ export default function AdminPromosPage() {
           usageLimit: Number(form.usageLimit)
         })
       })
-
       const data = await res.json()
-
       if (!res.ok) {
         setError(data.error)
+        setSubmitting(false)
         return
       }
-
       setForm({ code: '', discountType: 'percentage', discountValue: '', minimumOrderAmount: '', expiryDate: '', usageLimit: '', oneTimePerCustomer: false })
       fetchPromos()
-
     } catch (err) {
       setError('Something went wrong')
     }
+    setSubmitting(false)
   }
 
   const toggleActive = async (promo) => {
@@ -82,155 +83,194 @@ export default function AdminPromosPage() {
     fetchPromos()
   }
 
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this promo code?')) return
-    await fetch(`/api/admin/promos/${id}`, { method: 'DELETE' })
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    await fetch(`/api/admin/promos/${deleteTarget._id}`, { method: 'DELETE' })
+    setDeleteTarget(null)
+    setDeleting(false)
     fetchPromos()
   }
 
+  const inputClass = 'w-full rounded-[12px] border-[2px] border-forest/15 bg-cream px-4 py-3 text-[14px] text-forest placeholder:text-forest/35 outline-none transition-colors focus:border-olive'
+
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 24px' }}>
-      <h1 style={{ fontFamily: 'serif', fontSize: '28px', color: '#283618', marginBottom: '24px' }}>Promo Codes</h1>
+    <div className="px-8 md:px-12 py-10 md:py-14">
 
-      <form onSubmit={handleSubmit} style={{
-        background: '#FFFFFF', border: '1px solid #D6CEB8', borderRadius: '16px',
-        padding: '24px', marginBottom: '32px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px'
-      }}>
-        <div>
-          <label style={{ fontSize: '12px', display: 'block', marginBottom: '6px' }}>Code</label>
-          <input
-            type="text"
-            value={form.code}
-            onChange={(e) => setForm({ ...form, code: e.target.value })}
-            required
-            style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #D6CEB8' }}
-          />
-        </div>
+      <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-3">Marketing</p>
+      <h1 className="font-display font-bold text-forest text-[40px] md:text-[48px] leading-none mb-10" style={{ letterSpacing: '-0.02em' }}>
+        Promo Codes
+      </h1>
 
-        <div>
-          <label style={{ fontSize: '12px', display: 'block', marginBottom: '6px' }}>Discount Type</label>
-          <select
-            value={form.discountType}
-            onChange={(e) => setForm({ ...form, discountType: e.target.value })}
-            style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #D6CEB8' }}
-          >
-            <option value="percentage">Percentage</option>
-            <option value="fixed">Fixed Amount</option>
-          </select>
-        </div>
+      {/* ADD FORM */}
+      <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8 mb-6">
+        <h2 className="font-display font-bold text-forest text-[18px] mb-6">Create Promo Code</h2>
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 mb-5">
 
-        <div>
-          <label style={{ fontSize: '12px', display: 'block', marginBottom: '6px' }}>
-            Discount Value {form.discountType === 'percentage' ? '(%)' : '(₦)'}
-          </label>
-          <input
-            type="number"
-            value={form.discountValue}
-            onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
-            required
-            style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #D6CEB8' }}
-          />
-        </div>
+            <div>
+              <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Code</label>
+              <input
+                type="text" required placeholder="e.g. SAVE20"
+                value={form.code}
+                onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+                className={inputClass}
+              />
+            </div>
 
-        <div>
-          <label style={{ fontSize: '12px', display: 'block', marginBottom: '6px' }}>Min. Order Amount (₦)</label>
-          <input
-            type="number"
-            value={form.minimumOrderAmount}
-            onChange={(e) => setForm({ ...form, minimumOrderAmount: e.target.value })}
-            style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #D6CEB8' }}
-          />
-        </div>
+            <div>
+              <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Discount Type</label>
+              <select
+                value={form.discountType}
+                onChange={(e) => setForm({ ...form, discountType: e.target.value })}
+                className={`${inputClass} cursor-pointer`}
+              >
+                <option value="percentage">Percentage (%)</option>
+                <option value="fixed">Fixed Amount (₦)</option>
+              </select>
+            </div>
 
-        <div>
-          <label style={{ fontSize: '12px', display: 'block', marginBottom: '6px' }}>Expiry Date</label>
-          <input
-            type="date"
-            value={form.expiryDate}
-            onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
-            required
-            style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #D6CEB8' }}
-          />
-        </div>
+            <div>
+              <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">
+                Value {form.discountType === 'percentage' ? '(%)' : '(₦)'}
+              </label>
+              <input
+                type="number" required min="0"
+                value={form.discountValue}
+                onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
+                className={inputClass}
+              />
+            </div>
 
-        <div>
-          <label style={{ fontSize: '12px', display: 'block', marginBottom: '6px' }}>Usage Limit</label>
-          <input
-            type="number"
-            value={form.usageLimit}
-            onChange={(e) => setForm({ ...form, usageLimit: e.target.value })}
-            required
-            style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #D6CEB8' }}
-          />
-        </div>
+            <div>
+              <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Min. Order (₦)</label>
+              <input
+                type="number" min="0" placeholder="0"
+                value={form.minimumOrderAmount}
+                onChange={(e) => setForm({ ...form, minimumOrderAmount: e.target.value })}
+                className={inputClass}
+              />
+            </div>
 
-        <div>
-          <label style={{ fontSize: '12px', display: 'block', marginBottom: '6px' }}>One Per Customer</label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', fontSize: '13px' }}>
+            <div>
+              <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Expiry Date</label>
+              <input
+                type="date" required
+                value={form.expiryDate}
+                onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Usage Limit</label>
+              <input
+                type="number" required min="1"
+                value={form.usageLimit}
+                onChange={(e) => setForm({ ...form, usageLimit: e.target.value })}
+                className={inputClass}
+              />
+            </div>
+
+          </div>
+
+          <label className="flex items-center gap-2.5 text-[13px] font-medium text-forest cursor-pointer mb-5">
             <input
               type="checkbox"
               checked={form.oneTimePerCustomer}
               onChange={(e) => setForm({ ...form, oneTimePerCustomer: e.target.checked })}
+              className="accent-olive w-4 h-4"
             />
-            Limit to one use per email
+            Limit to one use per customer
           </label>
-        </div>
 
-        {error && <p style={{ color: '#C0392B', fontSize: '13px', gridColumn: '1 / -1' }}>{error}</p>}
+          {error && <p className="text-[13px] text-error mb-4">{error}</p>}
 
-        <button
-          type="submit"
-          style={{
-            gridColumn: '1 / -1', padding: '12px', borderRadius: '100px',
-            background: '#606C38', color: '#FEFAE0', border: 'none', fontSize: '13px', cursor: 'pointer'
-          }}
-        >
-          Create Promo Code
-        </button>
-      </form>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-8 py-4 hover:bg-forest transition-colors disabled:opacity-60"
+          >
+            {submitting ? <Loader size="sm" color="cream" /> : 'Create Promo Code'}
+          </button>
+        </form>
+      </div>
 
+      {/* PROMO TABLE */}
       {loading ? (
-        <div style={{ padding: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <Loader size="sm" color="olive" />
+        <div className="flex justify-center py-12">
+          <Loader size="md" color="olive" />
         </div>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', background: '#FFFFFF', borderRadius: '16px', overflow: 'hidden' }}>
-          <thead>
-            <tr style={{ background: '#283618' }}>
-              <th style={{ padding: '12px', color: '#FEFAE0', fontSize: '12px', textAlign: 'left' }}>Code</th>
-              <th style={{ padding: '12px', color: '#FEFAE0', fontSize: '12px', textAlign: 'left' }}>Discount</th>
-              <th style={{ padding: '12px', color: '#FEFAE0', fontSize: '12px', textAlign: 'left' }}>Used</th>
-              <th style={{ padding: '12px', color: '#FEFAE0', fontSize: '12px', textAlign: 'left' }}>Expires</th>
-              <th style={{ padding: '12px', color: '#FEFAE0', fontSize: '12px', textAlign: 'left' }}>Active</th>
-              <th style={{ padding: '12px', color: '#FEFAE0', fontSize: '12px', textAlign: 'left' }}>One Per Customer</th>
-              <th style={{ padding: '12px', color: '#FEFAE0', fontSize: '12px', textAlign: 'left' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {promos.map(promo => (
-              <tr key={promo._id} style={{ borderBottom: '1px solid #D6CEB8' }}>
-                <td style={{ padding: '12px', fontSize: '13px' }}>{promo.code}</td>
-                <td style={{ padding: '12px', fontSize: '13px' }}>
-                  {promo.discountType === 'percentage' ? `${promo.discountValue}%` : `₦${promo.discountValue.toLocaleString()}`}
-                </td>
-                <td style={{ padding: '12px', fontSize: '13px' }}>{promo.usedCount} / {promo.usageLimit}</td>
-                <td style={{ padding: '12px', fontSize: '13px' }}>{new Date(promo.expiryDate).toLocaleDateString()}</td>
-                <td style={{ padding: '12px' }}>
-                  <input type="checkbox" checked={promo.active} onChange={() => toggleActive(promo)} />
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <input type="checkbox" checked={!!promo.oneTimePerCustomer} onChange={() => toggleOneTimePerCustomer(promo)} />
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <button onClick={() => handleDelete(promo._id)} style={{ color: '#C0392B', fontSize: '12px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="rounded-[20px] border-[1.5px] border-border bg-surface overflow-hidden">
+          {promos.length === 0 ? (
+            <AdminEmptyState
+              icon={<svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z" /><path d="M7 7h.01" /></svg>}
+              title="No promo codes yet"
+              description="Create your first promo code using the form above."
+            />
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="bg-forest">
+                  <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Code</th>
+                  <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Discount</th>
+                  <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Used</th>
+                  <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Expires</th>
+                  <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Active</th>
+                  <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">1×/Customer</th>
+                  <th className="px-6 py-4" />
+                </tr>
+              </thead>
+              <tbody>
+                {promos.map((promo, i) => (
+                  <tr
+                    key={promo._id}
+                    className={`hover:bg-cream/60 transition-colors ${i < promos.length - 1 ? 'border-b-[1.5px] border-border' : ''}`}
+                  >
+                    <td className="px-6 py-4 font-bold text-forest text-[14px] font-mono tracking-wider">{promo.code}</td>
+                    <td className="px-6 py-4 text-[13px] font-bold text-forest">
+                      {promo.discountType === 'percentage' ? `${promo.discountValue}%` : `₦${promo.discountValue.toLocaleString()}`}
+                    </td>
+                    <td className="px-6 py-4 text-[13px] text-forest/60">
+                      {promo.usedCount} / {promo.usageLimit}
+                    </td>
+                    <td className="px-6 py-4 text-[13px] text-forest/60">
+                      {new Date(promo.expiryDate).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </td>
+                    <td className="px-6 py-4">
+                      <input type="checkbox" checked={promo.active} onChange={() => toggleActive(promo)} className="accent-olive w-4 h-4 cursor-pointer" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <input type="checkbox" checked={!!promo.oneTimePerCustomer} onChange={() => toggleOneTimePerCustomer(promo)} className="accent-olive w-4 h-4 cursor-pointer" />
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={() => setDeleteTarget(promo)}
+                        className="text-[13px] font-bold text-error hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title={`Delete "${deleteTarget?.code}"?`}
+        message="This promo code will be permanently removed and can no longer be used."
+        confirmLabel="Delete"
+        danger
+        loading={deleting}
+      />
+
     </div>
   )
 }

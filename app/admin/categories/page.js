@@ -94,86 +94,90 @@ export default function AdminCategoriesPage() {
 
   if (loading) {
     return (
-      <div className="bg-cream min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <Loader size="lg" />
       </div>
     )
   }
 
   return (
-    <div className="bg-cream min-h-screen">
-      <div className="max-w-[860px] mx-auto px-6 py-12">
+    <div className="px-8 md:px-12 py-10 md:py-14">
 
-        <h1 className="font-display font-bold text-forest text-[32px] mb-10">Categories</h1>
+      <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-3">Catalog</p>
+      <h1 className="font-display font-bold text-forest text-[40px] md:text-[48px] leading-none mb-10" style={{ letterSpacing: '-0.02em' }}>
+        Categories
+      </h1>
 
-        {/* Add form */}
-        <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 mb-8">
-          <h2 className="font-display font-bold text-forest text-[18px] mb-5">Add Category</h2>
-          <form onSubmit={handleSubmit} noValidate>
-            <div className="flex gap-3 items-start">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  placeholder="e.g. Toner"
-                  value={form.name}
-                  onChange={(e) => { setForm({ name: e.target.value }); setFieldErrors({}) }}
-                  className={`w-full rounded-[12px] border-[1.5px] px-4 py-3 text-[14px] text-forest bg-cream placeholder:text-muted outline-none transition-colors ${
-                    fieldErrors.name ? 'border-error' : 'border-border focus:border-olive'
-                  }`}
-                />
-                <FieldError message={fieldErrors.name} />
-              </div>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="flex-shrink-0 rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-wide px-7 py-3 hover:bg-forest transition-colors disabled:opacity-60"
-              >
-                {submitting ? <Loader size="sm" color="cream" /> : 'Add'}
-              </button>
+      {/* ADD FORM */}
+      <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8 mb-6">
+        <h2 className="font-display font-bold text-forest text-[18px] mb-5">Add Category</h2>
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="flex gap-3 items-start">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="e.g. Toner"
+                value={form.name}
+                onChange={(e) => { setForm({ name: e.target.value }); setFieldErrors({}) }}
+                className={`w-full rounded-[12px] border-[2px] bg-cream px-5 py-3.5 text-[14px] text-forest placeholder:text-forest/35 outline-none transition-colors ${
+                  fieldErrors.name ? 'border-error' : 'border-forest/15 focus:border-olive'
+                }`}
+              />
+              <FieldError message={fieldErrors.name} />
             </div>
-            {submitError && <p className="text-[13px] text-error mt-3">{submitError}</p>}
-          </form>
-        </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-shrink-0 rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-wide px-7 py-3.5 hover:bg-forest transition-colors disabled:opacity-60"
+            >
+              {submitting ? <Loader size="sm" color="cream" /> : 'Add'}
+            </button>
+          </div>
+          {submitError && <p className="text-[13px] text-error mt-3">{submitError}</p>}
+        </form>
+      </div>
 
-        {/* Category list */}
-        <div className="rounded-[20px] border-[1.5px] border-border bg-surface overflow-hidden">
-          {categories.length === 0 ? (
-            <p className="text-center text-forest/50 text-[14px] py-12">No categories yet. Add one above.</p>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="bg-forest">
-                  <th className="text-left px-6 py-3.5 text-[12px] font-bold uppercase tracking-wide text-cream/80">Name</th>
-                  <th className="text-left px-6 py-3.5 text-[12px] font-bold uppercase tracking-wide text-cream/80">Active</th>
-                  <th className="px-6 py-3.5" />
+      {/* CATEGORY LIST */}
+      <div className="rounded-[20px] border-[1.5px] border-border bg-surface overflow-hidden">
+        {categories.length === 0 ? (
+          <p className="text-center text-forest/50 text-[14px] py-16">No categories yet. Add one above.</p>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="bg-forest">
+                <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Name</th>
+                <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Active</th>
+                <th className="px-6 py-4" />
+              </tr>
+            </thead>
+            <tbody>
+              {categories.map((cat, i) => (
+                <tr
+                  key={cat._id}
+                  className={`hover:bg-cream/60 transition-colors ${i < categories.length - 1 ? 'border-b-[1.5px] border-border' : ''}`}
+                >
+                  <td className="px-6 py-4 font-bold text-forest text-[15px]">{cat.name}</td>
+                  <td className="px-6 py-4">
+                    <input
+                      type="checkbox"
+                      checked={cat.active}
+                      onChange={() => toggleActive(cat)}
+                      className="accent-olive w-4 h-4 cursor-pointer"
+                    />
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={() => { setDeleteError(''); setDeleteTarget(cat) }}
+                      className="text-[13px] font-bold text-error hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {categories.map((cat, i) => (
-                  <tr key={cat._id} className={i < categories.length - 1 ? 'border-b border-border' : ''}>
-                    <td className="px-6 py-4 text-[14px] font-medium text-forest">{cat.name}</td>
-                    <td className="px-6 py-4">
-                      <input
-                        type="checkbox"
-                        checked={cat.active}
-                        onChange={() => toggleActive(cat)}
-                        className="accent-olive w-4 h-4 cursor-pointer"
-                      />
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => { setDeleteError(''); setDeleteTarget(cat) }}
-                        className="text-[13px] font-bold text-error hover:underline"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <ConfirmModal

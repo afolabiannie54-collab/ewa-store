@@ -165,15 +165,17 @@ export default function Navbar() {
               <SearchIcon className="w-6 h-6" />
             </button>
 
-            {session && (
+            {session && session.user.role !== 'admin' && (
               <Link href="/wishlist" aria-label="Wishlist" className="hidden sm:inline-flex text-cream hover:text-olive transition-colors duration-200">
                 <HeartIcon className="w-6 h-6" />
               </Link>
             )}
 
-            <Link href="/cart" aria-label="Cart" className="inline-flex text-cream hover:text-olive transition-colors duration-200">
-              <BagIcon className="w-6 h-6" />
-            </Link>
+            {session?.user?.role !== 'admin' && (
+              <Link href="/cart" aria-label="Cart" className="inline-flex text-cream hover:text-olive transition-colors duration-200">
+                <BagIcon className="w-6 h-6" />
+              </Link>
+            )}
 
             <div className="relative hidden md:block" ref={accountRef}>
               <button
@@ -187,19 +189,21 @@ export default function Navbar() {
               {accountOpen && (
                 <div className="absolute right-0 top-[calc(100%+14px)] w-64 rounded-2xl bg-surface border border-border shadow-xl overflow-hidden py-2">
                   {session ? (
-                    <>
-                      <Link href="/account" onClick={() => setAccountOpen(false)} className="block px-6 py-3.5 text-[16px] font-medium text-text hover:bg-cream transition-colors">My Account</Link>
-                      <Link href="/orders" onClick={() => setAccountOpen(false)} className="block px-6 py-3.5 text-[16px] font-medium text-text hover:bg-cream transition-colors">My Orders</Link>
-                      <Link href="/issues" onClick={() => setAccountOpen(false)} className="block px-6 py-3.5 text-[16px] font-medium text-text hover:bg-cream transition-colors">My Issues</Link>
-                      <Link href="/reviews" onClick={() => setAccountOpen(false)} className="block px-6 py-3.5 text-[16px] font-medium text-text hover:bg-cream transition-colors">My Reviews</Link>
-                      <Link href="/wishlist" onClick={() => setAccountOpen(false)} className="block px-6 py-3.5 text-[16px] font-medium text-text hover:bg-cream transition-colors">Wishlist</Link>
-                      {session.user.role === 'admin' && (
-                        <Link href="/admin" onClick={() => setAccountOpen(false)} className="block px-6 py-3.5 text-[16px] font-bold text-olive hover:bg-cream transition-colors border-t border-border mt-1">Admin Dashboard</Link>
-                      )}
-                      <button onClick={handleLogout} className="w-full text-left px-6 py-3.5 text-[16px] font-medium text-error hover:bg-cream transition-colors border-t border-border mt-1">
-                        Logout
-                      </button>
-                    </>
+                    session.user.role === 'admin' ? (
+                      <>
+                        <Link href="/admin" onClick={() => setAccountOpen(false)} className="block px-6 py-4 text-[16px] font-bold text-olive hover:bg-cream transition-colors">Admin Dashboard</Link>
+                        <button onClick={handleLogout} className="w-full text-left px-6 py-4 text-[16px] font-medium text-error hover:bg-cream transition-colors border-t border-border">Logout</button>
+                      </>
+                    ) : (
+                      <>
+                        <Link href="/account" onClick={() => setAccountOpen(false)} className="block px-6 py-3.5 text-[16px] font-medium text-text hover:bg-cream transition-colors">My Account</Link>
+                        <Link href="/orders" onClick={() => setAccountOpen(false)} className="block px-6 py-3.5 text-[16px] font-medium text-text hover:bg-cream transition-colors">My Orders</Link>
+                        <Link href="/issues" onClick={() => setAccountOpen(false)} className="block px-6 py-3.5 text-[16px] font-medium text-text hover:bg-cream transition-colors">My Issues</Link>
+                        <Link href="/reviews" onClick={() => setAccountOpen(false)} className="block px-6 py-3.5 text-[16px] font-medium text-text hover:bg-cream transition-colors">My Reviews</Link>
+                        <Link href="/wishlist" onClick={() => setAccountOpen(false)} className="block px-6 py-3.5 text-[16px] font-medium text-text hover:bg-cream transition-colors">Wishlist</Link>
+                        <button onClick={handleLogout} className="w-full text-left px-6 py-3.5 text-[16px] font-medium text-error hover:bg-cream transition-colors border-t border-border mt-1">Logout</button>
+                      </>
+                    )
                   ) : (
                     <>
                       <Link href="/login" onClick={() => setAccountOpen(false)} className="block px-6 py-3.5 text-[16px] font-medium text-text hover:bg-cream transition-colors">Login</Link>
@@ -324,15 +328,21 @@ export default function Navbar() {
               <p className="text-[13px] font-bold uppercase tracking-wider text-muted mb-4">Account</p>
               {session ? (
                 <div className="flex flex-col">
-                  <Link href="/account" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-semibold text-text border-b border-border">My Account</Link>
-                  <Link href="/orders" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-semibold text-text border-b border-border">My Orders</Link>
-                  <Link href="/issues" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-semibold text-text border-b border-border">My Issues</Link>
-                  <Link href="/reviews" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-semibold text-text border-b border-border">My Reviews</Link>
-                  <Link href="/wishlist" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-semibold text-text border-b border-border">Wishlist</Link>
-                  {session.user.role === 'admin' && (
-                    <Link href="/admin" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-bold text-olive border-b border-border">Admin Dashboard</Link>
+                  {session.user.role === 'admin' ? (
+                    <>
+                      <Link href="/admin" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-bold text-olive border-b border-border">Admin Dashboard</Link>
+                      <button onClick={handleLogout} className="text-left py-4 text-[18px] font-semibold text-error">Logout</button>
+                    </>
+                  ) : (
+                    <>
+                      <Link href="/account" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-semibold text-text border-b border-border">My Account</Link>
+                      <Link href="/orders" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-semibold text-text border-b border-border">My Orders</Link>
+                      <Link href="/issues" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-semibold text-text border-b border-border">My Issues</Link>
+                      <Link href="/reviews" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-semibold text-text border-b border-border">My Reviews</Link>
+                      <Link href="/wishlist" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-semibold text-text border-b border-border">Wishlist</Link>
+                      <button onClick={handleLogout} className="text-left py-4 text-[18px] font-semibold text-error">Logout</button>
+                    </>
                   )}
-                  <button onClick={handleLogout} className="text-left py-4 text-[18px] font-semibold text-error">Logout</button>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4 mt-1">

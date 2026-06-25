@@ -2,6 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import Loader from '@/components/Loader'
+import AdminEmptyState from '@/components/AdminEmptyState'
+
+const STATUS_FILTERS = ['', 'Unread', 'In Progress', 'Resolved']
+
+const statusStyle = {
+  Unread: { background: '#FFF3CD', color: '#8A6D00' },
+  'In Progress': { background: '#E3EAF2', color: '#3A5A8A' },
+  Resolved: { background: '#EAF3EC', color: '#4A7C59' },
+}
 
 export default function AdminInquiriesPage() {
   const [inquiries, setInquiries] = useState([])
@@ -12,9 +21,7 @@ export default function AdminInquiriesPage() {
   const [sending, setSending] = useState(false)
   const [replyMessage, setReplyMessage] = useState('')
 
-  useEffect(() => {
-    fetchInquiries()
-  }, [])
+  useEffect(() => { fetchInquiries() }, [])
 
   const fetchInquiries = async () => {
     try {
@@ -44,7 +51,6 @@ export default function AdminInquiriesPage() {
 
   const sendReply = async (id) => {
     if (!replyText.trim()) return
-
     setSending(true)
     try {
       const res = await fetch(`/api/admin/inquiries/${id}/reply`, {
@@ -52,11 +58,9 @@ export default function AdminInquiriesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: replyText })
       })
-
       const data = await res.json()
-
       if (res.ok) {
-        setReplyMessage('Reply sent successfully')
+        setReplyMessage('success')
         setReplyText('')
         fetchInquiries()
         setTimeout(() => setReplyingId(null), 1500)
@@ -69,111 +73,121 @@ export default function AdminInquiriesPage() {
     setSending(false)
   }
 
-  const statusColors = {
-    Unread: { bg: '#FFF3CD', text: '#8A6D00' },
-    'In Progress': { bg: '#E3EAF2', text: '#3A5A8A' },
-    Resolved: { bg: '#EAF3EC', text: '#4A7C59' }
-  }
-
   const filteredInquiries = filterStatus ? inquiries.filter(i => i.status === filterStatus) : inquiries
 
   if (loading) return (
-    <div className="bg-cream min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <Loader size="lg" />
     </div>
   )
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 24px' }}>
-      <h1 style={{ fontFamily: 'serif', fontSize: '28px', color: '#283618', marginBottom: '24px' }}>Customer Inquiries</h1>
+    <div className="px-8 md:px-12 py-10 md:py-14">
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-        {['', 'Unread', 'In Progress', 'Resolved'].map(s => (
+      <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-3">Support</p>
+      <h1 className="font-display font-bold text-forest text-[40px] md:text-[48px] leading-none mb-10" style={{ letterSpacing: '-0.02em' }}>
+        Inquiries
+      </h1>
+
+      <div className="flex flex-wrap gap-2.5 mb-8">
+        {STATUS_FILTERS.map(s => (
           <button
             key={s}
             onClick={() => setFilterStatus(s)}
-            style={{
-              padding: '8px 16px', borderRadius: '100px', fontSize: '12px',
-              border: filterStatus === s ? '1px solid #606C38' : '1px solid #D6CEB8',
-              background: filterStatus === s ? '#606C38' : 'transparent',
-              color: filterStatus === s ? '#FEFAE0' : '#283618',
-              cursor: 'pointer'
-            }}
+            className={`rounded-full px-5 py-2.5 text-[13px] font-bold uppercase tracking-wide transition-colors ${
+              filterStatus === s
+                ? 'bg-olive text-cream'
+                : 'bg-surface border-[1.5px] border-border text-forest hover:border-olive'
+            }`}
           >
             {s || 'All'}
+            <span className={`ml-1.5 ${filterStatus === s ? 'text-cream/70' : 'text-forest/40'}`}>
+              ({s ? inquiries.filter(i => i.status === s).length : inquiries.length})
+            </span>
           </button>
         ))}
       </div>
 
-      {filteredInquiries.map(inquiry => (
-        <div key={inquiry._id} style={{ background: '#FFFFFF', border: '1px solid #D6CEB8', borderRadius: '16px', padding: '20px', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <div>
-              <p style={{ fontSize: '14px', fontWeight: 600, color: '#283618' }}>{inquiry.name}</p>
-              <p style={{ fontSize: '12px', color: '#7A7A5C' }}>{inquiry.email}</p>
-            </div>
-            <span style={{
-              fontSize: '11px', padding: '4px 10px', borderRadius: '100px',
-              background: statusColors[inquiry.status]?.bg, color: statusColors[inquiry.status]?.text
-            }}>
-              {inquiry.status}
-            </span>
-          </div>
+      {filteredInquiries.length === 0 ? (
+        <AdminEmptyState
+          icon={<svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>}
+          title="No inquiries yet"
+          description="Customer messages from the contact form will appear here."
+        />
+      ) : (
+        <div className="flex flex-col gap-4">
+          {filteredInquiries.map(inquiry => (
+            <div key={inquiry._id} className="rounded-[20px] border-[1.5px] border-border bg-surface p-6 md:p-7">
 
-          <p style={{ fontSize: '13px', color: '#283618', marginBottom: '12px', lineHeight: 1.6 }}>{inquiry.message}</p>
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <p className="text-[15px] font-bold text-forest mb-0.5">{inquiry.name}</p>
+                  <p className="text-[12px] text-forest/50">{inquiry.email} · {new Date(inquiry.createdAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                </div>
+                <span
+                  className="flex-shrink-0 inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide"
+                  style={statusStyle[inquiry.status] || { background: '#D6CEB8', color: '#283618' }}
+                >
+                  {inquiry.status}
+                </span>
+              </div>
 
-          <p style={{ fontSize: '11px', color: '#7A7A5C', marginBottom: '12px' }}>
-            {new Date(inquiry.createdAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
+              <p className="text-[14px] text-forest leading-relaxed mb-5">{inquiry.message}</p>
 
-          <div style={{ display: 'flex', gap: '8px', marginBottom: replyingId === inquiry._id ? '12px' : 0 }}>
-            {inquiry.status !== 'In Progress' && (
-              <button onClick={() => updateStatus(inquiry._id, 'In Progress')} style={{ padding: '8px 16px', borderRadius: '100px', background: 'transparent', color: '#3A5A8A', border: '1px solid #3A5A8A', fontSize: '12px', cursor: 'pointer' }}>
-                Mark In Progress
-              </button>
-            )}
-            {inquiry.status !== 'Resolved' && (
-              <button onClick={() => updateStatus(inquiry._id, 'Resolved')} style={{ padding: '8px 16px', borderRadius: '100px', background: '#4A7C59', color: '#FEFAE0', border: 'none', fontSize: '12px', cursor: 'pointer' }}>
-                Mark Resolved
-              </button>
-            )}
-            <button
-              onClick={() => replyingId === inquiry._id ? setReplyingId(null) : startReply(inquiry._id)}
-              style={{ padding: '8px 16px', borderRadius: '100px', background: 'transparent', color: '#606C38', border: '1px solid #D6CEB8', fontSize: '12px', cursor: 'pointer' }}
-            >
-              {replyingId === inquiry._id ? 'Cancel' : 'Reply'}
-            </button>
-          </div>
+              <div className="flex flex-wrap gap-2.5 pt-4 border-t-[1.5px] border-border">
+                {inquiry.status !== 'In Progress' && (
+                  <button
+                    onClick={() => updateStatus(inquiry._id, 'In Progress')}
+                    className="rounded-full border-[1.5px] border-[#2C5282]/40 text-[#2C5282] text-[12px] font-bold uppercase tracking-wide px-5 py-2 hover:bg-cream hover:border-[#2C5282]/70 transition-colors"
+                  >
+                    Mark In Progress
+                  </button>
+                )}
+                {inquiry.status !== 'Resolved' && (
+                  <button
+                    onClick={() => updateStatus(inquiry._id, 'Resolved')}
+                    className="rounded-full bg-olive text-cream text-[12px] font-bold uppercase tracking-wide px-5 py-2 hover:bg-forest transition-colors"
+                  >
+                    Mark Resolved
+                  </button>
+                )}
+                <button
+                  onClick={() => replyingId === inquiry._id ? setReplyingId(null) : startReply(inquiry._id)}
+                  className="rounded-full border-[1.5px] border-border text-forest text-[12px] font-bold uppercase tracking-wide px-5 py-2 hover:border-olive transition-colors"
+                >
+                  {replyingId === inquiry._id ? 'Cancel' : 'Reply'}
+                </button>
+              </div>
 
-          {replyingId === inquiry._id && (
-            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #D6CEB8' }}>
-              <textarea
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                placeholder="Type your reply here..."
-                rows={3}
-                style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #D6CEB8', fontSize: '13px', marginBottom: '10px' }}
-              />
-              {replyMessage && (
-                <p style={{ fontSize: '12px', color: replyMessage.includes('success') ? '#4A7C59' : '#C0392B', marginBottom: '10px' }}>
-                  {replyMessage}
-                </p>
+              {replyingId === inquiry._id && (
+                <div className="mt-5 pt-5 border-t-[1.5px] border-border">
+                  <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Your Reply</label>
+                  <textarea
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder="Type your reply..."
+                    rows={3}
+                    className="w-full rounded-[12px] border-[2px] border-forest/15 bg-cream px-4 py-3 text-[13px] text-forest placeholder:text-forest/35 outline-none transition-colors focus:border-olive resize-none mb-3"
+                  />
+                  {replyMessage && (
+                    <p className={`text-[12px] font-bold mb-3 ${replyMessage === 'success' ? 'text-[#2D6A4F]' : 'text-error'}`}>
+                      {replyMessage === 'success' ? 'Reply sent successfully.' : replyMessage}
+                    </p>
+                  )}
+                  <button
+                    onClick={() => sendReply(inquiry._id)}
+                    disabled={sending}
+                    className="rounded-full bg-forest text-cream text-[12px] font-bold uppercase tracking-wide px-7 py-2.5 hover:bg-olive transition-colors disabled:opacity-60"
+                  >
+                    {sending ? <Loader size="sm" color="cream" /> : 'Send Reply'}
+                  </button>
+                </div>
               )}
-              <button
-                onClick={() => sendReply(inquiry._id)}
-                disabled={sending}
-                style={{ padding: '8px 20px', borderRadius: '100px', background: '#283618', color: '#FEFAE0', border: 'none', fontSize: '12px', cursor: 'pointer' }}
-              >
-                {sending ? <Loader size="sm" color="cream" /> : 'Send Reply'}
-              </button>
             </div>
-          )}
+          ))}
         </div>
-      ))}
-
-      {filteredInquiries.length === 0 && (
-        <p style={{ textAlign: 'center', color: '#7A7A5C', padding: '40px' }}>No inquiries found.</p>
       )}
+
     </div>
   )
 }
