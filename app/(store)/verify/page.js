@@ -3,21 +3,31 @@
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Loader from '@/components/Loader'
+import FieldError from '@/components/FieldError'
+import { isRequired } from '@/lib/validation'
 
 function VerifyForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get('email') || ''
+  const callbackUrl = searchParams.get('callbackUrl') || '/'
 
   const [otp, setOtp] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({})
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    if (!isRequired(otp)) {
+      setFieldErrors({ otp: 'Please enter the code sent to your email' })
+      return
+    }
+    setFieldErrors({})
     setLoading(true)
 
     try {
@@ -35,7 +45,7 @@ function VerifyForm() {
         return
       }
 
-      router.push('/login?verified=true')
+      router.push(`/login?verified=true&callbackUrl=${encodeURIComponent(callbackUrl)}`)
 
     } catch (err) {
       setError('Something went wrong. Please try again.')
@@ -71,103 +81,50 @@ function VerifyForm() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: '#FEFAE0',
-      padding: '24px'
-    }}>
-      <div style={{
-        width: '100%',
-        maxWidth: '420px',
-        background: '#FFFFFF',
-        borderRadius: '20px',
-        padding: '40px',
-        border: '1px solid #D6CEB8'
-      }}>
-        <h1 style={{
-          fontFamily: 'serif',
-          fontSize: '28px',
-          color: '#283618',
-          marginBottom: '8px'
-        }}>
-          Verify your email
+    <div className="min-h-screen bg-cream flex items-center justify-center px-6 py-16">
+      <div className="w-full max-w-[420px] rounded-[20px] border-[1.5px] border-border bg-surface p-8 md:p-10 shadow-[0_16px_40px_-12px_rgba(40,54,24,0.15)]">
+
+        <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-3">Verification</p>
+        <h1 className="font-display font-bold text-forest text-[32px] leading-none mb-3" style={{ letterSpacing: '-0.02em' }}>
+          Check your email
         </h1>
-        <p style={{ color: '#7A7A5C', fontSize: '14px', marginBottom: '32px' }}>
-          We sent a 6-digit code to <strong>{email}</strong>. Enter it below.
+        <p className="text-forest/60 text-[14px] leading-relaxed mb-8">
+          We sent a 6-digit code to <strong className="text-forest font-bold">{email}</strong>. Enter it below.
         </p>
 
         {error && (
-          <div style={{
-            background: '#FBEAEA',
-            color: '#C0392B',
-            padding: '12px 16px',
-            borderRadius: '12px',
-            fontSize: '13px',
-            marginBottom: '20px'
-          }}>
+          <div className="rounded-[12px] bg-error/10 border-[1.5px] border-error/25 px-5 py-4 text-[13px] text-error mb-6">
             {error}
           </div>
         )}
 
         {message && (
-          <div style={{
-            background: '#EAF3EC',
-            color: '#4A7C59',
-            padding: '12px 16px',
-            borderRadius: '12px',
-            fontSize: '13px',
-            marginBottom: '20px'
-          }}>
+          <div className="rounded-[12px] bg-success/10 border-[1.5px] border-success/25 px-5 py-4 text-[13px] text-success mb-6">
             {message}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: '#283618', marginBottom: '6px' }}>
-              Verification Code
-            </label>
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="mb-7">
+            <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Verification Code</label>
             <input
               type="text"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
-              required
               maxLength={6}
               placeholder="000000"
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                borderRadius: '12px',
-                border: '1px solid #D6CEB8',
-                fontSize: '20px',
-                letterSpacing: '0.3em',
-                textAlign: 'center',
-                outline: 'none'
-              }}
+              className={`w-full rounded-[12px] border-[2px] bg-cream px-5 py-4 text-[22px] text-forest text-center outline-none transition-colors ${
+                fieldErrors.otp ? 'border-error' : 'border-forest/15 focus:border-olive'
+              }`}
+              style={{ letterSpacing: '0.3em' }}
             />
+            <FieldError message={fieldErrors.otp} />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '14px',
-              borderRadius: '100px',
-              background: '#606C38',
-              color: '#FEFAE0',
-              border: 'none',
-              fontSize: '13px',
-              fontWeight: 500,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1,
-              marginBottom: '16px'
-            }}
+            className="w-full rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-[16px] hover:bg-forest transition-colors disabled:opacity-70 disabled:cursor-not-allowed mb-4"
           >
             {loading ? <Loader size="sm" color="cream" /> : 'Verify Account'}
           </button>
@@ -176,16 +133,7 @@ function VerifyForm() {
         <button
           onClick={handleResend}
           disabled={resending}
-          style={{
-            width: '100%',
-            padding: '12px',
-            background: 'transparent',
-            border: 'none',
-            color: '#606C38',
-            fontSize: '13px',
-            cursor: resending ? 'not-allowed' : 'pointer',
-            textAlign: 'center'
-          }}
+          className="w-full py-3 text-center text-[13px] font-bold text-olive hover:underline disabled:cursor-not-allowed"
         >
           {resending ? <Loader size="sm" color="olive" /> : "Didn't get a code? Resend"}
         </button>

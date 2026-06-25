@@ -4,22 +4,13 @@ import { useState, useEffect } from 'react'
 import Loader from '@/components/Loader'
 import ConfirmModal from '@/components/ConfirmModal'
 import AdminEmptyState from '@/components/AdminEmptyState'
+import StarRating from '@/components/StarRating'
 
 const FILTER_OPTIONS = [
   { key: '', label: 'All' },
   { key: 'pending', label: 'Pending' },
   { key: 'approved', label: 'Approved' },
 ]
-
-function StarRating({ rating }) {
-  return (
-    <div className="flex gap-0.5 leading-none">
-      {[1, 2, 3, 4, 5].map(n => (
-        <span key={n} className="text-[16px]" style={{ color: n <= rating ? '#606C38' : '#D6CEB8' }}>★</span>
-      ))}
-    </div>
-  )
-}
 
 export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState([])
@@ -123,17 +114,17 @@ export default function AdminReviewsPage() {
                   <p className="text-[12px] text-forest/50">by {review.userId?.name} · {review.userId?.email}</p>
                 </div>
                 <span
-                  className="flex-shrink-0 inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide"
-                  style={review.isApproved
-                    ? { background: '#E3F2E8', color: '#4A7C59' }
-                    : { background: '#FFF3CD', color: '#8A6D00' }
-                  }
+                  className={`flex-shrink-0 inline-flex rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wide border-[1.5px] ${
+                    review.isApproved
+                      ? 'bg-success/15 text-success border-success/30'
+                      : 'bg-cream text-forest border-border'
+                  }`}
                 >
                   {review.isApproved ? 'Approved' : 'Pending'}
                 </span>
               </div>
 
-              <StarRating rating={review.rating} />
+              <StarRating rating={review.rating} size={16} />
               <p className="text-[14px] text-forest leading-relaxed mt-3 mb-5">{review.comment}</p>
 
               <div className="flex gap-2.5 pt-4 border-t-[1.5px] border-border">
