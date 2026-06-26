@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
+import Link from 'next/link'
 
 const STORAGE_KEY = 'ewa-sage-conversation'
 const MAX_MESSAGES_PER_SESSION = 20
@@ -31,9 +32,32 @@ function SendIcon(props) {
   )
 }
 
+function HistoryIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-7 3.5L3 8" />
+      <path d="M3 4v4h4" /><path d="M12 7v5l3 2" />
+    </svg>
+  )
+}
+
+function BackIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M15 6l-6 6 6 6" />
+    </svg>
+  )
+}
+
+function getFirstName(fullName) {
+  if (!fullName) return ''
+  return fullName.trim().split(' ')[0]
+}
+
 function getGreeting(userName) {
-  return userName
-    ? `Hi ${userName}, I'm Sage — your EWA skincare advisor. My mission is to help your skin glow. What's on your mind today?`
+  const firstName = getFirstName(userName)
+  return firstName
+    ? `Hi ${firstName}, I'm Sage — your EWA skincare advisor. My mission is to help your skin glow. What's on your mind today?`
     : `Hi, I'm Sage — your EWA skincare advisor. My mission is to help your skin glow. What's on your mind today?`
 }
 
@@ -43,9 +67,108 @@ const QUICK_PROMPTS = [
   "What's the difference between AM and PM skincare?",
 ]
 
+function linkifyProducts(text, products) {
+  if (!products || products.length === 0) return text
+  const sorted = [...products].sort((a, b) => b.name.length - a.name.length)
+  let segments = [text]
+
+  for (const product of sorted) {
+    const next = []
+    for (const segment of segments) {
+      if (typeof segment !== 'string') {
+        next.push(segment)
+        continue
+      }
+      const parts = segment.split(product.name)
+      parts.forEach((part, i) => {
+        next.push(part)
+        if (i < parts.length - 1) {
+          next.push(
+            <Link
+              key={`${product.slug}-${Math.random()}`}
+              href={`/shop/${product.slug}`}
+              className="font-bold text-olive underline hover:text-forest"
+            >
+              {product.name}
+            </Link>
+          )
+        }
+      })
+    }
+    segments = next
+  }
+  return segments
+}
+
+function renderInline(text, products) {
+  let cleaned = text
+  if (products && products.length > 0) {
+    for (const product of products) {
+      const boldedName = `**${product.name}**`
+      if (cleaned.includes(boldedName)) {
+        cleaned = cleaned.split(boldedName).join(product.name)
+      }
+    }
+  }
+
+  const boldParts = cleaned.split(/(\*\*[^*]+\*\*)/g)
+  const withBold = boldParts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} className="font-bold">{part.slice(2, -2)}</strong>
+    }
+    return part
+  })
+
+  return withBold.flatMap((piece) => {
+    if (typeof piece !== 'string') return [piece]
+    const linked = linkifyProducts(piece, products)
+    return Array.isArray(linked) ? linked : [linked]
+  })
+}
+
+function renderFormattedText(content, products = []) {
+  const lines = content.split('\n')
+  const elements = []
+  let currentList = []
+
+  const flushList = () => {
+    if (currentList.length > 0) {
+      elements.push(
+        <ul key={`list-${elements.length}`} className="list-disc pl-4 my-1.5 flex flex-col gap-1">
+          {currentList.map((item, i) => (
+            <li key={i}>{renderInline(item, products)}</li>
+          ))}
+        </ul>
+      )
+      currentList = []
+    }
+  }
+
+  lines.forEach((line, i) => {
+    const trimmed = line.trim()
+    if (trimmed.startsWith('- ')) {
+      currentList.push(trimmed.slice(2))
+    } else {
+      flushList()
+      if (trimmed) {
+        elements.push(<p key={`line-${i}`} className="mb-1.5 last:mb-0">{renderInline(trimmed, products)}</p>)
+      }
+    }
+  })
+  flushList()
+
+  return elements
+}
+
 export default function SageChatWidget() {
-  const { data: session } = useSession()
+  const { data: session, status: sessionStatus } = useSession()
+  const isLoggedIn = sessionStatus === 'authenticated'
+  const userName = session?.user?.name
+
   const [isOpen, setIsOpen] = useState(false)
+  // 'chat' = actively viewing/typing in a conversation, 'history' = browsing past conversations list
+  const [view, setView] = useState('chat')
+
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
@@ -53,11 +176,37 @@ export default function SageChatWidget() {
   const messagesEndRef = useRef(null)
   const hasInitialized = useRef(false)
 
-  const userName = session?.user?.name
+  // Only meaningful for logged-in users: null means "new, unsaved conversation"
+  const [activeConversationId, setActiveConversationId] = useState(null)
+  const [pastConversations, setPastConversations] = useState([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
 
+  // --- Initial load ---
   useEffect(() => {
     if (hasInitialized.current) return
     hasInitialized.current = true
+
+    if (isLoggedIn) {
+      // If a guest had a real conversation going before logging in, carry it
+      // forward as their first saved conversation instead of silently
+      // discarding it. A guest who only ever saw the unsent greeting (no real
+      // exchange) just gets a fresh start, same as before.
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY)
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          const hadRealConversation = Array.isArray(parsed) && parsed.some(m => m.role === 'user')
+          if (hadRealConversation) {
+            setMessages(parsed)
+            localStorage.removeItem(STORAGE_KEY)
+            return
+          }
+        }
+      } catch (err) {}
+
+      setMessages([{ role: 'assistant', content: getGreeting(userName), products: [] }])
+      return
+    }
 
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
@@ -68,25 +217,99 @@ export default function SageChatWidget() {
           return
         }
       }
-    } catch (err) {
-      // Corrupt or missing localStorage data — fall through to fresh greeting
-    }
+    } catch (err) {}
 
-    setMessages([{ role: 'assistant', content: getGreeting(userName) }])
-  }, [userName])
+    setMessages([{ role: 'assistant', content: getGreeting(userName), products: [] }])
+  }, [isLoggedIn, userName])
 
+  // --- Persist to localStorage, guests only ---
   useEffect(() => {
-    if (messages.length === 0) return
+    if (isLoggedIn || messages.length === 0) return
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
-    } catch (err) {
-      // localStorage may be full or unavailable (private browsing) — fail silently
-    }
-  }, [messages])
+    } catch (err) {}
+  }, [messages, isLoggedIn])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isOpen])
+  }, [messages, isOpen, view])
+
+  const fetchPastConversations = async () => {
+    setLoadingHistory(true)
+    try {
+      const res = await fetch('/api/conversations')
+      const data = await res.json()
+      setPastConversations(data.conversations || [])
+    } catch (err) {
+      console.error('Failed to load conversation history')
+    }
+    setLoadingHistory(false)
+  }
+
+  const openHistory = () => {
+    setView('history')
+    fetchPastConversations()
+  }
+
+  const openPastConversation = async (id) => {
+    try {
+      const res = await fetch(`/api/conversations/${id}`)
+      const data = await res.json()
+      if (res.ok) {
+        setMessages(data.conversation.messages)
+        setActiveConversationId(id)
+        setView('chat')
+      }
+    } catch (err) {
+      setError('Could not load that conversation')
+    }
+  }
+
+  const startNewChat = () => {
+    setMessages([{ role: 'assistant', content: getGreeting(userName), products: [] }])
+    setActiveConversationId(null)
+    setError('')
+    setView('chat')
+    if (!isLoggedIn) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([{ role: 'assistant', content: getGreeting(userName), products: [] }]))
+      } catch (err) {}
+    }
+  }
+
+  // Persists the current message array to the database for logged-in users —
+  // creating a new ChatConversation on the very first real exchange if one
+  // doesn't exist yet, otherwise updating the existing one.
+  const persistConversation = async (updatedMessages, firstUserMessage) => {
+    if (!isLoggedIn) return
+
+    try {
+      if (!activeConversationId) {
+        const createRes = await fetch('/api/conversations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ firstMessage: firstUserMessage })
+        })
+        const createData = await createRes.json()
+        if (createRes.ok) {
+          setActiveConversationId(createData.conversation._id)
+          await fetch(`/api/conversations/${createData.conversation._id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: updatedMessages })
+          })
+        }
+      } else {
+        await fetch(`/api/conversations/${activeConversationId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: updatedMessages })
+        })
+      }
+    } catch (err) {
+      console.error('Failed to save conversation')
+    }
+  }
 
   const sendMessage = async (text) => {
     const trimmed = text.trim()
@@ -99,12 +322,12 @@ export default function SageChatWidget() {
     }
 
     setError('')
+    const isFirstUserMessage = userMessageCount === 0
     const newMessages = [...messages, { role: 'user', content: trimmed }]
     setMessages(newMessages)
     setInput('')
     setStreaming(true)
-
-    setMessages(prev => [...prev, { role: 'assistant', content: '' }])
+    setMessages(prev => [...prev, { role: 'assistant', content: '', products: [] }])
 
     try {
       const res = await fetch('/api/chat', {
@@ -120,21 +343,44 @@ export default function SageChatWidget() {
 
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
+      let rawBuffer = ''
       let fullReply = ''
+      let parsedProducts = []
+      let headerExtracted = false
+      let finalMessages = newMessages
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
 
         const chunk = decoder.decode(value, { stream: true })
-        fullReply += chunk
+
+        if (!headerExtracted) {
+          rawBuffer += chunk
+          const match = rawBuffer.match(/^__PRODUCTS__(.*?)__END_PRODUCTS__/s)
+          if (match) {
+            try {
+              parsedProducts = JSON.parse(match[1])
+            } catch (e) {
+              parsedProducts = []
+            }
+            headerExtracted = true
+            fullReply = rawBuffer.slice(match[0].length)
+          }
+          if (!headerExtracted) continue
+        } else {
+          fullReply += chunk
+        }
 
         setMessages(prev => {
           const updated = [...prev]
-          updated[updated.length - 1] = { role: 'assistant', content: fullReply }
+          updated[updated.length - 1] = { role: 'assistant', content: fullReply, products: parsedProducts }
+          finalMessages = updated
           return updated
         })
       }
+
+      await persistConversation(finalMessages, isFirstUserMessage ? trimmed : null)
 
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.')
@@ -149,100 +395,138 @@ export default function SageChatWidget() {
     sendMessage(input)
   }
 
-  const startNewChat = () => {
-    const fresh = [{ role: 'assistant', content: getGreeting(userName) }]
-    setMessages(fresh)
-    setError('')
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh))
-    } catch (err) {}
-  }
-
   return (
     <>
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? 'Close Sage chat' : 'Open Sage chat'}
-        style={{ position: 'fixed', bottom: '80px', right: '24px', zIndex: 55 }}
-        className="w-12 h-12 rounded-full bg-olive text-cream shadow-[0_8px_24px_-4px_rgba(40,54,24,0.45)] flex items-center justify-center hover:bg-forest transition-colors"
+        style={{ position: 'fixed', bottom: '88px', right: '24px', zIndex: 55 }}
+        className="w-14 h-14 rounded-full bg-olive text-cream shadow-[0_12px_32px_-8px_rgba(40,54,24,0.4)] flex items-center justify-center hover:bg-forest transition-colors"
       >
         {isOpen ? <CloseIcon className="w-6 h-6" /> : <SageIcon className="w-6 h-6" />}
       </button>
 
       {isOpen && (
-        <div style={{ position: 'fixed', bottom: '160px', right: '24px', zIndex: 55 }} className="w-[92vw] max-w-[380px] h-[560px] max-h-[75vh] rounded-[24px] border-[1.5px] border-border bg-cream shadow-[0_24px_64px_-12px_rgba(40,54,24,0.35)] flex flex-col overflow-hidden">
+        <div
+          style={{ position: 'fixed', bottom: '156px', right: '24px', zIndex: 55 }}
+          className="w-[92vw] max-w-[380px] h-[560px] max-h-[70vh] rounded-[24px] border-[1.5px] border-border bg-cream shadow-[0_24px_64px_-12px_rgba(40,54,24,0.35)] flex flex-col overflow-hidden"
+        >
 
           {/* HEADER */}
           <div className="bg-forest px-5 py-4 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-cream/10 flex items-center justify-center">
-                <SageIcon className="w-4 h-4 text-cream" />
-              </div>
-              <p className="font-display font-bold text-cream text-[16px]">Sage</p>
+              {view === 'history' ? (
+                <button onClick={() => setView('chat')} aria-label="Back to chat" className="text-cream hover:text-cream/70 transition-colors">
+                  <BackIcon className="w-5 h-5" />
+                </button>
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-cream/10 flex items-center justify-center">
+                  <SageIcon className="w-4 h-4 text-cream" />
+                </div>
+              )}
+              <p className="font-display font-bold text-cream text-[16px]">
+                {view === 'history' ? 'Your Conversations' : 'Sage'}
+              </p>
             </div>
-            <button
-              onClick={startNewChat}
-              className="text-cream/60 text-[12px] font-bold uppercase tracking-wide hover:text-cream transition-colors"
-            >
-              New Chat
-            </button>
+
+            <div className="flex items-center gap-3">
+              {isLoggedIn && view === 'chat' && (
+                <button onClick={openHistory} aria-label="View past conversations" className="text-cream/60 hover:text-cream transition-colors">
+                  <HistoryIcon className="w-[18px] h-[18px]" />
+                </button>
+              )}
+              {view === 'chat' && (
+                <button
+                  onClick={startNewChat}
+                  className="text-cream/60 text-[12px] font-bold uppercase tracking-wide hover:text-cream transition-colors"
+                >
+                  New Chat
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* MESSAGES */}
-          <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-3">
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`max-w-[85%] px-4 py-2.5 rounded-[16px] text-[14px] leading-relaxed whitespace-pre-wrap ${
-                  msg.role === 'user'
-                    ? 'self-end bg-olive text-cream rounded-br-[4px]'
-                    : 'self-start bg-surface border-[1.5px] border-border text-forest rounded-bl-[4px]'
-                }`}
-              >
-                {msg.content || (streaming && i === messages.length - 1 ? '···' : '')}
-              </div>
-            ))}
-
-            {messages.length <= 1 && !streaming && (
-              <div className="flex flex-col gap-2 mt-2">
-                {QUICK_PROMPTS.map(prompt => (
+          {/* HISTORY VIEW */}
+          {view === 'history' ? (
+            <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-2">
+              {loadingHistory ? (
+                <p className="text-[13px] text-forest/50 text-center py-8">Loading...</p>
+              ) : pastConversations.length === 0 ? (
+                <p className="text-[13px] text-forest/50 text-center py-8">No past conversations yet.</p>
+              ) : (
+                pastConversations.map(conv => (
                   <button
-                    key={prompt}
-                    onClick={() => sendMessage(prompt)}
-                    className="self-start text-left px-4 py-2.5 rounded-[14px] border-[1.5px] border-border bg-surface text-[13px] text-forest/80 hover:border-olive transition-colors"
+                    key={conv._id}
+                    onClick={() => openPastConversation(conv._id)}
+                    className="text-left px-4 py-3 rounded-[14px] border-[1.5px] border-border bg-surface hover:border-olive transition-colors"
                   >
-                    {prompt}
+                    <p className="text-[13px] font-medium text-forest truncate">{conv.title}</p>
+                    <p className="text-[11px] text-forest/45 mt-0.5">
+                      {new Date(conv.updatedAt).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
                   </button>
+                ))
+              )}
+            </div>
+          ) : (
+            <>
+              {/* MESSAGES */}
+              <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-3">
+                {messages.map((msg, i) => (
+                  <div
+                    key={i}
+                    className={`max-w-[85%] px-4 py-2.5 rounded-[16px] text-[14px] leading-relaxed ${
+                      msg.role === 'user'
+                        ? 'self-end bg-olive text-cream rounded-br-[4px]'
+                        : 'self-start bg-surface border-[1.5px] border-border text-forest rounded-bl-[4px]'
+                    }`}
+                  >
+                    {msg.content
+                      ? renderFormattedText(msg.content, msg.products)
+                      : (streaming && i === messages.length - 1 ? '···' : '')}
+                  </div>
                 ))}
+
+                {messages.length <= 1 && !streaming && (
+                  <div className="flex flex-col gap-2 mt-2">
+                    {QUICK_PROMPTS.map(prompt => (
+                      <button
+                        key={prompt}
+                        onClick={() => sendMessage(prompt)}
+                        className="self-start text-left px-4 py-2.5 rounded-[14px] border-[1.5px] border-border bg-surface text-[13px] text-forest/80 hover:border-olive transition-colors"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {error && <p className="text-[12px] text-error px-1">{error}</p>}
+
+                <div ref={messagesEndRef} />
               </div>
-            )}
 
-            {error && (
-              <p className="text-[12px] text-error px-1">{error}</p>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* INPUT */}
-          <form onSubmit={handleSubmit} className="flex-shrink-0 border-t-[1.5px] border-border bg-surface p-3 flex items-center gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask Sage anything..."
-              disabled={streaming}
-              className="flex-1 rounded-full border-[1.5px] border-border bg-cream px-4 py-2.5 text-[14px] text-forest placeholder:text-forest/35 outline-none focus:border-olive transition-colors disabled:opacity-60"
-            />
-            <button
-              type="submit"
-              disabled={streaming || !input.trim()}
-              aria-label="Send message"
-              className="flex-shrink-0 w-10 h-10 rounded-full bg-olive text-cream flex items-center justify-center hover:bg-forest transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <SendIcon className="w-4 h-4" />
-            </button>
-          </form>
+              {/* INPUT */}
+              <form onSubmit={handleSubmit} className="flex-shrink-0 border-t-[1.5px] border-border bg-surface p-3 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask Sage anything..."
+                  disabled={streaming}
+                  className="flex-1 rounded-full border-[1.5px] border-border bg-cream px-4 py-2.5 text-[14px] text-forest placeholder:text-forest/35 outline-none focus:border-olive transition-colors disabled:opacity-60"
+                />
+                <button
+                  type="submit"
+                  disabled={streaming || !input.trim()}
+                  aria-label="Send message"
+                  className="flex-shrink-0 w-10 h-10 rounded-full bg-olive text-cream flex items-center justify-center hover:bg-forest transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <SendIcon className="w-4 h-4" />
+                </button>
+              </form>
+            </>
+          )}
         </div>
       )}
     </>

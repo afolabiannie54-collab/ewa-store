@@ -1,4 +1,5 @@
 import { getCurrentUser } from '@/lib/auth'
+import { findRelevantProducts } from '@/lib/chatProductMatch'
 import { NextResponse } from 'next/server'
 
 const SAGE_SYSTEM_PROMPT = `You are Sage, the friendly AI skincare advisor for EWA, a Nigerian skincare brand. Your mission is to help people's skin glow.
@@ -10,7 +11,9 @@ Personality and tone:
 
 Hard rules:
 - Never invent or hallucinate a product, purchase, promo code, or fact about EWA that you have not been explicitly given in this conversation's context. If you don't have real information about something, say so honestly rather than making it up.
-- If product recommendations are relevant and you have NOT been given a real product list in context, give general skincare advice only — do not name specific invented EWA products.
+- If you have been given a list of real EWA products below, you may recommend them by their EXACT name when relevant to what the user is asking. Mention the exact product name plainly in your response (do not abbreviate or rephrase it) so it can be linked automatically.
+- If you have NOT been given any product list, or none of the given products are actually relevant to this specific question, give general skincare advice only — do not invent or name any EWA product.
+- Never recommend a product that is out of stock without mentioning that it's currently unavailable.
 - Be encouraging about skincare routines, never pushy or salesy. Checking in on how something is working for someone is welcome; aggressive upselling is not.
 - Keep advice general and educational. For serious skin conditions, gently suggest seeing a dermatologist rather than diagnosing anything yourself.`
 
@@ -28,9 +31,22 @@ export async function POST(req) {
 
     const user = await getCurrentUser()
 
+    const latestUserMessage = [...messages].reverse().find(m => m.role === 'user')
+    const relevantProducts = latestUserMessage
+      ? await findRelevantProducts(latestUserMessage.content)
+      : []
+
     const input = [
       { role: 'system', content: SAGE_SYSTEM_PROMPT },
-      ...(user ? [{ role: 'system', content: `The current user is logged in. Their name is ${user.name}. You may greet them by name.` }] : []),
+      ...(user ? [{ role: 'system', content: `The current user is logged in. Their first name is ${user.name?.trim().split(' ')[0] || user.name}. Address them by this first name only, not their full name.` }] : []),
+      ...(relevantProducts.length > 0
+        ? [{
+            role: 'system',
+            content: `Here are real EWA products relevant to this conversation. Only recommend from this list — never invent others:\n${relevantProducts.map(p =>
+              `- ${p.name} (${p.category}): ${p.description} — From ₦${p.startingPrice.toLocaleString()}${p.inStock ? '' : ' [OUT OF STOCK]'}`
+            ).join('\n')}`
+          }]
+        : []),
       ...messages.map(m => ({ role: m.role, content: m.content }))
     ]
 
@@ -59,6 +75,14 @@ export async function POST(req) {
 
     const stream = new ReadableStream({
       async start(controller) {
+        // Send the matched product list first, as a single JSON line, so the
+        // client knows exactly which real products to turn into links —
+        // before any of the actual streamed reply text arrives.
+        const productHeader = JSON.stringify(
+          relevantProducts.map(p => ({ name: p.name, slug: p.slug }))
+        )
+        controller.enqueue(encoder.encode(`__PRODUCTS__${productHeader}__END_PRODUCTS__`))
+
         const reader = openaiRes.body.getReader()
         let buffer = ''
 

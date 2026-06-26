@@ -76,7 +76,7 @@ export default function AccountPage() {
       const res = await fetch('/api/users/me', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...profile, currentPassword: profilePassword })
+        body: JSON.stringify({ ...profile, name: profile.name.trim(), email: profile.email.trim(), currentPassword: profilePassword })
       })
       const data = await res.json()
 

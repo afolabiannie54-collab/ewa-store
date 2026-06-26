@@ -83,10 +83,16 @@ function RegisterForm() {
     setLoading(true)
 
     try {
+      const cleanedForm = {
+        ...form,
+        name: form.name.trim(),
+        email: form.email.trim()
+      }
+
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+        body: JSON.stringify(cleanedForm)
       })
 
       const data = await res.json()
