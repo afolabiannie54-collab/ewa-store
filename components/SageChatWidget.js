@@ -163,13 +163,14 @@ export default function SageChatWidget() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? 'Close Sage chat' : 'Open Sage chat'}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-olive text-cream shadow-[0_12px_32px_-8px_rgba(40,54,24,0.4)] flex items-center justify-center hover:bg-forest transition-colors"
+        style={{ position: 'fixed', bottom: '80px', right: '24px', zIndex: 55 }}
+        className="w-12 h-12 rounded-full bg-olive text-cream shadow-[0_8px_24px_-4px_rgba(40,54,24,0.45)] flex items-center justify-center hover:bg-forest transition-colors"
       >
         {isOpen ? <CloseIcon className="w-6 h-6" /> : <SageIcon className="w-6 h-6" />}
       </button>
 
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-40 w-[92vw] max-w-[380px] h-[560px] max-h-[75vh] rounded-[24px] border-[1.5px] border-border bg-cream shadow-[0_24px_64px_-12px_rgba(40,54,24,0.35)] flex flex-col overflow-hidden">
+        <div style={{ position: 'fixed', bottom: '160px', right: '24px', zIndex: 55 }} className="w-[92vw] max-w-[380px] h-[560px] max-h-[75vh] rounded-[24px] border-[1.5px] border-border bg-cream shadow-[0_24px_64px_-12px_rgba(40,54,24,0.35)] flex flex-col overflow-hidden">
 
           {/* HEADER */}
           <div className="bg-forest px-5 py-4 flex items-center justify-between flex-shrink-0">
