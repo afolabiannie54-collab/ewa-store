@@ -257,7 +257,17 @@ export default function SageChatWidget() {
         }
       } catch (err) {}
 
-      setMessages([{ role: 'assistant', content: getGreeting(userName), products: [] }])
+      const loadPersonalizedGreeting = async () => {
+        try {
+          const greetingRes = await fetch('/api/chat/greeting')
+          const greetingData = await greetingRes.json()
+          const finalGreeting = greetingData.greeting || getGreeting(userName)
+          setMessages([{ role: 'assistant', content: finalGreeting, products: [] }])
+        } catch (err) {
+          setMessages([{ role: 'assistant', content: getGreeting(userName), products: [] }])
+        }
+      }
+      loadPersonalizedGreeting()
       return
     }
 
