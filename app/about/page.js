@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import Image from 'next/image'
+import AboutGallery from '@/components/AboutGallery'
 
 export const metadata = {
   title: 'Our Story — EWA Skincare',
@@ -51,69 +53,292 @@ export default function AboutPage() {
     },
   ]
 
+
   return (
     <div className="bg-cream">
+      <style>{`
+        @media (max-width: 1023px) {
+          .sage-mockup-card { transform: none !important; }
+        }
+        .lg-grid-title-desc {
+          display: block;
+        }
+        @media (min-width: 1024px) {
+          .lg-grid-title-desc {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            align-items: baseline;
+            gap: 0 48px;
+          }
+        }
+      `}</style>
 
       {/* HERO */}
-      <section className="max-w-[840px] mx-auto px-6 pt-20 md:pt-28 pb-16 text-center">
-        <p className="text-[14px] font-bold uppercase tracking-[0.2em] text-olive mb-4">
-          Our Story
-        </p>
-        <h1 className="font-display font-bold text-forest text-[40px] md:text-[56px] leading-[1.05] mb-8" style={{ letterSpacing: '-0.02em' }}>
-          Built for Nigerian skin, in Nigerian heat
-        </h1>
-        <p className="text-[18px] text-forest/70 leading-relaxed">
-          Most skincare is formulated somewhere cold and dry, then shipped here and hoped for the best. We started from the opposite direction.
-        </p>
-      </section>
+      <section className="bg-forest min-h-screen flex items-center">
+        <div className="w-full max-w-[1320px] mx-auto px-6 md:px-12 py-20 lg:py-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
-      {/* BODY COPY */}
-      <section className="max-w-[680px] mx-auto px-6 pb-20 md:pb-28">
-        <div className="flex flex-col gap-6 text-[17px] text-forest/80 leading-relaxed">
-          <p>
-            Lagos heat doesn&apos;t behave like a skincare lab in a temperate climate. Humidity sits on your skin all day. The sun is relentless and direct. And melanin-rich skin responds to active ingredients, sun exposure, and hyperpigmentation differently than the skin most global skincare brands formulate for by default.
-          </p>
-          <p>
-            EWA exists because that gap is real, and ignoring it doesn&apos;t make it disappear — it just shows up later as breakouts, dullness, or products that simply stop working halfway through the day. So every formula starts with two questions before anything else: how will this actually perform in Lagos heat, and how will this actually treat melanin-rich skin?
-          </p>
-          <p>
-            That&apos;s the whole philosophy. No padded ingredient lists, no borrowed routines from somewhere else. Just skincare built deliberately for the people actually wearing it, in the climate they actually live in.
-          </p>
-        </div>
-      </section>
+            <div>
+              <p className="text-cream/50 text-[13px] font-bold uppercase tracking-[0.2em] mb-5">Our Story</p>
+              <h1 className="font-display font-bold text-cream text-[44px] md:text-[60px] lg:text-[68px] leading-[1.02] mb-8" style={{ letterSpacing: '-0.02em' }}>
+                Built for Nigerian skin, in Nigerian heat
+              </h1>
+              <Link
+                href="/shop"
+                className="inline-block w-fit rounded-full bg-cream text-forest text-[14px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-olive hover:text-cream transition-colors"
+              >
+                Explore Our Products
+              </Link>
+            </div>
 
-      {/* VALUE PILLARS */}
-      <section className="bg-forest">
-        <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-20">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8">
-            {pillars.map((pillar, i) => (
-              <div key={i} className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-cream/10 text-cream flex items-center justify-center mb-4">
-                  {pillar.icon}
-                </div>
-                <p className="font-display font-bold text-cream text-[16px] mb-2">
-                  {pillar.title}
-                </p>
-                <p className="text-[14px] text-cream/60 leading-relaxed max-w-[220px]">
-                  {pillar.description}
-                </p>
-              </div>
-            ))}
+            <div
+              className="relative w-full overflow-hidden"
+              style={{ height: '70vh', minHeight: '420px', borderRadius: '32px' }}
+            >
+              <Image
+                src="/about/hero.jpg"
+                alt="EWA skincare lifestyle"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
+              />
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="max-w-[840px] mx-auto px-6 py-20 md:py-28 text-center">
-        <h2 className="font-display font-bold text-forest text-[28px] md:text-[36px] mb-6">
-          Ready to see for yourself?
-        </h2>
-        <Link
-          href="/shop"
-          className="inline-block rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors"
-        >
-          Shop The Range
-        </Link>
+      {/* OUR PHILOSOPHY */}
+      <section className="max-w-[720px] mx-auto px-6 py-24 md:py-32 text-center">
+        <p className="text-olive text-[13px] font-bold uppercase tracking-[0.2em] mb-6">Our Philosophy</p>
+        <p className="font-display font-bold text-forest text-[28px] md:text-[36px] leading-[1.3]" style={{ letterSpacing: '-0.01em' }}>
+          We believe skincare should adapt to the skin and climate it's actually made for — not the other way around.
+        </p>
+      </section>
+
+      {/* THE STORY — half and half */}
+      <section className="max-w-[1320px] mx-auto px-6 md:px-12 py-24 md:py-32">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-center">
+
+          <div
+            className="relative w-full overflow-hidden"
+            style={{ aspectRatio: '4/5', borderRadius: '28px' }}
+          >
+            <Image
+              src="/about/story.jpg"
+              alt="EWA skincare ingredients and process"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+            />
+          </div>
+
+          <div>
+            <p className="text-olive text-[13px] font-bold uppercase tracking-[0.2em] mb-5">The Story</p>
+            <h2 className="font-display font-bold text-forest leading-[1.05] mb-8" style={{ fontSize: 'clamp(36px, 4vw, 54px)', letterSpacing: '-0.02em' }}>
+              Most skincare wasn't made with us in mind
+            </h2>
+            <div className="flex flex-col gap-5 text-forest/70" style={{ fontSize: '17px', lineHeight: '1.75' }}>
+              <p>
+                Lagos heat doesn't behave like a skincare lab in a temperate climate. Humidity sits on your skin all day. The sun is relentless and direct. And melanin-rich skin responds to active ingredients, sun exposure, and hyperpigmentation differently than the skin most global skincare brands formulate for by default.
+              </p>
+              <p>
+                EWA exists because that gap is real, and ignoring it doesn't make it disappear — it just shows up later as breakouts, dullness, or products that simply stop working halfway through the day. So every formula starts with two questions before anything else: how will this actually perform in Lagos heat, and how will this actually treat melanin-rich skin?
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+      <AboutGallery />
+
+      {/* PILLARS — editorial typographic list */}
+      <section className="bg-forest">
+        <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-20 md:py-28">
+
+          <div style={{ marginBottom: '80px' }}>
+            <p style={{ color: 'rgba(254,250,224,0.4)', fontSize: '13px', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '16px' }}>
+              What We Stand For
+            </p>
+            <h2
+              className="font-display font-bold text-cream"
+              style={{ fontSize: 'clamp(36px, 5vw, 64px)', letterSpacing: '-0.02em', lineHeight: '1.05' }}
+            >
+              Built on a few<br />simple rules
+            </h2>
+          </div>
+
+          <div>
+            {pillars.map((pillar, i) => (
+              <div
+                key={i}
+                style={{
+                  borderTop: '1px solid rgba(254,250,224,0.12)',
+                  padding: 'clamp(28px, 4vw, 44px) 0',
+                  display: 'grid',
+                  gridTemplateColumns: 'clamp(48px, 6vw, 80px) 1fr',
+                  gap: 'clamp(16px, 3vw, 48px)',
+                  alignItems: 'start',
+                }}
+              >
+                <span
+                  className="font-display font-bold"
+                  style={{ fontSize: 'clamp(32px, 4vw, 56px)', color: 'rgba(254,250,224,0.22)', lineHeight: 1 }}
+                >
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div className="lg-grid-title-desc">
+                  <h3
+                    className="font-display font-bold text-cream"
+                    style={{ fontSize: 'clamp(18px, 2vw, 26px)', letterSpacing: '-0.01em', marginBottom: '8px' }}
+                  >
+                    {pillar.title}
+                  </h3>
+                  <p style={{ fontSize: '15px', lineHeight: '1.75', color: 'rgba(254,250,224,0.6)', maxWidth: '400px' }}>
+                    {pillar.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+            <div style={{ borderTop: '1px solid rgba(254,250,224,0.12)' }} />
+          </div>
+
+        </div>
+      </section>
+
+      {/* SAGE TEASER */}
+      <section style={{ background: 'linear-gradient(140deg, #384c17 0%, #4f6425 45%, #627c30 100%)', padding: 'clamp(72px, 10vw, 100px) 0 clamp(80px, 12vw, 120px)' }}>
+        <div className="max-w-[1320px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+
+            {/* Left: text */}
+            <div>
+              <p style={{ color: 'rgba(254,250,224,0.5)', fontSize: '13px', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '20px' }}>
+                Meet Sage
+              </p>
+              <h2
+                className="font-display font-bold text-cream"
+                style={{ fontSize: 'clamp(36px, 4.5vw, 58px)', letterSpacing: '-0.02em', lineHeight: '1.06', marginBottom: '24px' }}
+              >
+                Your personal skincare advisor, always on
+              </h2>
+              <p style={{ fontSize: '17px', lineHeight: '1.8', color: 'rgba(254,250,224,0.62)', marginBottom: '44px', maxWidth: '420px' }}>
+                Whether it's a specific skin concern or just figuring out where to start — Sage is warm, knowledgeable, and right there in the corner of your screen.
+              </p>
+              <button
+                style={{ display: 'inline-flex', alignItems: 'center', background: '#FEFAE0', color: '#384c17', fontSize: '14px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '14px 32px', borderRadius: '999px', border: 'none', cursor: 'pointer' }}
+              >
+                Chat with Sage
+              </button>
+            </div>
+
+            {/* Right: chat mockup */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', paddingTop: '16px', paddingBottom: '16px' }}>
+              <div className="sage-mockup-card" style={{ width: '100%', maxWidth: '400px', background: 'white', borderRadius: '24px', boxShadow: '0 48px 120px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)', overflow: 'hidden', transform: 'rotate(1.5deg)' }}>
+
+                {/* Header */}
+                <div style={{ background: '#384c17', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(254,250,224,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#FEFAE0" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
+                      <path d="M12 3c2 2.5 3 5 3 7.5a3 3 0 0 1-6 0C9 8 10 5.5 12 3Z" />
+                      <path d="M8 14c.5 2 2 4 4 4s3.5-2 4-4" />
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ color: '#FEFAE0', fontWeight: 700, fontSize: '14px', lineHeight: '1.2', margin: 0 }}>Sage</p>
+                    <p style={{ color: 'rgba(254,250,224,0.5)', fontSize: '11px', margin: 0 }}>EWA Skincare Advisor</p>
+                  </div>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#7dc95e' }} />
+                </div>
+
+                {/* Messages */}
+                <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: '14px', background: '#f7f6f0' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#4f6425', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#FEFAE0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '12px', height: '12px' }}>
+                        <path d="M12 3c2 2.5 3 5 3 7.5a3 3 0 0 1-6 0C9 8 10 5.5 12 3Z" />
+                        <path d="M8 14c.5 2 2 4 4 4s3.5-2 4-4" />
+                      </svg>
+                    </div>
+                    <div style={{ background: 'white', borderRadius: '4px 14px 14px 14px', padding: '11px 14px', fontSize: '13px', lineHeight: '1.55', color: '#2d3a14', maxWidth: '240px', boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
+                      Hi! I'm Sage. What's going on with your skin lately?
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ background: '#4f6425', borderRadius: '14px 4px 14px 14px', padding: '11px 14px', fontSize: '13px', lineHeight: '1.55', color: '#FEFAE0', maxWidth: '210px' }}>
+                      My skin gets so oily by noon
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#4f6425', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#FEFAE0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '12px', height: '12px' }}>
+                        <path d="M12 3c2 2.5 3 5 3 7.5a3 3 0 0 1-6 0C9 8 10 5.5 12 3Z" />
+                        <path d="M8 14c.5 2 2 4 4 4s3.5-2 4-4" />
+                      </svg>
+                    </div>
+                    <div style={{ background: 'white', borderRadius: '4px 14px 14px 14px', padding: '11px 14px', fontSize: '13px', lineHeight: '1.55', color: '#2d3a14', maxWidth: '240px', boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
+                      Lagos heat will do that. A lightweight gel moisturiser actually helps regulate oil — sounds counterintuitive, but it works.
+                    </div>
+                  </div>
+
+                  {/* Typing indicator */}
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#4f6425', flexShrink: 0 }} />
+                    <div style={{ background: 'white', borderRadius: '4px 14px 14px 14px', padding: '12px 16px', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', display: 'flex', gap: '5px', alignItems: 'center' }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(45,58,20,0.22)', display: 'inline-block' }} />
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(45,58,20,0.22)', display: 'inline-block' }} />
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(45,58,20,0.22)', display: 'inline-block' }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Input */}
+                <div style={{ padding: '14px 16px', borderTop: '1px solid #ede9dc', background: 'white', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ flex: 1, background: '#f5f3ec', borderRadius: '20px', padding: '10px 16px', fontSize: '13px', color: 'rgba(45,58,20,0.35)' }}>
+                    Ask Sage anything...
+                  </div>
+                  <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#4f6425', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#FEFAE0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '14px', height: '14px' }}>
+                      <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />
+                    </svg>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* CLOSING CTA */}
+      <section className="bg-forest" style={{ padding: 'clamp(80px, 12vw, 120px) 0 clamp(96px, 14vw, 140px)', overflow: 'hidden', position: 'relative' }}>
+        {/* Decorative concentric circles */}
+        <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: '700px', height: '700px', borderRadius: '50%', border: '1px solid rgba(254,250,224,0.05)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: '480px', height: '480px', borderRadius: '50%', border: '1px solid rgba(254,250,224,0.07)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: '260px', height: '260px', borderRadius: '50%', border: '1px solid rgba(254,250,224,0.09)', pointerEvents: 'none' }} />
+
+        <div className="max-w-[1320px] mx-auto px-6 md:px-12" style={{ position: 'relative', textAlign: 'center' }}>
+          <p style={{ color: 'rgba(254,250,224,0.4)', fontSize: '13px', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '32px' }}>
+            Shop EWA
+          </p>
+          <h2
+            className="font-display font-bold text-cream"
+            style={{ fontSize: 'clamp(52px, 9vw, 120px)', letterSpacing: '-0.03em', lineHeight: '0.95', marginBottom: '56px' }}
+          >
+            Ready to see<br />it for yourself?
+          </h2>
+          <Link
+            href="/shop"
+            className="inline-block rounded-full bg-cream text-forest font-bold uppercase hover:bg-olive hover:text-cream transition-colors"
+            style={{ fontSize: '14px', letterSpacing: '0.1em', padding: '16px 40px' }}
+          >
+            Shop The Range
+          </Link>
+        </div>
       </section>
 
     </div>
