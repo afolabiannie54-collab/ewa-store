@@ -178,6 +178,7 @@ export default function SageChatWidget() {
 
   // Only meaningful for logged-in users: null means "new, unsaved conversation"
   const [activeConversationId, setActiveConversationId] = useState(null)
+  const [rescuedFirstMessage, setRescuedFirstMessage] = useState(null)
   const [pastConversations, setPastConversations] = useState([])
   const [loadingHistory, setLoadingHistory] = useState(false)
 
@@ -195,9 +196,10 @@ export default function SageChatWidget() {
         const saved = localStorage.getItem(STORAGE_KEY)
         if (saved) {
           const parsed = JSON.parse(saved)
-          const hadRealConversation = Array.isArray(parsed) && parsed.some(m => m.role === 'user')
-          if (hadRealConversation) {
+          const firstUserMsg = Array.isArray(parsed) ? parsed.find(m => m.role === 'user') : null
+          if (firstUserMsg) {
             setMessages(parsed)
+            setRescuedFirstMessage(firstUserMsg.content)
             localStorage.removeItem(STORAGE_KEY)
             return
           }
@@ -268,6 +270,7 @@ export default function SageChatWidget() {
   const startNewChat = () => {
     setMessages([{ role: 'assistant', content: getGreeting(userName), products: [] }])
     setActiveConversationId(null)
+    setRescuedFirstMessage(null)
     setError('')
     setView('chat')
     if (!isLoggedIn) {
@@ -285,10 +288,11 @@ export default function SageChatWidget() {
 
     try {
       if (!activeConversationId) {
+        const titleSeed = rescuedFirstMessage || firstUserMessage
         const createRes = await fetch('/api/conversations', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ firstMessage: firstUserMessage })
+          body: JSON.stringify({ firstMessage: titleSeed })
         })
         const createData = await createRes.json()
         if (createRes.ok) {
