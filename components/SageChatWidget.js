@@ -6,6 +6,7 @@ import Link from 'next/link'
 
 const STORAGE_KEY = 'ewa-sage-conversation'
 const MAX_MESSAGES_PER_SESSION = 20
+const GUEST_NUDGE_THRESHOLD = 5
 
 function SageIcon(props) {
   return (
@@ -46,6 +47,23 @@ function BackIcon(props) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="M15 6l-6 6 6 6" />
     </svg>
+  )
+}
+
+function LoginNudgeMessage({ pathname }) {
+  const callbackParam = `?callbackUrl=${encodeURIComponent(pathname || '/')}`
+  return (
+    <p className="mb-1.5 last:mb-0">
+      Want me to remember this and give you more tailored advice next time? You can{' '}
+      <a href={`/login${callbackParam}`} className="font-bold text-olive underline hover:text-forest">
+        log in
+      </a>
+      {' '}or{' '}
+      <a href={`/register${callbackParam}`} className="font-bold text-olive underline hover:text-forest">
+        create an account
+      </a>
+      {' '}anytime.
+    </p>
   )
 }
 
@@ -325,6 +343,10 @@ export default function SageChatWidget() {
       return
     }
 
+    // After 5 guest exchanges, nudge toward logging in — once per conversation, not on every message after.
+    const shouldShowLoginNudge = !isLoggedIn && userMessageCount === GUEST_NUDGE_THRESHOLD
+      && !messages.some(m => m.isLoginNudge)
+
     setError('')
     const isFirstUserMessage = userMessageCount === 0
     const newMessages = [...messages, { role: 'user', content: trimmed }]
@@ -382,6 +404,10 @@ export default function SageChatWidget() {
           finalMessages = updated
           return updated
         })
+      }
+
+      if (shouldShowLoginNudge) {
+        setMessages(prev => [...prev, { role: 'assistant', content: '', products: [], isLoginNudge: true }])
       }
 
       await persistConversation(finalMessages, isFirstUserMessage ? trimmed : null)
@@ -485,9 +511,11 @@ export default function SageChatWidget() {
                         : 'self-start bg-surface border-[1.5px] border-border text-forest rounded-bl-[4px]'
                     }`}
                   >
-                    {msg.content
-                      ? renderFormattedText(msg.content, msg.products)
-                      : (streaming && i === messages.length - 1 ? '···' : '')}
+                    {msg.isLoginNudge
+                      ? <LoginNudgeMessage pathname={typeof window !== 'undefined' ? window.location.pathname : '/'} />
+                      : msg.content
+                        ? renderFormattedText(msg.content, msg.products)
+                        : (streaming && i === messages.length - 1 ? '···' : '')}
                   </div>
                 ))}
 
