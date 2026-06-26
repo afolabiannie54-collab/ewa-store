@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import ConfirmModal from '@/components/ConfirmModal'
 
 const STORAGE_KEY = 'ewa-sage-conversation'
 const MAX_MESSAGES_PER_SESSION = 20
@@ -46,6 +47,14 @@ function BackIcon(props) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="M15 6l-6 6 6 6" />
+    </svg>
+  )
+}
+
+function TrashIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0-1 13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7" />
     </svg>
   )
 }
@@ -198,6 +207,8 @@ export default function SageChatWidget() {
   const [activeConversationId, setActiveConversationId] = useState(null)
   const [pastConversations, setPastConversations] = useState([])
   const [loadingHistory, setLoadingHistory] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deletingConversation, setDeletingConversation] = useState(false)
 
   // --- Initial load ---
   // Critical: useSession() starts in a 'loading' state on first render, before
@@ -305,6 +316,26 @@ export default function SageChatWidget() {
     } catch (err) {
       setError('Could not load that conversation')
     }
+  }
+
+  const handleDeleteConversation = async () => {
+    if (!deleteTarget) return
+    setDeletingConversation(true)
+    try {
+      await fetch(`/api/conversations/${deleteTarget}`, { method: 'DELETE' })
+      setPastConversations(prev => prev.filter(c => c._id !== deleteTarget))
+      // If the conversation being deleted is the one currently open in the chat,
+      // reset to a fresh unsaved conversation rather than leaving a deleted,
+      // orphaned conversation visibly active in the chat window.
+      if (activeConversationId === deleteTarget) {
+        setMessages([{ role: 'assistant', content: getGreeting(userName), products: [] }])
+        setActiveConversationId(null)
+      }
+    } catch (err) {
+      console.error('Failed to delete conversation')
+    }
+    setDeletingConversation(false)
+    setDeleteTarget(null)
   }
 
   const startNewChat = () => {
@@ -505,16 +536,27 @@ export default function SageChatWidget() {
                 <p className="text-[13px] text-forest/50 text-center py-8">No past conversations yet.</p>
               ) : (
                 pastConversations.map(conv => (
-                  <button
+                  <div
                     key={conv._id}
-                    onClick={() => openPastConversation(conv._id)}
-                    className="text-left px-4 py-3 rounded-[14px] border-[1.5px] border-border bg-surface hover:border-olive transition-colors"
+                    className="group relative flex items-center gap-2 rounded-[14px] border-[1.5px] border-border bg-surface hover:border-olive transition-colors"
                   >
-                    <p className="text-[13px] font-medium text-forest truncate">{conv.title}</p>
-                    <p className="text-[11px] text-forest/45 mt-0.5">
-                      {new Date(conv.updatedAt).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </p>
-                  </button>
+                    <button
+                      onClick={() => openPastConversation(conv._id)}
+                      className="flex-1 text-left px-4 py-3 min-w-0"
+                    >
+                      <p className="text-[13px] font-medium text-forest truncate pr-6">{conv.title}</p>
+                      <p className="text-[11px] text-forest/45 mt-0.5">
+                        {new Date(conv.updatedAt).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => setDeleteTarget(conv._id)}
+                      aria-label="Delete conversation"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-forest/40 hover:text-error transition-all"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  </div>
                 ))
               )}
             </div>
@@ -581,6 +623,17 @@ export default function SageChatWidget() {
           )}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConversation}
+        title="Delete this conversation?"
+        message="This conversation will be permanently removed from your history. This cannot be undone."
+        confirmLabel="Delete"
+        danger
+        loading={deletingConversation}
+      />
     </>
   )
 }
