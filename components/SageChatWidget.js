@@ -200,15 +200,19 @@ export default function SageChatWidget() {
   const [loadingHistory, setLoadingHistory] = useState(false)
 
   // --- Initial load ---
+  // Critical: useSession() starts in a 'loading' state on first render, before
+  // it has actually checked whether the user is logged in. If this effect ran
+  // immediately and locked in "guest" via hasInitialized before the real
+  // session status resolved, a genuinely logged-in user would get permanently
+  // stuck on the guest code path for the rest of that page load. So we wait
+  // for sessionStatus to settle into either 'authenticated' or 'unauthenticated'
+  // before ever deciding which branch to take.
   useEffect(() => {
+    if (sessionStatus === 'loading') return
     if (hasInitialized.current) return
     hasInitialized.current = true
 
     if (isLoggedIn) {
-      // If a guest had a real conversation going before logging in, carry it
-      // forward as their first saved conversation instead of silently
-      // discarding it. A guest who only ever saw the unsent greeting (no real
-      // exchange) just gets a fresh start, same as before.
       try {
         const saved = localStorage.getItem(STORAGE_KEY)
         if (saved) {
@@ -217,10 +221,6 @@ export default function SageChatWidget() {
           if (firstUserMsg) {
             setMessages(parsed)
             localStorage.removeItem(STORAGE_KEY)
-            // Save immediately, rather than waiting for the next message — a rescued
-            // conversation with nowhere durable to live can be lost to a localStorage
-            // write race (this effect runs before session status finishes updating)
-            // or simply discarded if the user clicks New Chat before sending anything else.
             ;(async () => {
               try {
                 const createRes = await fetch('/api/conversations', {
@@ -262,7 +262,7 @@ export default function SageChatWidget() {
     } catch (err) {}
 
     setMessages([{ role: 'assistant', content: getGreeting(userName), products: [] }])
-  }, [isLoggedIn, userName])
+  }, [isLoggedIn, userName, sessionStatus])
 
   // --- Persist to localStorage, guests only ---
   useEffect(() => {
