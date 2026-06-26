@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@/lib/auth'
 import { findRelevantProducts } from '@/lib/chatProductMatch'
+import { getPersonalizationContext } from '@/lib/chatPersonalization'
 import { NextResponse } from 'next/server'
 
 const SAGE_SYSTEM_PROMPT = `You are Sage, the friendly AI skincare advisor for EWA, a Nigerian skincare brand. Your mission is to help people's skin glow.
@@ -15,6 +16,8 @@ Hard rules:
 - If you have been given a list of real EWA products below, you may recommend them by their EXACT name when relevant to what the user is asking. Mention the exact product name plainly in your response (do not abbreviate or rephrase it) so it can be linked automatically.
 - If you have NOT been given any product list, or none of the given products are actually relevant to this specific question, give general skincare advice only — do not invent or name any EWA product.
 - Never recommend a product that is out of stock without mentioning that it's currently unavailable.
+- If you have been given the user's real purchase history, wishlist, or available promo codes below, you may reference them naturally when relevant — e.g. asking how a past purchase is working out, mentioning a wishlist item, or letting them know about a promo code they can actually use. Never invent a purchase, wishlist item, or promo code that wasn't given to you.
+- If the user is marked as a first-time customer with no purchases yet, you can gently encourage them toward their first purchase when it fits naturally — never pushy, just warm and inviting.
 - Be encouraging about skincare routines, never pushy or salesy. Checking in on how something is working for someone is welcome; aggressive upselling is not.
 - Keep advice general and educational. For serious skin conditions, gently suggest seeing a dermatologist rather than diagnosing anything yourself.`
 
@@ -37,9 +40,49 @@ export async function POST(req) {
       ? await findRelevantProducts(latestUserMessage.content)
       : []
 
+    // Personalization is only ever fetched for logged-in users — guests never
+    // get this context at all, since there's no real account data to ground it in.
+    let personalization = null
+    if (user) {
+      try {
+        personalization = await getPersonalizationContext(user.id)
+      } catch (err) {
+        console.error('Failed to load personalization context', err)
+        // A failure here should degrade gracefully to a non-personalized
+        // reply, not break the chat entirely.
+      }
+    }
+
+    const personalizationLines = []
+    if (personalization) {
+      if (personalization.recentPurchases.length > 0) {
+        personalizationLines.push(
+          `Recent delivered purchases (most recent first): ${personalization.recentPurchases.map(p => p.name).join(', ')}.`
+        )
+      }
+      if (personalization.wishlistItems.length > 0) {
+        personalizationLines.push(
+          `Items currently on their wishlist: ${personalization.wishlistItems.map(p => p.name).join(', ')}.`
+        )
+      }
+      if (personalization.usablePromos.length > 0) {
+        personalizationLines.push(
+          `Promo codes they can currently use: ${personalization.usablePromos.map(p =>
+            `${p.code} (${p.discountType === 'percentage' ? `${p.discountValue}% off` : `₦${p.discountValue.toLocaleString()} off`}${p.minimumOrderAmount > 0 ? `, min order ₦${p.minimumOrderAmount.toLocaleString()}` : ''})`
+          ).join('; ')}.`
+        )
+      }
+      if (personalization.isFirstTimeCustomer) {
+        personalizationLines.push(`This user has not completed any delivered orders yet — they are a first-time customer.`)
+      }
+    }
+
     const input = [
       { role: 'system', content: SAGE_SYSTEM_PROMPT },
       ...(user ? [{ role: 'system', content: `The current user is logged in. Their first name is ${user.name?.trim().split(' ')[0] || user.name}. Address them by this first name only, not their full name.` }] : []),
+      ...(personalizationLines.length > 0
+        ? [{ role: 'system', content: `Real account context for this user:\n${personalizationLines.join('\n')}` }]
+        : []),
       ...(relevantProducts.length > 0
         ? [{
             role: 'system',
@@ -76,9 +119,6 @@ export async function POST(req) {
 
     const stream = new ReadableStream({
       async start(controller) {
-        // Send the matched product list first, as a single JSON line, so the
-        // client knows exactly which real products to turn into links —
-        // before any of the actual streamed reply text arrives.
         const productHeader = JSON.stringify(
           relevantProducts.map(p => ({ name: p.name, slug: p.slug }))
         )
