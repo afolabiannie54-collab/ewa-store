@@ -514,6 +514,15 @@ export default function SageChatWidget() {
 
   return (
     <>
+      <style>{`
+        .sage-hide-scroll { scrollbar-width: none; }
+        .sage-hide-scroll::-webkit-scrollbar { display: none; }
+        @keyframes sage-msg-in {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .sage-msg { animation: sage-msg-in 0.18s ease-out both; }
+      `}</style>
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? 'Close Sage chat' : 'Open Sage chat'}
@@ -583,7 +592,7 @@ export default function SageChatWidget() {
           {/* HISTORY VIEW */}
           {view === 'history' ? (
             <>
-            <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-2">
+            <div className="sage-hide-scroll flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-2">
               {loadingHistory ? (
                 <div className="flex flex-col gap-2.5">
                   {[0.72, 0.85, 0.58, 0.78].map((w, n) => (
@@ -671,11 +680,11 @@ export default function SageChatWidget() {
                   {error && <p className="text-[12px] text-error mt-4">{error}</p>}
                 </div>
               ) : (
-                <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-3">
+                <div className="sage-hide-scroll flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-3">
                   {messages.map((msg, i) => (
                     <div
                       key={i}
-                      className={`max-w-[85%] px-4 py-2.5 rounded-[16px] text-[14px] leading-relaxed ${
+                      className={`sage-msg max-w-[85%] px-4 py-2.5 rounded-[16px] text-[14px] leading-relaxed ${
                         msg.role === 'user'
                           ? 'self-end text-cream rounded-br-[4px]'
                           : 'self-start border-[1.5px] border-border text-forest rounded-bl-[4px]'
