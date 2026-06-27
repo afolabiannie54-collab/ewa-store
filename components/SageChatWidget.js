@@ -582,6 +582,7 @@ export default function SageChatWidget() {
 
           {/* HISTORY VIEW */}
           {view === 'history' ? (
+            <>
             <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-2">
               {loadingHistory ? (
                 <div className="flex flex-col gap-2.5">
@@ -628,6 +629,16 @@ export default function SageChatWidget() {
                 ))
               )}
             </div>
+            <div className="flex-shrink-0" style={{ padding: '10px 14px 14px', borderTop: '1px solid rgba(40,54,24,0.07)' }}>
+              <button
+                onClick={startNewChat}
+                className="w-full rounded-full text-cream font-semibold flex items-center justify-center hover:opacity-90 active:scale-[0.98] transition-all duration-150"
+                style={{ background: 'linear-gradient(135deg, #4f6425 0%, #283618 100%)', padding: '11px 20px', fontSize: '14px' }}
+              >
+                Start new conversation
+              </button>
+            </div>
+            </>
           ) : (
             <>
               {/* MESSAGES — empty state or active conversation */}
