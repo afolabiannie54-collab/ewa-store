@@ -531,8 +531,8 @@ export default function SageChatWidget() {
 
       {isOpen && (
         <div
-          style={{ position: 'fixed', bottom: '160px', right: '24px', zIndex: 55, boxShadow: '0 32px 80px -8px rgba(40,54,24,0.5), 0 0 0 1px rgba(40,54,24,0.07)' }}
-          className="w-[92vw] max-w-[380px] h-[560px] max-h-[70vh] rounded-[24px] bg-cream flex flex-col overflow-hidden"
+          style={{ position: 'fixed', bottom: '160px', right: '24px', zIndex: 55, boxShadow: '0 32px 80px -8px rgba(40,54,24,0.5), 0 0 0 1px rgba(40,54,24,0.07)', background: '#ffffff' }}
+          className="w-[92vw] max-w-[380px] h-[560px] max-h-[70vh] rounded-[24px] flex flex-col overflow-hidden"
         >
 
           {/* HEADER */}
@@ -584,28 +584,43 @@ export default function SageChatWidget() {
           {view === 'history' ? (
             <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-2">
               {loadingHistory ? (
-                <p className="text-[13px] text-forest/50 text-center py-8">Loading...</p>
+                <div className="flex flex-col gap-2 pt-1">
+                  {[0.75, 0.55, 0.65].map((w, n) => (
+                    <div key={n} className="animate-pulse rounded-[14px] border-[1.5px] border-border px-4 py-3.5">
+                      <div className="h-3 rounded-full mb-2.5" style={{ background: 'rgba(40,54,24,0.08)', width: `${w * 100}%` }} />
+                      <div className="h-2.5 rounded-full" style={{ background: 'rgba(40,54,24,0.05)', width: '32%' }} />
+                    </div>
+                  ))}
+                </div>
               ) : pastConversations.length === 0 ? (
-                <p className="text-[13px] text-forest/50 text-center py-8">No past conversations yet.</p>
+                <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-12">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: 'rgba(40,54,24,0.06)' }}>
+                    <span style={{ color: 'rgba(40,54,24,0.3)' }}><HistoryIcon className="w-5 h-5" /></span>
+                  </div>
+                  <p className="text-[14px] font-semibold text-forest" style={{ opacity: 0.6 }}>No conversations yet</p>
+                  <p className="text-[12px] mt-1" style={{ color: 'rgba(40,54,24,0.35)', lineHeight: '1.6' }}>Your chats with Sage will appear here once you start a conversation.</p>
+                </div>
               ) : (
                 pastConversations.map(conv => (
                   <div
                     key={conv._id}
-                    className="group relative flex items-center gap-2 rounded-[14px] border-[1.5px] border-border bg-surface hover:border-olive transition-colors"
+                    className="group relative flex items-center gap-2 rounded-[14px] border-[1.5px] border-border hover:border-olive transition-colors"
+                    style={{ background: '#faf9f6' }}
                   >
                     <button
                       onClick={() => openPastConversation(conv._id)}
                       className="flex-1 text-left px-4 py-3 min-w-0"
                     >
                       <p className="text-[13px] font-medium text-forest truncate pr-6">{conv.title}</p>
-                      <p className="text-[11px] text-forest/45 mt-0.5">
+                      <p className="text-[11px] mt-0.5" style={{ color: 'rgba(40,54,24,0.4)' }}>
                         {new Date(conv.updatedAt).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
                     </button>
                     <button
                       onClick={() => setDeleteTarget(conv._id)}
                       aria-label="Delete conversation"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-forest/40 hover:text-error transition-all"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:text-error transition-all"
+                      style={{ color: 'rgba(40,54,24,0.35)' }}
                     >
                       <TrashIcon className="w-4 h-4" />
                     </button>
@@ -651,9 +666,11 @@ export default function SageChatWidget() {
                       className={`max-w-[85%] px-4 py-2.5 rounded-[16px] text-[14px] leading-relaxed ${
                         msg.role === 'user'
                           ? 'self-end text-cream rounded-br-[4px]'
-                          : 'self-start bg-surface border-[1.5px] border-border text-forest rounded-bl-[4px]'
+                          : 'self-start border-[1.5px] border-border text-forest rounded-bl-[4px]'
                       }`}
-                      style={msg.role === 'user' ? { background: 'linear-gradient(135deg, #4f6425 0%, #283618 100%)' } : {}}
+                      style={msg.role === 'user'
+                        ? { background: 'linear-gradient(135deg, #4f6425 0%, #283618 100%)' }
+                        : { background: '#f4f3ee' }}
                     >
                       {msg.isLoginNudge
                         ? <LoginNudgeMessage pathname={typeof window !== 'undefined' ? window.location.pathname : '/'} />
@@ -670,23 +687,29 @@ export default function SageChatWidget() {
               )}
 
               {/* INPUT */}
-              <form onSubmit={handleSubmit} className="flex-shrink-0 p-3">
-                <div className="flex items-center gap-2 rounded-full border-[1.5px] border-border bg-surface pl-5 pr-2 py-2 shadow-[0_4px_16px_-4px_rgba(40,54,24,0.08)] focus-within:border-olive transition-colors">
-                  <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask Sage anything..."
-                    disabled={streaming}
-                    className="flex-1 bg-transparent text-[14px] text-forest placeholder:text-forest/35 outline-none disabled:opacity-60"
-                  />
+              <form
+                onSubmit={handleSubmit}
+                className="flex-shrink-0 flex flex-col"
+                style={{ borderTop: '1px solid rgba(40,54,24,0.08)', background: '#f7f6f2' }}
+              >
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask Sage anything..."
+                  disabled={streaming}
+                  className="bg-transparent outline-none disabled:opacity-50"
+                  style={{ fontSize: '15px', color: '#283618', padding: '16px 20px 6px' }}
+                />
+                <div className="flex justify-end" style={{ padding: '4px 14px 14px' }}>
                   <button
                     type="submit"
                     disabled={streaming || !input.trim()}
                     aria-label="Send message"
-                    className="flex-shrink-0 w-9 h-9 rounded-full bg-olive text-cream flex items-center justify-center hover:bg-forest transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="w-10 h-10 rounded-full text-cream flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-20 disabled:cursor-not-allowed"
+                    style={{ background: 'linear-gradient(135deg, #4f6425 0%, #283618 100%)' }}
                   >
-                    <SendIcon className="w-4 h-4" />
+                    <SendIcon className="w-[17px] h-[17px]" />
                   </button>
                 </div>
               </form>
