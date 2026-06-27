@@ -589,6 +589,11 @@ export default function SageChatWidget() {
           to   { opacity: 1; transform: translateY(0); }
         }
         .sage-msg { animation: sage-msg-in 0.18s ease-out both; }
+        @keyframes sage-panel-up {
+          from { transform: translateY(100%); opacity: 0.6; }
+          to   { transform: translateY(0); opacity: 1; }
+        }
+        .sage-panel-mobile { animation: sage-panel-up 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
       `}</style>
       {!(isMobile && isOpen) && (
         <button
@@ -621,7 +626,7 @@ export default function SageChatWidget() {
             background: '#ffffff',
             borderRadius: '24px',
           }}
-          className="flex flex-col overflow-hidden"
+          className={`flex flex-col overflow-hidden${isMobile ? ' sage-panel-mobile' : ''}`}
         >
 
           {/* HEADER */}
@@ -835,14 +840,12 @@ export default function SageChatWidget() {
               title="Drag to resize"
               style={{
                 position: 'absolute',
-                bottom: '4px',
-                right: '4px',
-                width: '16px',
-                height: '16px',
+                top: 0,
+                left: 0,
+                width: '28px',
+                height: '28px',
                 cursor: 'nwse-resize',
-                opacity: 0.3,
-                backgroundImage: 'radial-gradient(circle, rgba(40,54,24,0.6) 1.5px, transparent 1.5px)',
-                backgroundSize: '4px 4px',
+                zIndex: 2,
               }}
             />
           )}
