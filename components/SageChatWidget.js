@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import ConfirmModal from '@/components/ConfirmModal'
 
 const STORAGE_KEY = 'ewa-sage-conversation'
@@ -188,6 +189,7 @@ function renderFormattedText(content, products = []) {
 }
 
 export default function SageChatWidget() {
+  const pathname = usePathname()
   const { data: session, status: sessionStatus } = useSession()
   const isLoggedIn = sessionStatus === 'authenticated'
   const userName = session?.user?.name
@@ -484,6 +486,13 @@ export default function SageChatWidget() {
   const handleSubmit = (e) => {
     e.preventDefault()
     sendMessage(input)
+  }
+
+  const EXCLUDED_ROUTE_PREFIXES = ['/admin', '/checkout', '/cart']
+  const isExcludedRoute = EXCLUDED_ROUTE_PREFIXES.some(prefix => pathname?.startsWith(prefix))
+
+  if (isExcludedRoute) {
+    return null
   }
 
   return (
