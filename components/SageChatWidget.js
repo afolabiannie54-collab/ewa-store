@@ -539,7 +539,7 @@ export default function SageChatWidget() {
           <div className="px-5 py-4 flex items-center justify-between flex-shrink-0" style={{ background: 'linear-gradient(135deg, #283618 0%, #384c17 100%)' }}>
             <div className="flex items-center gap-3">
               {view === 'history' ? (
-                <button onClick={() => setView('chat')} aria-label="Back to chat" className="text-cream hover:text-cream/70 transition-colors">
+                <button onClick={() => setView('chat')} aria-label="Back to chat" className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-cream hover:bg-cream/10 transition-colors">
                   <BackIcon className="w-5 h-5" />
                 </button>
               ) : (
@@ -554,9 +554,9 @@ export default function SageChatWidget() {
                 <p className="font-display font-bold text-cream text-[16px] leading-tight">
                   {view === 'history' ? 'Your Conversations' : 'Sage'}
                 </p>
-                {view === 'chat' && (
-                  <p className="text-[11px] font-medium" style={{ color: 'rgba(254,250,224,0.45)' }}>Your skin advisor</p>
-                )}
+                <p className="text-[11px] font-medium" style={{ color: 'rgba(254,250,224,0.45)' }}>
+                  {view === 'history' ? 'Your chat history with Sage' : 'Your skin advisor'}
+                </p>
               </div>
             </div>
 
@@ -584,11 +584,11 @@ export default function SageChatWidget() {
           {view === 'history' ? (
             <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-2">
               {loadingHistory ? (
-                <div className="flex flex-col gap-2 pt-1">
-                  {[0.75, 0.55, 0.65].map((w, n) => (
-                    <div key={n} className="animate-pulse rounded-[14px] border-[1.5px] border-border px-4 py-3.5">
-                      <div className="h-3 rounded-full mb-2.5" style={{ background: 'rgba(40,54,24,0.08)', width: `${w * 100}%` }} />
-                      <div className="h-2.5 rounded-full" style={{ background: 'rgba(40,54,24,0.05)', width: '32%' }} />
+                <div className="flex flex-col gap-2.5">
+                  {[0.72, 0.85, 0.58, 0.78].map((w, n) => (
+                    <div key={n} className="animate-pulse rounded-[16px] border-[1.5px] border-border px-5 py-4" style={{ background: '#faf9f6' }}>
+                      <div className="h-3.5 rounded-full mb-3" style={{ background: 'rgba(40,54,24,0.09)', width: `${w * 100}%` }} />
+                      <div className="h-2.5 rounded-full" style={{ background: 'rgba(40,54,24,0.05)', width: '28%' }} />
                     </div>
                   ))}
                 </div>
@@ -633,22 +633,23 @@ export default function SageChatWidget() {
               {/* MESSAGES — empty state or active conversation */}
               {messages.length <= 1 ? (
                 <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6" style={{ background: 'linear-gradient(135deg, #4f6425 0%, #283618 100%)', boxShadow: '0 8px 24px -4px rgba(40,54,24,0.45)' }}>
-                    <SageMark className="w-9 h-9 text-cream" />
+                  <div className="w-[60px] h-[60px] rounded-full flex items-center justify-center mb-4" style={{ background: 'linear-gradient(135deg, #4f6425 0%, #283618 100%)', boxShadow: '0 8px 24px -4px rgba(40,54,24,0.4)' }}>
+                    <SageMark className="w-8 h-8 text-cream" />
                   </div>
-                  <h2 className="font-display font-bold text-forest text-[22px] mb-2.5">
+                  <h2 className="font-display font-bold text-forest mb-2" style={{ fontSize: '19px' }}>
                     Your Skin Advisor Is Online
                   </h2>
-                  <p className="text-[14px] text-forest/55 leading-relaxed max-w-[260px] mb-7">
-                    Ask anything about routines, ingredients, or what might work for you — I'm here whenever you need.
+                  <p className="leading-relaxed mb-5 max-w-[250px]" style={{ fontSize: '13px', color: 'rgba(40,54,24,0.48)' }}>
+                    Ask anything about routines, ingredients, or what works for your skin.
                   </p>
 
-                  <div className="flex flex-col gap-2.5 w-full max-w-[280px]">
+                  <div className="flex flex-col gap-2 w-full max-w-[280px]">
                     {QUICK_PROMPTS.map(prompt => (
                       <button
                         key={prompt}
                         onClick={() => sendMessage(prompt)}
-                        className="group flex items-center justify-between gap-3 text-left px-4 py-3 rounded-[14px] border-[1.5px] border-border bg-surface text-[13px] text-forest/80 hover:border-olive hover:bg-cream hover:text-forest transition-all duration-150"
+                        className="group flex items-center justify-between gap-3 text-left px-4 py-3 rounded-[14px] border-[1.5px] border-border hover:border-olive transition-all duration-150"
+                        style={{ background: '#f5f4f0', fontSize: '13px', color: 'rgba(40,54,24,0.72)' }}
                       >
                         <span>{prompt}</span>
                         <span className="flex-shrink-0 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all duration-150 text-olive">→</span>
@@ -656,7 +657,7 @@ export default function SageChatWidget() {
                     ))}
                   </div>
 
-                  {error && <p className="text-[12px] text-error mt-5">{error}</p>}
+                  {error && <p className="text-[12px] text-error mt-4">{error}</p>}
                 </div>
               ) : (
                 <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-3">
@@ -689,27 +690,30 @@ export default function SageChatWidget() {
               {/* INPUT */}
               <form
                 onSubmit={handleSubmit}
-                className="flex-shrink-0 flex flex-col"
-                style={{ borderTop: '1px solid rgba(40,54,24,0.08)', background: '#f7f6f2' }}
+                className="flex-shrink-0"
+                style={{ padding: '10px 14px 14px', borderTop: '1px solid rgba(40,54,24,0.07)' }}
               >
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask Sage anything..."
-                  disabled={streaming}
-                  className="bg-transparent outline-none disabled:opacity-50"
-                  style={{ fontSize: '15px', color: '#283618', padding: '16px 20px 6px' }}
-                />
-                <div className="flex justify-end" style={{ padding: '4px 14px 14px' }}>
+                <div
+                  className="flex items-center gap-2 rounded-full border-[1.5px] border-border focus-within:border-olive transition-colors"
+                  style={{ background: '#f5f4f0', padding: '5px 5px 5px 16px' }}
+                >
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask Sage anything..."
+                    disabled={streaming}
+                    className="flex-1 bg-transparent outline-none disabled:opacity-50"
+                    style={{ fontSize: '14px', color: '#283618' }}
+                  />
                   <button
                     type="submit"
                     disabled={streaming || !input.trim()}
                     aria-label="Send message"
-                    className="w-10 h-10 rounded-full text-cream flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-20 disabled:cursor-not-allowed"
+                    className="flex-shrink-0 w-9 h-9 rounded-full text-cream flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed"
                     style={{ background: 'linear-gradient(135deg, #4f6425 0%, #283618 100%)' }}
                   >
-                    <SendIcon className="w-[17px] h-[17px]" />
+                    <SendIcon className="w-4 h-4" />
                   </button>
                 </div>
               </form>
