@@ -229,6 +229,13 @@ export default function SageChatWidget() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deletingConversation, setDeletingConversation] = useState(false)
 
+  const [panelWidth, setPanelWidth] = useState(380)
+  const [panelHeight, setPanelHeight] = useState(560)
+  const [isResizing, setIsResizing] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const dragStartRef = useRef({ startX: 0, startY: 0, startWidth: 380, startHeight: 560 })
+  const swipeTouchRef = useRef(null)
+
   // --- Initial load ---
   // Critical: useSession() starts in a 'loading' state on first render, before
   // it has actually checked whether the user is logged in. If this effect ran
@@ -315,6 +322,49 @@ export default function SageChatWidget() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isOpen, view])
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  useEffect(() => {
+    const savedWidth = localStorage.getItem('ewa-sage-panel-width')
+    const savedHeight = localStorage.getItem('ewa-sage-panel-height')
+    if (savedWidth) setPanelWidth(Number(savedWidth))
+    if (savedHeight) setPanelHeight(Number(savedHeight))
+  }, [])
+
+  useEffect(() => {
+    function handleMouseMove(e) {
+      if (!isResizing) return
+      const newWidth = Math.min(560, Math.max(320, dragStartRef.current.startWidth + (dragStartRef.current.startX - e.clientX)))
+      const newHeight = Math.min(720, Math.max(400, dragStartRef.current.startHeight + (dragStartRef.current.startY - e.clientY)))
+      setPanelWidth(newWidth)
+      setPanelHeight(newHeight)
+    }
+    function handleMouseUp() {
+      if (isResizing) {
+        setIsResizing(false)
+        localStorage.setItem('ewa-sage-panel-width', String(panelWidth))
+        localStorage.setItem('ewa-sage-panel-height', String(panelHeight))
+      }
+    }
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      document.body.style.userSelect = 'none'
+      document.body.style.cursor = 'nwse-resize'
+    }
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
+    }
+  }, [isResizing, panelWidth, panelHeight])
 
   const fetchPastConversations = async () => {
     setLoadingHistory(true)
@@ -505,6 +555,23 @@ export default function SageChatWidget() {
     sendMessage(input)
   }
 
+  const startDrag = (e) => {
+    e.preventDefault()
+    dragStartRef.current = { startX: e.clientX, startY: e.clientY, startWidth: panelWidth, startHeight: panelHeight }
+    setIsResizing(true)
+  }
+
+  const handleHeaderTouchStart = (e) => {
+    swipeTouchRef.current = { startY: e.touches[0].clientY }
+  }
+
+  const handleHeaderTouchEnd = (e) => {
+    if (!swipeTouchRef.current) return
+    const deltaY = e.changedTouches[0].clientY - swipeTouchRef.current.startY
+    swipeTouchRef.current = null
+    if (deltaY > 80) setIsOpen(false)
+  }
+
   const EXCLUDED_ROUTE_PREFIXES = ['/admin', '/checkout', '/cart']
   const isExcludedRoute = EXCLUDED_ROUTE_PREFIXES.some(prefix => pathname?.startsWith(prefix))
 
@@ -523,29 +590,47 @@ export default function SageChatWidget() {
         }
         .sage-msg { animation: sage-msg-in 0.18s ease-out both; }
       `}</style>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label={isOpen ? 'Close Sage chat' : 'Open Sage chat'}
-        style={{
-          position: 'fixed', bottom: '80px', right: '24px', zIndex: 55,
-          background: isOpen
-            ? 'linear-gradient(135deg, #384c17 0%, #283618 100%)'
-            : 'linear-gradient(135deg, #627c30 0%, #283618 100%)',
-          boxShadow: '0 8px 32px -4px rgba(40,54,24,0.6), 0 2px 8px rgba(40,54,24,0.2)',
-        }}
-        className="w-12 h-12 rounded-full text-cream flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-200"
-      >
-        {isOpen ? <CloseIcon className="w-5 h-5" /> : <SageMark className="w-[26px] h-[26px]" />}
-      </button>
+      {!(isMobile && isOpen) && (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label={isOpen ? 'Close Sage chat' : 'Open Sage chat'}
+          style={{
+            position: 'fixed', bottom: '80px', right: '24px', zIndex: 55,
+            background: isOpen
+              ? 'linear-gradient(135deg, #384c17 0%, #283618 100%)'
+              : 'linear-gradient(135deg, #627c30 0%, #283618 100%)',
+            boxShadow: '0 8px 32px -4px rgba(40,54,24,0.6), 0 2px 8px rgba(40,54,24,0.2)',
+          }}
+          className="w-12 h-12 rounded-full text-cream flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-200"
+        >
+          {isOpen ? <CloseIcon className="w-5 h-5" /> : <SageMark className="w-[26px] h-[26px]" />}
+        </button>
+      )}
 
       {isOpen && (
         <div
-          style={{ position: 'fixed', bottom: '160px', right: '24px', zIndex: 55, boxShadow: '0 32px 80px -8px rgba(40,54,24,0.5), 0 0 0 1px rgba(40,54,24,0.07)', background: '#ffffff' }}
-          className="w-[92vw] max-w-[380px] h-[560px] max-h-[70vh] rounded-[24px] flex flex-col overflow-hidden"
+          style={isMobile ? {
+            position: 'fixed', top: 0, left: 0,
+            width: '100vw', height: '100vh',
+            zIndex: 60,
+            background: '#ffffff',
+          } : {
+            position: 'fixed', bottom: '160px', right: '24px', zIndex: 55,
+            width: panelWidth, height: panelHeight,
+            boxShadow: '0 32px 80px -8px rgba(40,54,24,0.5), 0 0 0 1px rgba(40,54,24,0.07)',
+            background: '#ffffff',
+            borderRadius: '24px',
+          }}
+          className="flex flex-col overflow-hidden"
         >
 
           {/* HEADER */}
-          <div className="px-5 py-4 flex items-center justify-between flex-shrink-0" style={{ background: 'linear-gradient(135deg, #283618 0%, #384c17 100%)' }}>
+          <div
+            className="px-5 py-4 flex items-center justify-between flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #283618 0%, #384c17 100%)' }}
+            onTouchStart={handleHeaderTouchStart}
+            onTouchEnd={handleHeaderTouchEnd}
+          >
             <div className="flex items-center gap-3">
               {view === 'history' ? (
                 <button onClick={() => setView('chat')} aria-label="Back to chat" className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-cream hover:bg-cream/10 transition-colors">
@@ -570,6 +655,11 @@ export default function SageChatWidget() {
             </div>
 
             <div className="flex items-center gap-3">
+              {isMobile && (
+                <button onClick={() => setIsOpen(false)} aria-label="Close Sage chat" className="text-cream/60 hover:text-cream transition-colors">
+                  <CloseIcon className="w-5 h-5" />
+                </button>
+              )}
               {isLoggedIn && view === 'chat' && (
                 <button onClick={openHistory} aria-label="View past conversations" className="text-cream/60 hover:text-cream transition-colors">
                   <HistoryIcon className="w-[18px] h-[18px]" />
@@ -738,6 +828,23 @@ export default function SageChatWidget() {
                 </div>
               </form>
             </>
+          )}
+          {!isMobile && (
+            <div
+              onMouseDown={startDrag}
+              title="Drag to resize"
+              style={{
+                position: 'absolute',
+                bottom: '4px',
+                right: '4px',
+                width: '16px',
+                height: '16px',
+                cursor: 'nwse-resize',
+                opacity: 0.3,
+                backgroundImage: 'radial-gradient(circle, rgba(40,54,24,0.6) 1.5px, transparent 1.5px)',
+                backgroundSize: '4px 4px',
+              }}
+            />
           )}
         </div>
       )}
