@@ -233,6 +233,7 @@ export default function SageChatWidget() {
   const [panelHeight, setPanelHeight] = useState(560)
   const [isResizing, setIsResizing] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [isClosingMobile, setIsClosingMobile] = useState(false)
   const dragStartRef = useRef({ startX: 0, startY: 0, startWidth: 380, startHeight: 560 })
   const swipeTouchRef = useRef(null)
 
@@ -569,7 +570,11 @@ export default function SageChatWidget() {
     if (!swipeTouchRef.current) return
     const deltaY = e.changedTouches[0].clientY - swipeTouchRef.current.startY
     swipeTouchRef.current = null
-    if (deltaY > 80) setIsOpen(false)
+    if (deltaY > 80) closeMobilePanel()
+  }
+
+  const closeMobilePanel = () => {
+    setIsClosingMobile(true)
   }
 
   const EXCLUDED_ROUTE_PREFIXES = ['/admin', '/checkout', '/cart']
@@ -590,10 +595,15 @@ export default function SageChatWidget() {
         }
         .sage-msg { animation: sage-msg-in 0.18s ease-out both; }
         @keyframes sage-panel-up {
-          from { transform: translateY(100%); opacity: 0.6; }
-          to   { transform: translateY(0); opacity: 1; }
+          from { transform: translateY(100%); }
+          to   { transform: translateY(0); }
         }
-        .sage-panel-mobile { animation: sage-panel-up 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        @keyframes sage-panel-down {
+          from { transform: translateY(0); }
+          to   { transform: translateY(100%); }
+        }
+        .sage-panel-mobile { animation: sage-panel-up 0.42s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .sage-panel-closing { animation: sage-panel-down 0.28s cubic-bezier(0.4, 0, 1, 1) both; }
       `}</style>
       {!(isMobile && isOpen) && (
         <button
@@ -626,7 +636,13 @@ export default function SageChatWidget() {
             background: '#ffffff',
             borderRadius: '24px',
           }}
-          className={`flex flex-col overflow-hidden${isMobile ? ' sage-panel-mobile' : ''}`}
+          className={`flex flex-col overflow-hidden${isMobile ? (isClosingMobile ? ' sage-panel-closing' : ' sage-panel-mobile') : ''}`}
+          onAnimationEnd={() => {
+            if (isClosingMobile) {
+              setIsClosingMobile(false)
+              setIsOpen(false)
+            }
+          }}
         >
 
           {/* HEADER */}
@@ -661,7 +677,7 @@ export default function SageChatWidget() {
 
             <div className="flex items-center gap-3">
               {isMobile && (
-                <button onClick={() => setIsOpen(false)} aria-label="Close Sage chat" className="text-cream/60 hover:text-cream transition-colors">
+                <button onClick={closeMobilePanel} aria-label="Close Sage chat" className="text-cream/60 hover:text-cream transition-colors">
                   <CloseIcon className="w-5 h-5" />
                 </button>
               )}
