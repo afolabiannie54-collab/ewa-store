@@ -10,14 +10,6 @@ const STORAGE_KEY = 'ewa-sage-conversation'
 const MAX_MESSAGES_PER_SESSION = 20
 const GUEST_NUDGE_THRESHOLD = 5
 
-function SageIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M12 3c2 2.5 3 5 3 7.5a3 3 0 0 1-6 0C9 8 10 5.5 12 3Z" />
-      <path d="M8 14c.5 2 2 4 4 4s3.5-2 4-4" />
-    </svg>
-  )
-}
 
 function CloseIcon(props) {
   return (
@@ -69,14 +61,14 @@ function SageMark(props) {
       />
       <path
         d="M16 9v17"
-        stroke="var(--color-cream)"
+        stroke="#FEFAE0"
         strokeWidth="1.2"
         strokeLinecap="round"
         opacity="0.5"
       />
       <path
         d="M16 13c-1.5 1-3 2.5-3 4M16 18c1.5 1 3 2.5 3 4"
-        stroke="var(--color-cream)"
+        stroke="#FEFAE0"
         strokeWidth="1"
         strokeLinecap="round"
         opacity="0.4"
@@ -525,33 +517,47 @@ export default function SageChatWidget() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? 'Close Sage chat' : 'Open Sage chat'}
-        style={{ position: 'fixed', bottom: '80px', right: '24px', zIndex: 55 }}
-        className="w-12 h-12 rounded-full bg-olive text-cream shadow-[0_8px_24px_-4px_rgba(40,54,24,0.45)] flex items-center justify-center hover:bg-forest transition-colors"
+        style={{
+          position: 'fixed', bottom: '80px', right: '24px', zIndex: 55,
+          background: isOpen
+            ? 'linear-gradient(135deg, #384c17 0%, #283618 100%)'
+            : 'linear-gradient(135deg, #627c30 0%, #283618 100%)',
+          boxShadow: '0 8px 32px -4px rgba(40,54,24,0.6), 0 2px 8px rgba(40,54,24,0.2)',
+        }}
+        className="w-12 h-12 rounded-full text-cream flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-200"
       >
-        {isOpen ? <CloseIcon className="w-6 h-6" /> : <SageIcon className="w-6 h-6" />}
+        {isOpen ? <CloseIcon className="w-5 h-5" /> : <SageMark className="w-[26px] h-[26px]" />}
       </button>
 
       {isOpen && (
         <div
-          style={{ position: 'fixed', bottom: '160px', right: '24px', zIndex: 55 }}
-          className="w-[92vw] max-w-[380px] h-[560px] max-h-[70vh] rounded-[24px] border-[1.5px] border-border bg-cream shadow-[0_24px_64px_-12px_rgba(40,54,24,0.35)] flex flex-col overflow-hidden"
+          style={{ position: 'fixed', bottom: '160px', right: '24px', zIndex: 55, boxShadow: '0 32px 80px -8px rgba(40,54,24,0.5), 0 0 0 1px rgba(40,54,24,0.07)' }}
+          className="w-[92vw] max-w-[380px] h-[560px] max-h-[70vh] rounded-[24px] bg-cream flex flex-col overflow-hidden"
         >
 
           {/* HEADER */}
-          <div className="bg-forest px-5 py-4 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-2.5">
+          <div className="px-5 py-4 flex items-center justify-between flex-shrink-0" style={{ background: 'linear-gradient(135deg, #283618 0%, #384c17 100%)' }}>
+            <div className="flex items-center gap-3">
               {view === 'history' ? (
                 <button onClick={() => setView('chat')} aria-label="Back to chat" className="text-cream hover:text-cream/70 transition-colors">
                   <BackIcon className="w-5 h-5" />
                 </button>
               ) : (
-                <div className="w-8 h-8 rounded-full bg-cream/10 flex items-center justify-center">
-                  <SageIcon className="w-4 h-4 text-cream" />
+                <div className="relative flex-shrink-0">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4f6425 0%, #627c30 100%)' }}>
+                    <SageMark className="w-5 h-5 text-cream" />
+                  </div>
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2" style={{ backgroundColor: '#4ade80', borderColor: '#283618' }} />
                 </div>
               )}
-              <p className="font-display font-bold text-cream text-[16px]">
-                {view === 'history' ? 'Your Conversations' : 'Sage'}
-              </p>
+              <div>
+                <p className="font-display font-bold text-cream text-[16px] leading-tight">
+                  {view === 'history' ? 'Your Conversations' : 'Sage'}
+                </p>
+                {view === 'chat' && (
+                  <p className="text-[11px] font-medium" style={{ color: 'rgba(254,250,224,0.45)' }}>Your skin advisor</p>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-3">
@@ -563,7 +569,10 @@ export default function SageChatWidget() {
               {view === 'chat' && (
                 <button
                   onClick={startNewChat}
-                  className="text-cream/60 text-[12px] font-bold uppercase tracking-wide hover:text-cream transition-colors"
+                  className="text-[12px] font-bold uppercase tracking-wide transition-colors"
+                  style={{ color: 'rgba(254,250,224,0.5)' }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#FEFAE0'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(254,250,224,0.5)'}
                 >
                   New Chat
                 </button>
@@ -609,7 +618,7 @@ export default function SageChatWidget() {
               {/* MESSAGES — empty state or active conversation */}
               {messages.length <= 1 ? (
                 <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-                  <div className="w-16 h-16 rounded-full bg-olive flex items-center justify-center mb-6">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6" style={{ background: 'linear-gradient(135deg, #4f6425 0%, #283618 100%)', boxShadow: '0 8px 24px -4px rgba(40,54,24,0.45)' }}>
                     <SageMark className="w-9 h-9 text-cream" />
                   </div>
                   <h2 className="font-display font-bold text-forest text-[22px] mb-2.5">
@@ -624,9 +633,10 @@ export default function SageChatWidget() {
                       <button
                         key={prompt}
                         onClick={() => sendMessage(prompt)}
-                        className="text-left px-4 py-3 rounded-[14px] border-[1.5px] border-border bg-surface text-[13px] text-forest/80 hover:border-olive hover:bg-cream transition-colors"
+                        className="group flex items-center justify-between gap-3 text-left px-4 py-3 rounded-[14px] border-[1.5px] border-border bg-surface text-[13px] text-forest/80 hover:border-olive hover:bg-cream hover:text-forest transition-all duration-150"
                       >
-                        {prompt}
+                        <span>{prompt}</span>
+                        <span className="flex-shrink-0 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all duration-150 text-olive">→</span>
                       </button>
                     ))}
                   </div>
@@ -640,9 +650,10 @@ export default function SageChatWidget() {
                       key={i}
                       className={`max-w-[85%] px-4 py-2.5 rounded-[16px] text-[14px] leading-relaxed ${
                         msg.role === 'user'
-                          ? 'self-end bg-olive text-cream rounded-br-[4px]'
+                          ? 'self-end text-cream rounded-br-[4px]'
                           : 'self-start bg-surface border-[1.5px] border-border text-forest rounded-bl-[4px]'
                       }`}
+                      style={msg.role === 'user' ? { background: 'linear-gradient(135deg, #4f6425 0%, #283618 100%)' } : {}}
                     >
                       {msg.isLoginNudge
                         ? <LoginNudgeMessage pathname={typeof window !== 'undefined' ? window.location.pathname : '/'} />
