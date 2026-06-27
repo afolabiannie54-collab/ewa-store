@@ -60,6 +60,31 @@ function TrashIcon(props) {
   )
 }
 
+function SageMark(props) {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" {...props}>
+      <path
+        d="M16 4C9 8 6 14 6 19c0 5.5 4.5 9 10 9s10-3.5 10-9c0-5-3-11-10-15Z"
+        fill="currentColor"
+      />
+      <path
+        d="M16 9v17"
+        stroke="var(--color-cream)"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        opacity="0.5"
+      />
+      <path
+        d="M16 13c-1.5 1-3 2.5-3 4M16 18c1.5 1 3 2.5 3 4"
+        stroke="var(--color-cream)"
+        strokeWidth="1"
+        strokeLinecap="round"
+        opacity="0.4"
+      />
+    </svg>
+  )
+}
+
 function LoginNudgeMessage({ pathname }) {
   const callbackParam = `?callbackUrl=${encodeURIComponent(pathname || '/')}`
   return (
@@ -581,62 +606,78 @@ export default function SageChatWidget() {
             </div>
           ) : (
             <>
-              {/* MESSAGES */}
-              <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-3">
-                {messages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`max-w-[85%] px-4 py-2.5 rounded-[16px] text-[14px] leading-relaxed ${
-                      msg.role === 'user'
-                        ? 'self-end bg-olive text-cream rounded-br-[4px]'
-                        : 'self-start bg-surface border-[1.5px] border-border text-forest rounded-bl-[4px]'
-                    }`}
-                  >
-                    {msg.isLoginNudge
-                      ? <LoginNudgeMessage pathname={typeof window !== 'undefined' ? window.location.pathname : '/'} />
-                      : msg.content
-                        ? renderFormattedText(msg.content, msg.products)
-                        : (streaming && i === messages.length - 1 ? '···' : '')}
+              {/* MESSAGES — empty state or active conversation */}
+              {messages.length <= 1 ? (
+                <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+                  <div className="w-16 h-16 rounded-full bg-olive flex items-center justify-center mb-6">
+                    <SageMark className="w-9 h-9 text-cream" />
                   </div>
-                ))}
+                  <h2 className="font-display font-bold text-forest text-[22px] mb-2.5">
+                    Your Skin Advisor Is Online
+                  </h2>
+                  <p className="text-[14px] text-forest/55 leading-relaxed max-w-[260px] mb-7">
+                    Ask anything about routines, ingredients, or what might work for you — I'm here whenever you need.
+                  </p>
 
-                {messages.length <= 1 && !streaming && (
-                  <div className="flex flex-col gap-2 mt-2">
+                  <div className="flex flex-col gap-2.5 w-full max-w-[280px]">
                     {QUICK_PROMPTS.map(prompt => (
                       <button
                         key={prompt}
                         onClick={() => sendMessage(prompt)}
-                        className="self-start text-left px-4 py-2.5 rounded-[14px] border-[1.5px] border-border bg-surface text-[13px] text-forest/80 hover:border-olive transition-colors"
+                        className="text-left px-4 py-3 rounded-[14px] border-[1.5px] border-border bg-surface text-[13px] text-forest/80 hover:border-olive hover:bg-cream transition-colors"
                       >
                         {prompt}
                       </button>
                     ))}
                   </div>
-                )}
 
-                {error && <p className="text-[12px] text-error px-1">{error}</p>}
+                  {error && <p className="text-[12px] text-error mt-5">{error}</p>}
+                </div>
+              ) : (
+                <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-3">
+                  {messages.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={`max-w-[85%] px-4 py-2.5 rounded-[16px] text-[14px] leading-relaxed ${
+                        msg.role === 'user'
+                          ? 'self-end bg-olive text-cream rounded-br-[4px]'
+                          : 'self-start bg-surface border-[1.5px] border-border text-forest rounded-bl-[4px]'
+                      }`}
+                    >
+                      {msg.isLoginNudge
+                        ? <LoginNudgeMessage pathname={typeof window !== 'undefined' ? window.location.pathname : '/'} />
+                        : msg.content
+                          ? renderFormattedText(msg.content, msg.products)
+                          : (streaming && i === messages.length - 1 ? '···' : '')}
+                    </div>
+                  ))}
 
-                <div ref={messagesEndRef} />
-              </div>
+                  {error && <p className="text-[12px] text-error px-1">{error}</p>}
+
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
 
               {/* INPUT */}
-              <form onSubmit={handleSubmit} className="flex-shrink-0 border-t-[1.5px] border-border bg-surface p-3 flex items-center gap-2">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask Sage anything..."
-                  disabled={streaming}
-                  className="flex-1 rounded-full border-[1.5px] border-border bg-cream px-4 py-2.5 text-[14px] text-forest placeholder:text-forest/35 outline-none focus:border-olive transition-colors disabled:opacity-60"
-                />
-                <button
-                  type="submit"
-                  disabled={streaming || !input.trim()}
-                  aria-label="Send message"
-                  className="flex-shrink-0 w-10 h-10 rounded-full bg-olive text-cream flex items-center justify-center hover:bg-forest transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <SendIcon className="w-4 h-4" />
-                </button>
+              <form onSubmit={handleSubmit} className="flex-shrink-0 p-3">
+                <div className="flex items-center gap-2 rounded-full border-[1.5px] border-border bg-surface pl-5 pr-2 py-2 shadow-[0_4px_16px_-4px_rgba(40,54,24,0.08)] focus-within:border-olive transition-colors">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask Sage anything..."
+                    disabled={streaming}
+                    className="flex-1 bg-transparent text-[14px] text-forest placeholder:text-forest/35 outline-none disabled:opacity-60"
+                  />
+                  <button
+                    type="submit"
+                    disabled={streaming || !input.trim()}
+                    aria-label="Send message"
+                    className="flex-shrink-0 w-9 h-9 rounded-full bg-olive text-cream flex items-center justify-center hover:bg-forest transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <SendIcon className="w-4 h-4" />
+                  </button>
+                </div>
               </form>
             </>
           )}
