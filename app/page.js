@@ -352,71 +352,110 @@ export default function HomePage() {
 
       {/* REVIEWS */}
       {(reviewsLoading || featuredReviews.length > 0) && (
-        <section style={{ background: '#141d0c' }}>
-          <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-24 md:py-32">
+        <>
+          <style>{`
+            .ewa-review-card {
+              transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.38s ease;
+              box-shadow: 0 32px 80px -16px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.15);
+            }
+            .ewa-review-card:hover {
+              transform: translateY(-12px);
+              box-shadow: 0 52px 120px -12px rgba(0,0,0,0.78), 0 8px 24px rgba(0,0,0,0.22) !important;
+            }
+            .ewa-review-quote {
+              transition: opacity 0.38s ease, transform 0.38s ease;
+            }
+            .ewa-review-card:hover .ewa-review-quote {
+              opacity: 0.13;
+              transform: scale(1.08) translateY(-4px);
+            }
+            .ewa-review-stars svg {
+              transition: transform 0.2s ease;
+            }
+            .ewa-review-card:hover .ewa-review-stars svg {
+              transform: scale(1.15);
+            }
+          `}</style>
+          <section style={{ background: '#141d0c', position: 'relative', overflow: 'hidden' }}>
 
-            <div className="text-center mb-16 md:mb-20">
-              <p style={{ color: 'rgba(254,250,224,0.35)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: '18px' }}>
-                Real Customers, Real Results
-              </p>
-              <h2 className="font-display font-bold text-cream" style={{ fontSize: 'clamp(38px, 5vw, 62px)', letterSpacing: '-0.02em', lineHeight: 1.04 }}>
-                What People Are Saying
-              </h2>
+            {/* Background decorative layer */}
+            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+              {/* Dot grid */}
+              <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(254,250,224,0.055) 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+              {/* Radial glow — top right */}
+              <div style={{ position: 'absolute', top: '-25%', right: '-8%', width: '640px', height: '640px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(79,100,37,0.22) 0%, transparent 65%)' }} />
+              {/* Radial glow — bottom left */}
+              <div style={{ position: 'absolute', bottom: '-25%', left: '-8%', width: '560px', height: '560px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(40,54,24,0.32) 0%, transparent 65%)' }} />
+              {/* Giant decorative quote — top left */}
+              <div className="font-display font-bold select-none" style={{ position: 'absolute', top: '-4%', left: '-1%', fontSize: '340px', lineHeight: 1, color: 'rgba(254,250,224,0.03)', transform: 'rotate(-6deg)' }}>&ldquo;</div>
+              {/* Giant decorative quote — bottom right (flipped) */}
+              <div className="font-display font-bold select-none" style={{ position: 'absolute', bottom: '-8%', right: '-1%', fontSize: '340px', lineHeight: 1, color: 'rgba(254,250,224,0.03)', transform: 'rotate(174deg)' }}>&ldquo;</div>
             </div>
 
-            <div className={`grid gap-6 md:gap-8 ${
-              reviewsLoading || featuredReviews.length >= 3
-                ? 'grid-cols-1 md:grid-cols-3'
-                : featuredReviews.length === 2
-                ? 'grid-cols-1 md:grid-cols-2 max-w-[860px] mx-auto'
-                : 'grid-cols-1 max-w-[420px] mx-auto'
-            }`}>
-              {reviewsLoading
-                ? [1,2,3].map(i => (
-                    <div key={i} className="rounded-[24px] animate-pulse" style={{ background: 'rgba(255,255,255,0.06)', height: '280px' }} />
-                  ))
-                : featuredReviews.slice(0, 3).map(review => (
-                    <div
-                      key={review._id}
-                      className="relative bg-white rounded-[24px] p-8 md:p-10 flex flex-col overflow-hidden"
-                      style={{ boxShadow: '0 32px 80px -16px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.15)' }}
-                    >
-                      <span
-                        className="absolute font-display font-bold select-none pointer-events-none"
-                        style={{ top: '-8px', right: '20px', fontSize: '160px', lineHeight: 1, color: 'rgba(40,54,24,0.055)' }}
-                        aria-hidden="true"
+            <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-24 md:py-32" style={{ position: 'relative', zIndex: 1 }}>
+
+              <div className="text-center mb-16 md:mb-20">
+                <p style={{ color: 'rgba(254,250,224,0.35)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: '18px' }}>
+                  Real Customers, Real Results
+                </p>
+                <h2 className="font-display font-bold text-cream" style={{ fontSize: 'clamp(38px, 5vw, 62px)', letterSpacing: '-0.02em', lineHeight: 1.04 }}>
+                  What People Are Saying
+                </h2>
+              </div>
+
+              <div className={`grid gap-6 md:gap-8 ${
+                reviewsLoading || featuredReviews.length >= 3
+                  ? 'grid-cols-1 md:grid-cols-3'
+                  : featuredReviews.length === 2
+                  ? 'grid-cols-1 md:grid-cols-2 max-w-[860px] mx-auto'
+                  : 'grid-cols-1 max-w-[420px] mx-auto'
+              }`}>
+                {reviewsLoading
+                  ? [1,2,3].map(i => (
+                      <div key={i} className="rounded-[24px] animate-pulse" style={{ background: 'rgba(255,255,255,0.06)', height: '280px' }} />
+                    ))
+                  : featuredReviews.slice(0, 3).map(review => (
+                      <div
+                        key={review._id}
+                        className="ewa-review-card relative bg-white rounded-[24px] p-8 md:p-10 flex flex-col overflow-hidden"
                       >
-                        &ldquo;
-                      </span>
+                        <span
+                          className="ewa-review-quote absolute font-display font-bold select-none pointer-events-none"
+                          style={{ top: '-8px', right: '20px', fontSize: '160px', lineHeight: 1, color: 'rgba(40,54,24,0.055)' }}
+                          aria-hidden="true"
+                        >
+                          &ldquo;
+                        </span>
 
-                      <div className="flex gap-1 mb-6">
-                        {[1,2,3,4,5].map(i => (
-                          <svg key={i} viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="#4f6425" stroke="none">
-                            <path d="M12 2.5l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.7L12 2.5Z" />
-                          </svg>
-                        ))}
-                      </div>
+                        <div className="ewa-review-stars flex gap-1 mb-6">
+                          {[1,2,3,4,5].map(i => (
+                            <svg key={i} viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="#4f6425" stroke="none">
+                              <path d="M12 2.5l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.7L12 2.5Z" />
+                            </svg>
+                          ))}
+                        </div>
 
-                      <p className="text-forest text-[17px] md:text-[18px] leading-[1.7] font-medium flex-1 mb-8">
-                        &ldquo;{review.comment}&rdquo;
-                      </p>
-
-                      <div style={{ borderTop: '1px solid rgba(40,54,24,0.1)', paddingTop: '20px' }}>
-                        <p className="text-[13px]">
-                          <span className="font-bold text-forest">{review.userId?.name || 'EWA Customer'}</span>
-                          <span style={{ color: 'rgba(40,54,24,0.35)' }}> on </span>
-                          <Link href={`/shop/${review.productId?.slug}`} className="font-bold text-olive hover:underline">
-                            {review.productId?.name}
-                          </Link>
+                        <p className="text-forest text-[17px] md:text-[18px] leading-[1.7] font-medium flex-1 mb-8">
+                          &ldquo;{review.comment}&rdquo;
                         </p>
-                      </div>
-                    </div>
-                  ))
-              }
-            </div>
 
-          </div>
-        </section>
+                        <div style={{ borderTop: '1px solid rgba(40,54,24,0.1)', paddingTop: '20px' }}>
+                          <p className="text-[13px]">
+                            <span className="font-bold text-forest">{review.userId?.name || 'EWA Customer'}</span>
+                            <span style={{ color: 'rgba(40,54,24,0.35)' }}> on our </span>
+                            <Link href={`/shop/${review.productId?.slug}`} className="font-bold text-olive hover:underline">
+                              {review.productId?.name}
+                            </Link>
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                }
+              </div>
+
+            </div>
+          </section>
+        </>
       )}
 
       <QuickAddModal
