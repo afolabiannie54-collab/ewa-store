@@ -1,5 +1,7 @@
 import connectDB from '@/lib/mongodb'
 import Review from '@/models/Review'
+import '@/models/Product'
+import '@/models/User'
 import { NextResponse } from 'next/server'
 
 export async function GET(req) {
