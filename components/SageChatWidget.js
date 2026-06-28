@@ -339,6 +339,12 @@ export default function SageChatWidget() {
   }, [])
 
   useEffect(() => {
+    const handler = () => setIsOpen(true)
+    window.addEventListener('sage:open', handler)
+    return () => window.removeEventListener('sage:open', handler)
+  }, [])
+
+  useEffect(() => {
     function handleMouseMove(e) {
       if (!isResizing) return
       const newWidth = Math.min(560, Math.max(320, dragStartRef.current.startWidth + (dragStartRef.current.startX - e.clientX)))

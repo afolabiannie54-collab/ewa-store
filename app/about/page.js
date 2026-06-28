@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import AboutGallery from '@/components/AboutGallery'
+import SageOpenButton from '@/components/SageOpenButton'
 
 export const metadata = {
   title: 'Our Story — EWA Skincare',
@@ -226,11 +227,11 @@ export default function AboutPage() {
               <p style={{ fontSize: '17px', lineHeight: '1.8', color: 'rgba(254,250,224,0.62)', marginBottom: '44px', maxWidth: '420px' }}>
                 Whether it's a specific skin concern or just figuring out where to start — Sage is warm, knowledgeable, and right there in the corner of your screen.
               </p>
-              <button
+              <SageOpenButton
                 style={{ display: 'inline-flex', alignItems: 'center', background: '#FEFAE0', color: '#384c17', fontSize: '14px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '14px 32px', borderRadius: '999px', border: 'none', cursor: 'pointer' }}
               >
                 Chat with Sage
-              </button>
+              </SageOpenButton>
             </div>
 
             {/* Right: chat mockup */}

@@ -154,58 +154,6 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* SHOP BY CONCERN */}
-      <section className="bg-cream">
-        <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-20 md:py-28">
-          <div className="text-center mb-12 md:mb-16">
-            <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-3">
-              Find What Works For You
-            </p>
-            <h2 className="font-display font-bold text-forest text-[36px] md:text-[48px]" style={{ letterSpacing: '-0.01em' }}>
-              Shop by Concern
-            </h2>
-          </div>
-
-          <div className="flex flex-col items-center gap-4 md:gap-5">
-            <div className="flex flex-wrap justify-center gap-3.5 md:gap-5">
-              {['Acne', 'Aging', 'Hydration'].map(concern => (
-                <Link
-                  key={concern}
-                  href={`/shop?skinConcern=${encodeURIComponent(concern)}`}
-                  className="group flex items-center gap-2.5 rounded-full bg-white px-8 md:px-11 py-4 md:py-5 text-[15px] md:text-[17px] font-bold text-forest hover:text-olive hover:-translate-y-0.5 transition-all duration-200"
-                  style={{ border: '1.5px solid rgba(40,54,24,0.1)', boxShadow: '0 4px 18px -4px rgba(40,54,24,0.13), 0 1px 4px rgba(40,54,24,0.07)' }}
-                >
-                  {concern}
-                  <span className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-olive">→</span>
-                </Link>
-              ))}
-            </div>
-            <div className="flex flex-wrap justify-center gap-3.5 md:gap-5 md:translate-x-14">
-              {['Hyperpigmentation', 'Brightening'].map(concern => (
-                <Link
-                  key={concern}
-                  href={`/shop?skinConcern=${encodeURIComponent(concern)}`}
-                  className="group flex items-center gap-2.5 rounded-full bg-white px-8 md:px-11 py-4 md:py-5 text-[15px] md:text-[17px] font-bold text-forest hover:text-olive hover:-translate-y-0.5 transition-all duration-200"
-                  style={{ border: '1.5px solid rgba(40,54,24,0.1)', boxShadow: '0 4px 18px -4px rgba(40,54,24,0.13), 0 1px 4px rgba(40,54,24,0.07)' }}
-                >
-                  {concern}
-                  <span className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-olive">→</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div className="text-center mt-10 md:mt-14">
-            <Link
-              href="/shop"
-              className="text-[13px] font-bold uppercase tracking-[0.12em] text-forest/45 hover:text-olive transition-colors"
-            >
-              Browse all products →
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* REVIEWS */}
       {featuredReviews.length > 0 && (
         <section className="bg-forest">
@@ -291,6 +239,58 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* SHOP BY CONCERN */}
+      <section className="bg-cream">
+        <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-20 md:py-28">
+          <div className="text-center mb-12 md:mb-16">
+            <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-3">
+              Find What Works For You
+            </p>
+            <h2 className="font-display font-bold text-forest text-[36px] md:text-[48px]" style={{ letterSpacing: '-0.01em' }}>
+              Shop by Concern
+            </h2>
+          </div>
+
+          <div className="flex flex-col items-center gap-5 md:gap-6">
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+              {['Acne', 'Aging', 'Hydration'].map(concern => (
+                <Link
+                  key={concern}
+                  href={`/shop?skinConcern=${encodeURIComponent(concern)}`}
+                  className="group flex items-center gap-3 rounded-full bg-white px-10 md:px-14 py-5 md:py-6 text-[17px] md:text-[20px] font-bold text-forest hover:text-olive hover:-translate-y-0.5 transition-all duration-200"
+                  style={{ border: '1.5px solid rgba(40,54,24,0.1)', boxShadow: '0 4px 18px -4px rgba(40,54,24,0.13), 0 1px 4px rgba(40,54,24,0.07)' }}
+                >
+                  {concern}
+                  <span className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-olive">→</span>
+                </Link>
+              ))}
+            </div>
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6 md:translate-x-14">
+              {['Hyperpigmentation', 'Brightening'].map(concern => (
+                <Link
+                  key={concern}
+                  href={`/shop?skinConcern=${encodeURIComponent(concern)}`}
+                  className="group flex items-center gap-3 rounded-full bg-white px-10 md:px-14 py-5 md:py-6 text-[17px] md:text-[20px] font-bold text-forest hover:text-olive hover:-translate-y-0.5 transition-all duration-200"
+                  style={{ border: '1.5px solid rgba(40,54,24,0.1)', boxShadow: '0 4px 18px -4px rgba(40,54,24,0.13), 0 1px 4px rgba(40,54,24,0.07)' }}
+                >
+                  {concern}
+                  <span className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-olive">→</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-center mt-10 md:mt-14">
+            <Link
+              href="/shop"
+              className="text-[13px] font-bold uppercase tracking-[0.12em] text-forest/45 hover:text-olive transition-colors"
+            >
+              Browse all products →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* SAGE TEASER */}
       <section style={{ background: 'linear-gradient(140deg, #384c17 0%, #4f6425 45%, #627c30 100%)', padding: 'clamp(72px, 10vw, 100px) 0 clamp(80px, 12vw, 120px)' }}>
         <div className="max-w-[1320px] mx-auto px-6 md:px-12">
@@ -310,6 +310,7 @@ export default function HomePage() {
                 Whether it&apos;s a specific skin concern or just figuring out where to start — Sage is warm, knowledgeable, and right there in the corner of your screen.
               </p>
               <button
+                onClick={() => window.dispatchEvent(new Event('sage:open'))}
                 style={{ display: 'inline-flex', alignItems: 'center', background: '#FEFAE0', color: '#384c17', fontSize: '14px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '14px 32px', borderRadius: '999px', border: 'none', cursor: 'pointer' }}
               >
                 Chat with Sage
