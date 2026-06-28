@@ -12,6 +12,7 @@ export default function HomePage() {
   const [wishlistIds, setWishlistIds] = useState([])
   const [quickAddSlug, setQuickAddSlug] = useState(null)
   const [featuredReviews, setFeaturedReviews] = useState([])
+  const [reviewsLoading, setReviewsLoading] = useState(true)
 
   useEffect(() => {
     fetchFeatured()
@@ -49,6 +50,7 @@ export default function HomePage() {
     } catch (err) {
       console.error('Failed to load featured reviews')
     }
+    setReviewsLoading(false)
   }
 
   const handleWishlistToggle = async (productId, currentlyWishlisted) => {
@@ -349,7 +351,7 @@ export default function HomePage() {
       </section>
 
       {/* REVIEWS */}
-      {featuredReviews.length > 0 && (
+      {(reviewsLoading || featuredReviews.length > 0) && (
         <section style={{ background: '#141d0c' }}>
           <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-24 md:py-32">
 
@@ -363,43 +365,48 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-              {featuredReviews.slice(0, 3).map(review => (
-                <div
-                  key={review._id}
-                  className="relative bg-white rounded-[24px] p-8 md:p-10 flex flex-col overflow-hidden"
-                  style={{ boxShadow: '0 32px 80px -16px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.15)' }}
-                >
-                  <span
-                    className="absolute font-display font-bold select-none pointer-events-none"
-                    style={{ top: '-8px', right: '20px', fontSize: '160px', lineHeight: 1, color: 'rgba(40,54,24,0.055)' }}
-                    aria-hidden="true"
-                  >
-                    &ldquo;
-                  </span>
+              {reviewsLoading
+                ? [1,2,3].map(i => (
+                    <div key={i} className="rounded-[24px] animate-pulse" style={{ background: 'rgba(255,255,255,0.06)', height: '280px' }} />
+                  ))
+                : featuredReviews.slice(0, 3).map(review => (
+                    <div
+                      key={review._id}
+                      className="relative bg-white rounded-[24px] p-8 md:p-10 flex flex-col overflow-hidden"
+                      style={{ boxShadow: '0 32px 80px -16px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.15)' }}
+                    >
+                      <span
+                        className="absolute font-display font-bold select-none pointer-events-none"
+                        style={{ top: '-8px', right: '20px', fontSize: '160px', lineHeight: 1, color: 'rgba(40,54,24,0.055)' }}
+                        aria-hidden="true"
+                      >
+                        &ldquo;
+                      </span>
 
-                  <div className="flex gap-1 mb-6">
-                    {[1,2,3,4,5].map(i => (
-                      <svg key={i} viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="#4f6425" stroke="none">
-                        <path d="M12 2.5l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.7L12 2.5Z" />
-                      </svg>
-                    ))}
-                  </div>
+                      <div className="flex gap-1 mb-6">
+                        {[1,2,3,4,5].map(i => (
+                          <svg key={i} viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="#4f6425" stroke="none">
+                            <path d="M12 2.5l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.7L12 2.5Z" />
+                          </svg>
+                        ))}
+                      </div>
 
-                  <p className="text-forest text-[17px] md:text-[18px] leading-[1.7] font-medium flex-1 mb-8">
-                    &ldquo;{review.comment}&rdquo;
-                  </p>
+                      <p className="text-forest text-[17px] md:text-[18px] leading-[1.7] font-medium flex-1 mb-8">
+                        &ldquo;{review.comment}&rdquo;
+                      </p>
 
-                  <div style={{ borderTop: '1px solid rgba(40,54,24,0.1)', paddingTop: '20px' }}>
-                    <p className="text-[13px]">
-                      <span className="font-bold text-forest">{review.userId?.name || 'EWA Customer'}</span>
-                      <span style={{ color: 'rgba(40,54,24,0.35)' }}> · </span>
-                      <Link href={`/shop/${review.productId?.slug}`} className="font-bold text-olive hover:underline">
-                        {review.productId?.name}
-                      </Link>
-                    </p>
-                  </div>
-                </div>
-              ))}
+                      <div style={{ borderTop: '1px solid rgba(40,54,24,0.1)', paddingTop: '20px' }}>
+                        <p className="text-[13px]">
+                          <span className="font-bold text-forest">{review.userId?.name || 'EWA Customer'}</span>
+                          <span style={{ color: 'rgba(40,54,24,0.35)' }}> · </span>
+                          <Link href={`/shop/${review.productId?.slug}`} className="font-bold text-olive hover:underline">
+                            {review.productId?.name}
+                          </Link>
+                        </p>
+                      </div>
+                    </div>
+                  ))
+              }
             </div>
 
           </div>
