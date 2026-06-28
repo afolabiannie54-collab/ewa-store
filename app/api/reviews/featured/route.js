@@ -10,7 +10,7 @@ export async function GET(req) {
       .populate('productId', 'name slug')
       .populate('userId', 'name')
       .sort({ createdAt: -1 })
-      .limit(6)
+      .limit(3)
 
     return NextResponse.json({ reviews }, { status: 200 })
 
