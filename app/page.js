@@ -11,10 +11,12 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [wishlistIds, setWishlistIds] = useState([])
   const [quickAddSlug, setQuickAddSlug] = useState(null)
+  const [featuredReviews, setFeaturedReviews] = useState([])
 
   useEffect(() => {
     fetchFeatured()
     fetchWishlist()
+    fetchFeaturedReviews()
   }, [])
 
   const fetchFeatured = async () => {
@@ -36,6 +38,16 @@ export default function HomePage() {
       setWishlistIds((data.wishlist || []).map(p => p._id))
     } catch (err) {
       // not logged in or no wishlist yet — fine to ignore
+    }
+  }
+
+  const fetchFeaturedReviews = async () => {
+    try {
+      const res = await fetch('/api/reviews/featured')
+      const data = await res.json()
+      setFeaturedReviews(data.reviews || [])
+    } catch (err) {
+      console.error('Failed to load featured reviews')
     }
   }
 
@@ -138,6 +150,80 @@ export default function HomePage() {
                 ))}
               </div>
             )}
+          </div>
+        </section>
+      )}
+
+      {/* SHOP BY CONCERN */}
+      <section className="bg-cream">
+        <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-20">
+          <div className="text-center mb-12">
+            <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-3">
+              Find What Works For You
+            </p>
+            <h2 className="font-display font-bold text-forest text-[36px] md:text-[48px]" style={{ letterSpacing: '-0.01em' }}>
+              Shop by Concern
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {['Acne', 'Aging', 'Hyperpigmentation', 'Hydration', 'Brightening'].map(concern => (
+              <Link
+                key={concern}
+                href={`/shop?skinConcern=${encodeURIComponent(concern)}`}
+                className="group relative aspect-square rounded-[20px] border-[1.5px] border-border bg-surface flex items-center justify-center text-center p-4 hover:border-olive transition-colors"
+              >
+                <p className="font-display font-bold text-forest text-[16px] md:text-[18px] group-hover:text-olive transition-colors">
+                  {concern}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* REVIEWS */}
+      {featuredReviews.length > 0 && (
+        <section className="bg-forest">
+          <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-20">
+            <div className="text-center mb-12">
+              <p className="text-cream/50 text-[13px] font-bold uppercase tracking-[0.15em] mb-3">
+                Real Customers, Real Results
+              </p>
+              <h2 className="font-display font-bold text-cream text-[36px] md:text-[48px]" style={{ letterSpacing: '-0.01em' }}>
+                What People Are Saying
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {featuredReviews.slice(0, 3).map(review => (
+                <div key={review._id} className="rounded-[20px] bg-cream/[0.06] border-[1.5px] border-cream/15 p-7">
+                  <div className="flex gap-1 mb-4">
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <svg
+                        key={i}
+                        viewBox="0 0 24 24"
+                        className="w-4 h-4"
+                        fill={i <= review.rating ? '#FEFAE0' : 'none'}
+                        stroke="#FEFAE0"
+                        strokeWidth="1.5"
+                      >
+                        <path d="M12 2.5l2.9 6.6 7.1.7-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.7L12 2.5Z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-cream/85 text-[15px] leading-relaxed mb-5">
+                    &quot;{review.comment}&quot;
+                  </p>
+                  <p className="text-cream/50 text-[13px]">
+                    {review.userId?.name || 'EWA Customer'} on{' '}
+                    <Link href={`/shop/${review.productId?.slug}`} className="text-cream font-bold hover:underline">
+                      {review.productId?.name}
+                    </Link>
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}

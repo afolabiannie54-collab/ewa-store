@@ -43,8 +43,8 @@ function ShopContent() {
 
   const [filters, setFilters] = useState({
     category: searchParams.get('category') || '',
-    skinType: '',
-    skinConcern: '',
+    skinType: searchParams.get('skinType') || '',
+    skinConcern: searchParams.get('skinConcern') || '',
     search: searchParams.get('search') || '',
     sort: ''
   })
