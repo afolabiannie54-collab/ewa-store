@@ -238,71 +238,72 @@ export default function AboutPage() {
               <div className="sage-mockup-card" style={{ width: '100%', maxWidth: '400px', background: 'white', borderRadius: '24px', boxShadow: '0 48px 120px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)', overflow: 'hidden', transform: 'rotate(1.5deg)' }}>
 
                 {/* Header */}
-                <div style={{ background: '#384c17', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(254,250,224,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#FEFAE0" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
-                      <path d="M12 3c2 2.5 3 5 3 7.5a3 3 0 0 1-6 0C9 8 10 5.5 12 3Z" />
-                      <path d="M8 14c.5 2 2 4 4 4s3.5-2 4-4" />
-                    </svg>
+                <div style={{ background: 'linear-gradient(135deg, #283618 0%, #384c17 100%)', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #4f6425 0%, #627c30 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg viewBox="0 0 32 32" fill="none" style={{ width: '20px', height: '20px' }}>
+                        <path d="M16 4C9 8 6 14 6 19c0 5.5 4.5 9 10 9s10-3.5 10-9c0-5-3-11-10-15Z" fill="#FEFAE0" />
+                        <path d="M16 9v17" stroke="#FEFAE0" strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
+                        <path d="M16 13c-1.5 1-3 2.5-3 4M16 18c1.5 1 3 2.5 3 4" stroke="#FEFAE0" strokeWidth="1" strokeLinecap="round" opacity="0.4" />
+                      </svg>
+                    </div>
+                    <div style={{ position: 'absolute', bottom: 0, right: 0, width: '10px', height: '10px', borderRadius: '50%', background: '#4ade80', border: '2px solid #283618' }} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ color: '#FEFAE0', fontWeight: 700, fontSize: '14px', lineHeight: '1.2', margin: 0 }}>Sage</p>
-                    <p style={{ color: 'rgba(254,250,224,0.5)', fontSize: '11px', margin: 0 }}>EWA Skincare Advisor</p>
+                    <p style={{ color: '#FEFAE0', fontWeight: 700, fontSize: '16px', lineHeight: '1.2', margin: 0 }}>Sage</p>
+                    <p style={{ color: 'rgba(254,250,224,0.45)', fontSize: '11px', margin: 0 }}>Your skin advisor</p>
                   </div>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#7dc95e' }} />
                 </div>
 
                 {/* Messages */}
-                <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: '14px', background: '#f7f6f0' }}>
+                <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: '14px', background: '#ffffff' }}>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#4f6425', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#FEFAE0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '12px', height: '12px' }}>
-                        <path d="M12 3c2 2.5 3 5 3 7.5a3 3 0 0 1-6 0C9 8 10 5.5 12 3Z" />
-                        <path d="M8 14c.5 2 2 4 4 4s3.5-2 4-4" />
+                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'linear-gradient(135deg, #4f6425 0%, #627c30 100%)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg viewBox="0 0 32 32" fill="none" style={{ width: '13px', height: '13px' }}>
+                        <path d="M16 4C9 8 6 14 6 19c0 5.5 4.5 9 10 9s10-3.5 10-9c0-5-3-11-10-15Z" fill="#FEFAE0" />
                       </svg>
                     </div>
-                    <div style={{ background: 'white', borderRadius: '4px 14px 14px 14px', padding: '11px 14px', fontSize: '13px', lineHeight: '1.55', color: '#2d3a14', maxWidth: '240px', boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
-                      Hi! I'm Sage. What's going on with your skin lately?
+                    <div style={{ background: '#f4f3ee', border: '1.5px solid #D6CEB8', borderRadius: '4px 14px 14px 14px', padding: '10px 14px', fontSize: '13px', lineHeight: '1.55', color: '#283618', maxWidth: '230px' }}>
+                      Hi! I&apos;m Sage. What&apos;s going on with your skin lately?
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <div style={{ background: '#4f6425', borderRadius: '14px 4px 14px 14px', padding: '11px 14px', fontSize: '13px', lineHeight: '1.55', color: '#FEFAE0', maxWidth: '210px' }}>
+                    <div style={{ background: 'linear-gradient(135deg, #4f6425 0%, #283618 100%)', borderRadius: '14px 4px 14px 14px', padding: '10px 14px', fontSize: '13px', lineHeight: '1.55', color: '#FEFAE0', maxWidth: '200px' }}>
                       My skin gets so oily by noon
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#4f6425', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#FEFAE0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '12px', height: '12px' }}>
-                        <path d="M12 3c2 2.5 3 5 3 7.5a3 3 0 0 1-6 0C9 8 10 5.5 12 3Z" />
-                        <path d="M8 14c.5 2 2 4 4 4s3.5-2 4-4" />
+                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'linear-gradient(135deg, #4f6425 0%, #627c30 100%)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg viewBox="0 0 32 32" fill="none" style={{ width: '13px', height: '13px' }}>
+                        <path d="M16 4C9 8 6 14 6 19c0 5.5 4.5 9 10 9s10-3.5 10-9c0-5-3-11-10-15Z" fill="#FEFAE0" />
                       </svg>
                     </div>
-                    <div style={{ background: 'white', borderRadius: '4px 14px 14px 14px', padding: '11px 14px', fontSize: '13px', lineHeight: '1.55', color: '#2d3a14', maxWidth: '240px', boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
+                    <div style={{ background: '#f4f3ee', border: '1.5px solid #D6CEB8', borderRadius: '4px 14px 14px 14px', padding: '10px 14px', fontSize: '13px', lineHeight: '1.55', color: '#283618', maxWidth: '230px' }}>
                       Lagos heat will do that. A lightweight gel moisturiser actually helps regulate oil — sounds counterintuitive, but it works.
                     </div>
                   </div>
 
                   {/* Typing indicator */}
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#4f6425', flexShrink: 0 }} />
-                    <div style={{ background: 'white', borderRadius: '4px 14px 14px 14px', padding: '12px 16px', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', display: 'flex', gap: '5px', alignItems: 'center' }}>
-                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(45,58,20,0.22)', display: 'inline-block' }} />
-                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(45,58,20,0.22)', display: 'inline-block' }} />
-                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(45,58,20,0.22)', display: 'inline-block' }} />
+                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'linear-gradient(135deg, #4f6425 0%, #627c30 100%)', flexShrink: 0 }} />
+                    <div style={{ background: '#f4f3ee', border: '1.5px solid #D6CEB8', borderRadius: '4px 14px 14px 14px', padding: '11px 16px', display: 'flex', gap: '5px', alignItems: 'center' }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(40,54,24,0.25)', display: 'inline-block' }} />
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(40,54,24,0.25)', display: 'inline-block' }} />
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(40,54,24,0.25)', display: 'inline-block' }} />
                     </div>
                   </div>
                 </div>
 
                 {/* Input */}
-                <div style={{ padding: '14px 16px', borderTop: '1px solid #ede9dc', background: 'white', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ flex: 1, background: '#f5f3ec', borderRadius: '20px', padding: '10px 16px', fontSize: '13px', color: 'rgba(45,58,20,0.35)' }}>
+                <div style={{ padding: '10px 14px 14px', borderTop: '1px solid rgba(40,54,24,0.07)', background: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ flex: 1, background: '#f5f4f0', borderRadius: '999px', padding: '9px 16px', fontSize: '13px', color: 'rgba(40,54,24,0.35)', border: '1.5px solid #D6CEB8' }}>
                     Ask Sage anything...
                   </div>
-                  <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#4f6425', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#FEFAE0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '14px', height: '14px' }}>
-                      <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #4f6425 0%, #283618 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#FEFAE0" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: '14px', height: '14px' }}>
+                      <path d="M5 12h14M13 6l6 6-6 6" />
                     </svg>
                   </div>
                 </div>

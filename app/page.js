@@ -181,6 +181,108 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* SAGE TEASER */}
+      <section style={{ background: 'linear-gradient(140deg, #384c17 0%, #4f6425 45%, #627c30 100%)', padding: 'clamp(72px, 10vw, 100px) 0 clamp(80px, 12vw, 120px)' }}>
+        <div className="max-w-[1320px] mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+
+            <div>
+              <p style={{ color: 'rgba(254,250,224,0.5)', fontSize: '13px', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '20px' }}>
+                Meet Sage
+              </p>
+              <h2
+                className="font-display font-bold text-cream"
+                style={{ fontSize: 'clamp(36px, 4.5vw, 58px)', letterSpacing: '-0.02em', lineHeight: '1.06', marginBottom: '24px' }}
+              >
+                Your personal skincare advisor, always on
+              </h2>
+              <p style={{ fontSize: '17px', lineHeight: '1.8', color: 'rgba(254,250,224,0.62)', marginBottom: '44px', maxWidth: '420px' }}>
+                Whether it&apos;s a specific skin concern or just figuring out where to start — Sage is warm, knowledgeable, and right there in the corner of your screen.
+              </p>
+              <button
+                style={{ display: 'inline-flex', alignItems: 'center', background: '#FEFAE0', color: '#384c17', fontSize: '14px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '14px 32px', borderRadius: '999px', border: 'none', cursor: 'pointer' }}
+              >
+                Chat with Sage
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', paddingTop: '16px', paddingBottom: '16px' }}>
+              <div style={{ width: '100%', maxWidth: '400px', background: 'white', borderRadius: '24px', boxShadow: '0 48px 120px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)', overflow: 'hidden', transform: 'rotate(-1.5deg)' }}>
+
+                <div style={{ background: 'linear-gradient(135deg, #283618 0%, #384c17 100%)', padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #4f6425 0%, #627c30 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg viewBox="0 0 32 32" fill="none" style={{ width: '20px', height: '20px' }}>
+                        <path d="M16 4C9 8 6 14 6 19c0 5.5 4.5 9 10 9s10-3.5 10-9c0-5-3-11-10-15Z" fill="#FEFAE0" />
+                        <path d="M16 9v17" stroke="#FEFAE0" strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
+                        <path d="M16 13c-1.5 1-3 2.5-3 4M16 18c1.5 1 3 2.5 3 4" stroke="#FEFAE0" strokeWidth="1" strokeLinecap="round" opacity="0.4" />
+                      </svg>
+                    </div>
+                    <div style={{ position: 'absolute', bottom: 0, right: 0, width: '10px', height: '10px', borderRadius: '50%', background: '#4ade80', border: '2px solid #283618' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ color: '#FEFAE0', fontWeight: 700, fontSize: '16px', lineHeight: '1.2', margin: 0 }}>Sage</p>
+                    <p style={{ color: 'rgba(254,250,224,0.45)', fontSize: '11px', margin: 0 }}>Your skin advisor</p>
+                  </div>
+                </div>
+
+                <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: '14px', background: '#ffffff' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'linear-gradient(135deg, #4f6425 0%, #627c30 100%)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg viewBox="0 0 32 32" fill="none" style={{ width: '13px', height: '13px' }}>
+                        <path d="M16 4C9 8 6 14 6 19c0 5.5 4.5 9 10 9s10-3.5 10-9c0-5-3-11-10-15Z" fill="#FEFAE0" />
+                      </svg>
+                    </div>
+                    <div style={{ background: '#f4f3ee', border: '1.5px solid #D6CEB8', borderRadius: '4px 14px 14px 14px', padding: '10px 14px', fontSize: '13px', lineHeight: '1.55', color: '#283618', maxWidth: '230px' }}>
+                      Hi! I&apos;m Sage. What&apos;s going on with your skin lately?
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ background: 'linear-gradient(135deg, #4f6425 0%, #283618 100%)', borderRadius: '14px 4px 14px 14px', padding: '10px 14px', fontSize: '13px', lineHeight: '1.55', color: '#FEFAE0', maxWidth: '200px' }}>
+                      My skin gets so oily by noon
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'linear-gradient(135deg, #4f6425 0%, #627c30 100%)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg viewBox="0 0 32 32" fill="none" style={{ width: '13px', height: '13px' }}>
+                        <path d="M16 4C9 8 6 14 6 19c0 5.5 4.5 9 10 9s10-3.5 10-9c0-5-3-11-10-15Z" fill="#FEFAE0" />
+                      </svg>
+                    </div>
+                    <div style={{ background: '#f4f3ee', border: '1.5px solid #D6CEB8', borderRadius: '4px 14px 14px 14px', padding: '10px 14px', fontSize: '13px', lineHeight: '1.55', color: '#283618', maxWidth: '230px' }}>
+                      Lagos heat will do that. A lightweight gel moisturiser actually helps regulate oil — sounds counterintuitive, but it works.
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'linear-gradient(135deg, #4f6425 0%, #627c30 100%)', flexShrink: 0 }} />
+                    <div style={{ background: '#f4f3ee', border: '1.5px solid #D6CEB8', borderRadius: '4px 14px 14px 14px', padding: '11px 16px', display: 'flex', gap: '5px', alignItems: 'center' }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(40,54,24,0.25)', display: 'inline-block' }} />
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(40,54,24,0.25)', display: 'inline-block' }} />
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(40,54,24,0.25)', display: 'inline-block' }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ padding: '10px 14px 14px', borderTop: '1px solid rgba(40,54,24,0.07)', background: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ flex: 1, background: '#f5f4f0', borderRadius: '999px', padding: '9px 16px', fontSize: '13px', color: 'rgba(40,54,24,0.35)', border: '1.5px solid #D6CEB8' }}>
+                    Ask Sage anything...
+                  </div>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #4f6425 0%, #283618 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#FEFAE0" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: '14px', height: '14px' }}>
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       <QuickAddModal
         slug={quickAddSlug}
         isOpen={!!quickAddSlug}
