@@ -5,9 +5,11 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Loader from '@/components/Loader'
 import EmptyWishlistIllustration from '@/components/EmptyWishlistIllustration'
+import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
 
 export default function WishlistPage() {
-  const { status } = useSession()
+  const { data: session, status } = useSession()
+  const isAdmin = session?.user?.role === 'admin'
   const [wishlist, setWishlist] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -75,6 +77,8 @@ export default function WishlistPage() {
           <span className="px-4 py-2 rounded-full bg-olive text-cream text-[12px] font-medium">Wishlist</span>
         </div>
 
+        {isAdmin && <AdminBrowsingBanner />}
+
         {wishlist.length === 0 ? (
           <div className="flex flex-col items-center text-center py-12 md:py-20">
             <EmptyWishlistIllustration />
@@ -111,7 +115,8 @@ export default function WishlistPage() {
                   </p>
                   <button
                     onClick={() => handleRemove(product._id)}
-                    className="w-full rounded-full border-[1.5px] border-error text-error text-[12px] font-bold uppercase tracking-wide py-2 hover:bg-error hover:text-cream transition-colors"
+                    disabled={isAdmin}
+                    className="w-full rounded-full border-[1.5px] border-error text-error text-[12px] font-bold uppercase tracking-wide py-2 hover:bg-error hover:text-cream transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Remove
                   </button>

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import Loader from '@/components/Loader'
 import { addToGuestCart } from '@/lib/cart-client'
+import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
 
 function CloseIcon(props) {
   return (
@@ -16,6 +17,7 @@ function CloseIcon(props) {
 
 export default function QuickAddModal({ slug, isOpen, onClose }) {
   const { data: session } = useSession()
+  const isAdmin = session?.user?.role === 'admin'
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [selectedVariant, setSelectedVariant] = useState(null)
@@ -121,6 +123,7 @@ export default function QuickAddModal({ slug, isOpen, onClose }) {
             </div>
 
             <div className="p-6">
+              {isAdmin && <AdminBrowsingBanner />}
               <h3 className="font-display font-bold text-forest text-[22px] mb-1">
                 {product.name}
               </h3>
@@ -175,7 +178,7 @@ export default function QuickAddModal({ slug, isOpen, onClose }) {
 
               <button
                 onClick={handleAddToCart}
-                disabled={!selectedVariant || selectedVariant.stockQuantity === 0 || adding}
+                disabled={isAdmin || !selectedVariant || selectedVariant.stockQuantity === 0 || adding}
                 className="w-full rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-4 hover:bg-forest transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {message || (selectedVariant?.stockQuantity === 0 ? 'Out of Stock' : adding ? <Loader size="sm" color="cream" /> : 'Add to Cart')}

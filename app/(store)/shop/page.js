@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import ProductCard from '@/components/ProductCard'
 import QuickAddModal from '@/components/QuickAddModal'
+import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
 
 const SKIN_TYPES = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']
 const SKIN_CONCERNS = ['Acne', 'Aging', 'Hyperpigmentation', 'Hydration', 'Brightening']
@@ -26,6 +28,8 @@ function ChevronDown(props) {
 
 function ShopContent() {
   const searchParams = useSearchParams()
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.role === 'admin'
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -135,6 +139,8 @@ function ShopContent() {
         <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-10">
           {loading ? 'Loading products' : `${products.length} product${products.length !== 1 ? 's' : ''}`}
         </p>
+
+        {isAdmin && <AdminBrowsingBanner />}
 
 {/* CATEGORY PILLS */}
         <div className="flex flex-wrap gap-2.5 md:gap-3.5 mb-7">

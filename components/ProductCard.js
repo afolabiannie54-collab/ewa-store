@@ -15,7 +15,8 @@ function HeartIcon(props) {
 }
 
 export default function ProductCard({ product, isWishlisted = false, onWishlistToggle, onQuickAdd }) {
-  const { status } = useSession()
+  const { data: session, status } = useSession()
+  const isAdmin = session?.user?.role === 'admin'
   const [imageError, setImageError] = useState(false)
   const [wishlistBusy, setWishlistBusy] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -81,7 +82,7 @@ export default function ProductCard({ product, isWishlisted = false, onWishlistT
 
           <button
             onClick={handleWishlistClick}
-            disabled={wishlistBusy}
+            disabled={isAdmin || wishlistBusy}
             aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
             className="absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-surface/90 backdrop-blur-sm transition-transform hover:scale-110 disabled:opacity-50"
           >
@@ -109,7 +110,7 @@ export default function ProductCard({ product, isWishlisted = false, onWishlistT
           {onQuickAdd && (
             <button
               onClick={handleQuickAddClick}
-              disabled={!product.inStock}
+              disabled={isAdmin || !product.inStock}
               className="w-full rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.08em] py-3 transition-colors hover:bg-forest disabled:bg-border disabled:text-muted disabled:cursor-not-allowed"
             >
               {product.inStock ? 'Add to Cart' : 'Sold Out'}

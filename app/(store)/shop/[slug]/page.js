@@ -10,6 +10,7 @@ import { addToGuestCart } from '@/lib/cart-client'
 import StarRating from '@/components/StarRating'
 import StarInput from '@/components/StarInput'
 import ProductCard from '@/components/ProductCard'
+import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
 
 function HeartIcon(props) {
   return (
@@ -33,6 +34,7 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState('description')
   const [addedMessage, setAddedMessage] = useState('')
   const { data: session, status: sessionStatus } = useSession()
+  const isAdmin = session?.user?.role === 'admin'
   const [inWishlist, setInWishlist] = useState(false)
 
   const [reviews, setReviews] = useState([])
@@ -255,6 +257,7 @@ export default function ProductDetailPage() {
           </div>
 {/* PRODUCT INFO */}
           <div className="border-2 border-olive rounded-[28px] p-8">
+            {isAdmin && <AdminBrowsingBanner />}
             <p className="text-[13px] font-bold uppercase tracking-[0.2em] text-olive mb-5">
               {product.category}
             </p>
@@ -344,7 +347,7 @@ export default function ProductDetailPage() {
             <div className="flex gap-3 mb-4">
               <button
                 onClick={handleAddToCart}
-                disabled={maxStock === 0}
+                disabled={isAdmin || maxStock === 0}
                 className="flex-1 rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-[18px] hover:bg-forest transition-colors disabled:bg-border disabled:text-muted disabled:cursor-not-allowed"
               >
                 {maxStock === 0 ? 'Sold Out' : 'Add to Cart'}
@@ -353,8 +356,9 @@ export default function ProductDetailPage() {
               {session && (
                 <button
                   onClick={handleToggleWishlist}
+                  disabled={isAdmin}
                   aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-                  className={`w-[60px] flex-shrink-0 flex items-center justify-center rounded-full border-[1.5px] transition-colors ${
+                  className={`w-[60px] flex-shrink-0 flex items-center justify-center rounded-full border-[1.5px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     inWishlist ? 'bg-olive border-olive text-cream' : 'border-border text-forest hover:border-olive'
                   }`}
                 >
