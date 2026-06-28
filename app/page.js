@@ -404,7 +404,7 @@ export default function HomePage() {
                       <div style={{ borderTop: '1px solid rgba(40,54,24,0.1)', paddingTop: '20px' }}>
                         <p className="text-[13px]">
                           <span className="font-bold text-forest">{review.userId?.name || 'EWA Customer'}</span>
-                          <span style={{ color: 'rgba(40,54,24,0.35)' }}> · </span>
+                          <span style={{ color: 'rgba(40,54,24,0.35)' }}> on </span>
                           <Link href={`/shop/${review.productId?.slug}`} className="font-bold text-olive hover:underline">
                             {review.productId?.name}
                           </Link>
