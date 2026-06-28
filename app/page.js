@@ -6,6 +6,7 @@ import Image from 'next/image'
 import ProductCard from '@/components/ProductCard'
 import QuickAddModal from '@/components/QuickAddModal'
 import FadeInSection from '@/components/FadeInSection'
+import { motion } from 'framer-motion'
 
 export default function HomePage() {
   const [featured, setFeatured] = useState([])
@@ -80,24 +81,51 @@ export default function HomePage() {
         <div className="mx-auto max-w-[1320px] px-6 md:px-0 grid grid-cols-1 md:grid-cols-2 items-stretch md:min-h-[calc(100vh-80px)]">
 
           <div className="relative z-10 py-16 md:py-0 md:pl-12 flex flex-col justify-center">
-            <p className="text-[14px] font-bold uppercase tracking-[0.2em] text-olive mb-6">
-              Clean skincare · Made for you
-            </p>
-            <h1 className="font-display font-bold text-forest leading-[0.95] text-[48px] md:text-[64px] mb-7" style={{ letterSpacing: '-0.02em' }}>
-              Skin that feels<br />like itself again
-            </h1>
-            <p className="text-[17px] text-forest/65 leading-relaxed max-w-[420px] mb-9">
-              Made with what your skin actually asks for — gentle, effective ingredients, nothing it doesn&apos;t need.
-            </p>
-            <Link
-              href="/shop"
-              className="inline-block rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors w-fit"
+            <motion.p
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="text-[14px] font-bold uppercase tracking-[0.2em] text-olive mb-6"
             >
-              Shop Now
-            </Link>
+              Clean skincare · Made for you
+            </motion.p>
+            <motion.h1
+              initial={{ opacity: 0, y: 32 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
+              className="font-display font-bold text-forest leading-[0.95] text-[48px] md:text-[64px] mb-7"
+              style={{ letterSpacing: '-0.02em' }}
+            >
+              Skin that feels<br />like itself again
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.22, ease: 'easeOut' }}
+              className="text-[17px] text-forest/65 leading-relaxed max-w-[420px] mb-9"
+            >
+              Made with what your skin actually asks for — gentle, effective ingredients, nothing it doesn&apos;t need.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.36, ease: 'easeOut' }}
+            >
+              <Link
+                href="/shop"
+                className="inline-block rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors w-fit"
+              >
+                Shop Now
+              </Link>
+            </motion.div>
           </div>
 
-          <div className="group relative -mx-6 md:mx-0 w-screen md:w-full h-[560px] md:h-auto flex items-end justify-center border-t-[2.5px] border-olive md:border-t-0">
+          <motion.div
+            initial={{ opacity: 0, x: 32 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.12, ease: 'easeOut' }}
+            className="group relative -mx-6 md:mx-0 w-screen md:w-full h-[560px] md:h-auto flex items-end justify-center border-t-[2.5px] border-olive md:border-t-0"
+          >
             <div
               className="absolute bottom-[6%] w-[80%] md:w-[85%] h-[140px] md:h-[180px] rounded-[50%] transition-all duration-700 ease-out group-hover:scale-110 group-hover:opacity-70"
               style={{
@@ -117,13 +145,13 @@ export default function HomePage() {
                 className="object-contain object-bottom"
               />
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* FEATURED — collapses entirely if no products are flagged */}
       {!loading && featured.length === 0 ? null : (
-        <FadeInSection>
+        <FadeInSection y={40} scale={0.97}>
         <section id="featured" className="bg-forest">
           <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-20">
             <div className="text-center mb-12">
@@ -160,7 +188,7 @@ export default function HomePage() {
       )}
 
       {/* OUR STORY TEASER */}
-      <FadeInSection>
+      <FadeInSection y={20}>
       <section className="relative min-h-[900px] md:min-h-[860px] overflow-hidden">
         <Image
           src="/about-teaser.jpg"
@@ -201,7 +229,7 @@ export default function HomePage() {
       </FadeInSection>
 
       {/* SHOP BY CONCERN */}
-      <FadeInSection>
+      <FadeInSection x={-28} y={16}>
       <section className="bg-cream">
         <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-20 md:py-28">
           <div className="text-center mb-12 md:mb-16">
@@ -255,7 +283,7 @@ export default function HomePage() {
       </FadeInSection>
 
       {/* SAGE TEASER */}
-      <FadeInSection>
+      <FadeInSection x={28} y={16}>
       <section style={{ background: 'linear-gradient(140deg, #384c17 0%, #4f6425 45%, #627c30 100%)', padding: 'clamp(72px, 10vw, 100px) 0 clamp(80px, 12vw, 120px)' }}>
         <div className="max-w-[1320px] mx-auto px-6 md:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
@@ -385,7 +413,7 @@ export default function HomePage() {
               transform: scale(1.15);
             }
           `}</style>
-          <FadeInSection>
+          <FadeInSection y={44} delay={0.05}>
           <section style={{ background: '#141d0c', position: 'relative', overflow: 'hidden' }}>
 
             {/* Background decorative layer */}
