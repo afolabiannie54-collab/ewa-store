@@ -11,6 +11,7 @@ import StarRating from '@/components/StarRating'
 import StarInput from '@/components/StarInput'
 import ProductCard from '@/components/ProductCard'
 import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
+import FadeInSection from '@/components/FadeInSection'
 
 function HeartIcon(props) {
   return (
@@ -378,6 +379,7 @@ export default function ProductDetailPage() {
         </div>
 
         {/* TABS */}
+        <FadeInSection>
         <div className="mb-20">
           <div className="flex gap-4 md:gap-8 border-b-[1.5px] border-border mb-8 overflow-x-auto">
             {['description', 'ingredients', 'how to use'].map(tab => (
@@ -423,6 +425,7 @@ export default function ProductDetailPage() {
             </div>
           )}
         </div>
+        </FadeInSection>
 
         {/* REVIEWS */}
         <div className="mb-20 max-w-[720px]">
@@ -485,6 +488,7 @@ export default function ProductDetailPage() {
 
         {/* RELATED PRODUCTS */}
         {relatedProducts.length > 0 && (
+          <FadeInSection>
           <div>
             <h2 className="font-display font-bold text-forest text-[28px] md:text-[34px] mb-8">
               You May Also Like
@@ -495,6 +499,7 @@ export default function ProductDetailPage() {
               ))}
             </div>
           </div>
+          </FadeInSection>
         )}
 
       </div>

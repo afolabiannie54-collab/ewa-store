@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react'
 import ProductCard from '@/components/ProductCard'
 import QuickAddModal from '@/components/QuickAddModal'
 import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
+import FadeInSection from '@/components/FadeInSection'
 
 const SKIN_TYPES = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']
 const SKIN_CONCERNS = ['Acne', 'Aging', 'Hyperpigmentation', 'Hydration', 'Brightening']
@@ -280,6 +281,7 @@ function ShopContent() {
         )}
 
         {/* PRODUCT GRID */}
+        <FadeInSection>
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
             {[...Array(6)].map((_, i) => (
@@ -301,6 +303,7 @@ function ShopContent() {
             ))}
           </div>
         )}
+        </FadeInSection>
       </div>
 
       <QuickAddModal

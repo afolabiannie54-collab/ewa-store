@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import AboutGallery from '@/components/AboutGallery'
 import SageOpenButton from '@/components/SageOpenButton'
+import FadeInSection from '@/components/FadeInSection'
 
 export const metadata = {
   title: 'Our Story — EWA Skincare',
@@ -111,14 +112,17 @@ export default function AboutPage() {
       </section>
 
       {/* OUR PHILOSOPHY */}
+      <FadeInSection>
       <section className="max-w-[720px] mx-auto px-6 py-24 md:py-32 text-center">
         <p className="text-olive text-[13px] font-bold uppercase tracking-[0.2em] mb-6">Our Philosophy</p>
         <p className="font-display font-bold text-forest text-[28px] md:text-[36px] leading-[1.3]" style={{ letterSpacing: '-0.01em' }}>
           We believe skincare should adapt to the skin and climate it's actually made for — not the other way around.
         </p>
       </section>
+      </FadeInSection>
 
       {/* THE STORY — half and half */}
+      <FadeInSection>
       <section className="max-w-[1320px] mx-auto px-6 md:px-12 py-24 md:py-32">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-center">
 
@@ -152,9 +156,13 @@ export default function AboutPage() {
 
         </div>
       </section>
+      </FadeInSection>
+      <FadeInSection>
       <AboutGallery />
+      </FadeInSection>
 
       {/* PILLARS — editorial typographic list */}
+      <FadeInSection>
       <section className="bg-forest">
         <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-20 md:py-28">
 
@@ -207,8 +215,10 @@ export default function AboutPage() {
 
         </div>
       </section>
+      </FadeInSection>
 
       {/* SAGE TEASER */}
+      <FadeInSection>
       <section style={{ background: 'linear-gradient(140deg, #384c17 0%, #4f6425 45%, #627c30 100%)', padding: 'clamp(72px, 10vw, 100px) 0 clamp(80px, 12vw, 120px)' }}>
         <div className="max-w-[1320px] mx-auto px-6 md:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
@@ -315,8 +325,10 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+      </FadeInSection>
 
       {/* CLOSING CTA */}
+      <FadeInSection>
       <section className="bg-forest" style={{ padding: 'clamp(80px, 12vw, 120px) 0 clamp(96px, 14vw, 140px)', overflow: 'hidden', position: 'relative' }}>
         {/* Decorative concentric circles */}
         <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: '700px', height: '700px', borderRadius: '50%', border: '1px solid rgba(254,250,224,0.05)', pointerEvents: 'none' }} />
@@ -342,6 +354,7 @@ export default function AboutPage() {
           </Link>
         </div>
       </section>
+      </FadeInSection>
 
     </div>
   )

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import ProductCard from '@/components/ProductCard'
 import QuickAddModal from '@/components/QuickAddModal'
+import FadeInSection from '@/components/FadeInSection'
 
 export default function HomePage() {
   const [featured, setFeatured] = useState([])
@@ -122,6 +123,7 @@ export default function HomePage() {
 
       {/* FEATURED — collapses entirely if no products are flagged */}
       {!loading && featured.length === 0 ? null : (
+        <FadeInSection>
         <section id="featured" className="bg-forest">
           <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-20">
             <div className="text-center mb-12">
@@ -154,9 +156,11 @@ export default function HomePage() {
             )}
           </div>
         </section>
+        </FadeInSection>
       )}
 
       {/* OUR STORY TEASER */}
+      <FadeInSection>
       <section className="relative min-h-[900px] md:min-h-[860px] overflow-hidden">
         <Image
           src="/about-teaser.jpg"
@@ -194,8 +198,10 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </FadeInSection>
 
       {/* SHOP BY CONCERN */}
+      <FadeInSection>
       <section className="bg-cream">
         <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-20 md:py-28">
           <div className="text-center mb-12 md:mb-16">
@@ -246,8 +252,10 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </FadeInSection>
 
       {/* SAGE TEASER */}
+      <FadeInSection>
       <section style={{ background: 'linear-gradient(140deg, #384c17 0%, #4f6425 45%, #627c30 100%)', padding: 'clamp(72px, 10vw, 100px) 0 clamp(80px, 12vw, 120px)' }}>
         <div className="max-w-[1320px] mx-auto px-6 md:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
@@ -349,6 +357,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </FadeInSection>
 
       {/* REVIEWS */}
       {(reviewsLoading || featuredReviews.length > 0) && (
@@ -376,6 +385,7 @@ export default function HomePage() {
               transform: scale(1.15);
             }
           `}</style>
+          <FadeInSection>
           <section style={{ background: '#141d0c', position: 'relative', overflow: 'hidden' }}>
 
             {/* Background decorative layer */}
@@ -455,6 +465,7 @@ export default function HomePage() {
 
             </div>
           </section>
+          </FadeInSection>
         </>
       )}
 
