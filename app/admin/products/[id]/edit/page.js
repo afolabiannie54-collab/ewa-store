@@ -436,14 +436,20 @@ export default function EditProductPage() {
                 </select>
               </div>
 
-              <label className="flex items-center gap-2.5 text-[13px] font-medium text-forest cursor-pointer">
+              <label className={`flex items-center gap-2.5 text-[13px] font-medium ${form.status === 'Active' ? 'text-forest cursor-pointer' : 'text-forest/40 cursor-not-allowed'}`}>
                 <input
                   type="checkbox" checked={form.isFeatured}
+                  disabled={form.status !== 'Active'}
                   onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })}
-                  className="accent-olive w-4 h-4"
+                  className="accent-olive w-4 h-4 disabled:cursor-not-allowed"
                 />
                 Feature on homepage
               </label>
+              {form.status !== 'Active' && (
+                <p className="text-[12px] text-forest/45 mt-2">
+                  Only Active products can be featured. Set status to Active to enable this.
+                </p>
+              )}
             </div>
 
             <button
