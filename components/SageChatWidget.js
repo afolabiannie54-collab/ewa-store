@@ -94,17 +94,6 @@ function LoginNudgeMessage({ pathname }) {
   )
 }
 
-function getFirstName(fullName) {
-  if (!fullName) return ''
-  return fullName.trim().split(' ')[0]
-}
-
-function getGreeting(userName) {
-  const firstName = getFirstName(userName)
-  return firstName
-    ? `Hi ${firstName}, I'm Sage — your EWA skincare advisor. My mission is to help your skin glow. What's on your mind today?`
-    : `Hi, I'm Sage — your EWA skincare advisor. My mission is to help your skin glow. What's on your mind today?`
-}
 
 const QUICK_PROMPTS = [
   "What's good for oily skin?",
@@ -284,17 +273,7 @@ export default function SageChatWidget() {
         }
       } catch (err) {}
 
-      const loadPersonalizedGreeting = async () => {
-        try {
-          const greetingRes = await fetch('/api/chat/greeting')
-          const greetingData = await greetingRes.json()
-          const finalGreeting = greetingData.greeting || getGreeting(userName)
-          setMessages([{ role: 'assistant', content: finalGreeting, products: [] }])
-        } catch (err) {
-          setMessages([{ role: 'assistant', content: getGreeting(userName), products: [] }])
-        }
-      }
-      loadPersonalizedGreeting()
+      setMessages([])
       return
     }
 
@@ -302,14 +281,14 @@ export default function SageChatWidget() {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
         const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed) && parsed.filter(m => m.role === 'user').length > 0) {
           setMessages(parsed)
           return
         }
       }
     } catch (err) {}
 
-    setMessages([{ role: 'assistant', content: getGreeting(userName), products: [] }])
+    setMessages([])
   }, [isLoggedIn, userName, sessionStatus])
 
   // --- Persist to localStorage, guests only ---
@@ -414,7 +393,7 @@ export default function SageChatWidget() {
       // reset to a fresh unsaved conversation rather than leaving a deleted,
       // orphaned conversation visibly active in the chat window.
       if (activeConversationId === deleteTarget) {
-        setMessages([{ role: 'assistant', content: getGreeting(userName), products: [] }])
+        setMessages([])
         setActiveConversationId(null)
       }
     } catch (err) {
@@ -425,13 +404,13 @@ export default function SageChatWidget() {
   }
 
   const startNewChat = () => {
-    setMessages([{ role: 'assistant', content: getGreeting(userName), products: [] }])
+    setMessages([])
     setActiveConversationId(null)
     setError('')
     setView('chat')
     if (!isLoggedIn) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify([{ role: 'assistant', content: getGreeting(userName), products: [] }]))
+        localStorage.removeItem(STORAGE_KEY)
       } catch (err) {}
     }
   }
@@ -768,7 +747,7 @@ export default function SageChatWidget() {
           ) : (
             <>
               {/* MESSAGES — empty state or active conversation */}
-              {messages.length <= 1 ? (
+              {messages.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
                   <div className="w-[60px] h-[60px] rounded-full flex items-center justify-center mb-4" style={{ background: 'linear-gradient(135deg, #4f6425 0%, #283618 100%)', boxShadow: '0 8px 24px -4px rgba(40,54,24,0.4)' }}>
                     <SageMark className="w-8 h-8 text-cream" />
