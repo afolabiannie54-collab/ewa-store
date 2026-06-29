@@ -24,6 +24,8 @@ export default function OrderDetailPage() {
   const [cancelling, setCancelling] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelMessage, setCancelMessage] = useState('')
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false)
+  const [invoiceError, setInvoiceError] = useState('')
 
   useEffect(() => {
     fetchOrder()
@@ -61,6 +63,30 @@ export default function OrderDetailPage() {
       setCancelMessage('Something went wrong')
     }
     setCancelling(false)
+  }
+
+  const handleDownloadInvoice = async () => {
+    setDownloadingInvoice(true)
+    setInvoiceError('')
+    try {
+      const res = await fetch(`/api/orders/${orderId}/invoice`)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to generate invoice')
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `invoice-${order.orderNumber}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      setInvoiceError(err.message || 'Could not download invoice')
+    }
+    setDownloadingInvoice(false)
   }
 
   const statusSteps = ['Pending', 'Confirmed', 'Shipped', 'Delivered']
@@ -197,14 +223,17 @@ export default function OrderDetailPage() {
         </div>
 
         {/* ACTIONS */}
+        {invoiceError && (
+          <p className="text-[13px] text-error mb-4">{invoiceError}</p>
+        )}
         <div className="flex flex-wrap gap-3">
-          <a
-            href={`/api/orders/${orderId}/invoice`}
-            download
-            className="rounded-full border-[1.5px] border-border text-forest text-[13px] font-bold uppercase tracking-wide px-7 py-3.5 hover:border-olive transition-colors"
+          <button
+            onClick={handleDownloadInvoice}
+            disabled={downloadingInvoice}
+            className="rounded-full border-[1.5px] border-border text-forest text-[13px] font-bold uppercase tracking-wide px-7 py-3.5 hover:border-olive transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Download Invoice
-          </a>
+            {downloadingInvoice ? 'Generating…' : 'Download Invoice'}
+          </button>
 
           {order.status === 'Pending' && (
             <button

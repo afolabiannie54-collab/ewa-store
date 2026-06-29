@@ -21,12 +21,13 @@ export async function GET(req, { params }) {
     }
 
     if (user.role !== 'admin') {
-      const dbUser = await User.findById(user.id)
       const isOwner = order.userId?.toString() === user.id
-      const isGuestMatch = dbUser.isEmailVerified && order.guestEmail === dbUser.email
-
-      if (!isOwner && !isGuestMatch) {
-        return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403 })
+      if (!isOwner) {
+        const dbUser = await User.findById(user.id)
+        const isGuestMatch = dbUser?.isEmailVerified && order.guestEmail === dbUser?.email
+        if (!isGuestMatch) {
+          return new Response(JSON.stringify({ error: 'Not authorized' }), { status: 403 })
+        }
       }
     }
 
