@@ -12,6 +12,11 @@ export async function POST(req) {
     await connectDB()
 
     const user = await getCurrentUser()
+
+    if (user?.role === 'admin') {
+      return NextResponse.json({ error: 'Admin accounts cannot complete purchases' }, { status: 403 })
+    }
+
     const body = await req.json()
 
     const {

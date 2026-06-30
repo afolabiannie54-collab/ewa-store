@@ -562,10 +562,11 @@ export default function SageChatWidget() {
     setIsClosingMobile(true)
   }
 
+  const isAdminUser = session?.user?.role === 'admin'
   const EXCLUDED_ROUTE_PREFIXES = ['/admin', '/checkout', '/cart']
   const isExcludedRoute = EXCLUDED_ROUTE_PREFIXES.some(prefix => pathname?.startsWith(prefix))
 
-  if (isExcludedRoute) {
+  if (isAdminUser || isExcludedRoute) {
     return null
   }
 

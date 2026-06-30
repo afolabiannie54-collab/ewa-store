@@ -18,6 +18,7 @@ function TrashIcon(props) {
 
 export default function CartPage() {
   const { data: session, status } = useSession()
+  const isAdmin = session?.user?.role === 'admin'
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -206,12 +207,23 @@ export default function CartPage() {
                 Shipping calculated at checkout
               </p>
 
-              <Link
-                href="/checkout"
-                className="block text-center w-full rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-[18px] hover:bg-forest transition-colors"
-              >
-                Proceed to Checkout
-              </Link>
+              {isAdmin ? (
+                <div>
+                  <div className="block text-center w-full rounded-full bg-border text-muted text-[14px] font-bold uppercase tracking-[0.1em] py-[18px] cursor-not-allowed">
+                    Proceed to Checkout
+                  </div>
+                  <p className="text-[12px] text-forest/45 text-center mt-3">
+                    Admin accounts cannot complete purchases.
+                  </p>
+                </div>
+              ) : (
+                <Link
+                  href="/checkout"
+                  className="block text-center w-full rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-[18px] hover:bg-forest transition-colors"
+                >
+                  Proceed to Checkout
+                </Link>
+              )}
             </div>
           </div>
         )}

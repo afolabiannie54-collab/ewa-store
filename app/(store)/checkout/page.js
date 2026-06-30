@@ -12,6 +12,7 @@ import { NIGERIAN_STATES, getShippingTier } from '@/lib/shipping'
 
 export default function CheckoutPage() {
   const { data: session, status } = useSession()
+  const isAdmin = session?.user?.role === 'admin'
   const router = useRouter()
 
   const [items, setItems] = useState([])
@@ -229,6 +230,19 @@ export default function CheckoutPage() {
     return (
       <div className="bg-cream min-h-screen flex items-center justify-center">
         <Loader size="lg" />
+      </div>
+    )
+  }
+
+  if (isAdmin) {
+    return (
+      <div className="bg-cream min-h-screen flex items-center justify-center px-6">
+        <div className="text-center max-w-[400px]">
+          <p className="text-forest/60 text-[16px] mb-6">Admin accounts cannot complete purchases. Log in with a customer account to shop.</p>
+          <Link href="/shop" className="inline-block rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors">
+            Browse Shop
+          </Link>
+        </div>
       </div>
     )
   }
