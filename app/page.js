@@ -74,7 +74,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="bg-cream overflow-x-hidden">
+    <div className="bg-cream">
 
 {/* HERO */}
       <section className="relative overflow-hidden">
@@ -229,7 +229,7 @@ export default function HomePage() {
       </FadeInSection>
 
       {/* SHOP BY CONCERN */}
-      <FadeInSection x={-28} y={16}>
+      <FadeInSection y={24}>
       <section className="bg-cream">
         <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-20 md:py-28">
           <div className="text-center mb-12 md:mb-16">
@@ -283,7 +283,7 @@ export default function HomePage() {
       </FadeInSection>
 
       {/* SAGE TEASER */}
-      <FadeInSection x={28} y={16}>
+      <FadeInSection y={24}>
       <section style={{ background: 'linear-gradient(140deg, #384c17 0%, #4f6425 45%, #627c30 100%)', padding: 'clamp(72px, 10vw, 100px) 0 clamp(80px, 12vw, 120px)' }}>
         <div className="max-w-[1320px] mx-auto px-6 md:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
