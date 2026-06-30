@@ -74,7 +74,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="bg-cream">
+    <div className="bg-cream overflow-x-hidden">
 
 {/* HERO */}
       <section className="relative overflow-hidden">
