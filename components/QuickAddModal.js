@@ -80,6 +80,7 @@ export default function QuickAddModal({ slug, product: productProp, isOpen, onCl
         if (res.ok) {
           setMessage('Added to cart!')
           success = true
+          window.dispatchEvent(new Event('cart:updated'))
         } else {
           setMessage(data.error || 'Could not add to cart')
         }
@@ -90,6 +91,7 @@ export default function QuickAddModal({ slug, product: productProp, isOpen, onCl
       addToGuestCart(product._id, selectedVariant.size, quantity)
       setMessage('Added to cart!')
       success = true
+      window.dispatchEvent(new Event('cart:updated'))
     }
 
     setAdding(false)

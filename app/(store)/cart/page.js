@@ -74,6 +74,7 @@ export default function CartPage() {
       updateGuestCartItem(productId, size, newQuantity)
     }
 
+    window.dispatchEvent(new Event('cart:updated'))
     fetchCart()
   }
 
@@ -88,6 +89,7 @@ export default function CartPage() {
       removeFromGuestCart(productId, size)
     }
 
+    window.dispatchEvent(new Event('cart:updated'))
     fetchCart()
   }
 

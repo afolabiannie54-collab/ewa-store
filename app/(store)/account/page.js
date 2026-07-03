@@ -161,7 +161,6 @@ export default function AccountPage() {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault()
     setPasswordError('')
-    setPasswordMessage('')
 
     const errors = validatePasswordForm()
     setPasswordFieldErrors(errors)

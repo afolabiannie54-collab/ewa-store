@@ -177,6 +177,7 @@ export default function ProductDetailPage() {
 
         if (res.ok) {
           showToast('Added to cart!')
+          window.dispatchEvent(new Event('cart:updated'))
         } else {
           showToast(data.error || 'Could not add to cart', 'error')
         }
@@ -186,6 +187,7 @@ export default function ProductDetailPage() {
     } else {
       addToGuestCart(product._id, selectedVariant.size, quantity)
       showToast('Added to cart!')
+      window.dispatchEvent(new Event('cart:updated'))
     }
   }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -83,7 +83,7 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  useEffect(() => {
+  const fetchCartCount = useCallback(() => {
     if (session) {
       fetch('/api/cart')
         .then(r => r.json())
@@ -96,6 +96,15 @@ export default function Navbar() {
       setCartCount(0)
     }
   }, [session])
+
+  useEffect(() => {
+    fetchCartCount()
+  }, [fetchCartCount])
+
+  useEffect(() => {
+    window.addEventListener('cart:updated', fetchCartCount)
+    return () => window.removeEventListener('cart:updated', fetchCartCount)
+  }, [fetchCartCount])
 
   useEffect(() => {
     if (!searchQuery.trim()) {
