@@ -93,7 +93,13 @@ export default function Navbar() {
         })
         .catch(() => {})
     } else {
-      setCartCount(0)
+      try {
+        const guestCart = JSON.parse(localStorage.getItem('ewa_guest_cart') || '[]')
+        const count = guestCart.reduce((sum, item) => sum + (item.quantity || 0), 0)
+        setCartCount(count)
+      } catch {
+        setCartCount(0)
+      }
     }
   }, [session])
 
