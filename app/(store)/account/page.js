@@ -7,9 +7,11 @@ import Loader from '@/components/Loader'
 import FieldError from '@/components/FieldError'
 import AccountNav from '@/components/AccountNav'
 import { isValidEmail, isRequired } from '@/lib/validation'
+import { useToast } from '@/lib/useToast'
 
 export default function AccountPage() {
   const { data: session, status, update } = useSession()
+  const showToast = useToast()
 
   const [profile, setProfile] = useState({ name: '', email: '' })
   const [originalProfile, setOriginalProfile] = useState({ name: '', email: '' })
@@ -26,7 +28,6 @@ export default function AccountPage() {
 
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [passwordError, setPasswordError] = useState('')
-  const [passwordMessage, setPasswordMessage] = useState('')
   const [changingPassword, setChangingPassword] = useState(false)
   const [passwordFieldErrors, setPasswordFieldErrors] = useState({})
 
@@ -93,11 +94,11 @@ export default function AccountPage() {
       if (!res.ok) {
         setError(data.error)
       } else {
-        setMessage(data.message)
         if (data.emailChangePending) {
           setEmailChangePending(true)
         } else {
           await update()
+          showToast('Profile updated')
         }
         setProfilePassword('')
       }
@@ -130,7 +131,7 @@ export default function AccountPage() {
       if (!res.ok) {
         setError(data.error)
       } else {
-        setMessage('Email updated successfully')
+        showToast('Email updated successfully')
         setEmailChangePending(false)
         setConfirmOtp('')
         fetchProfile()
@@ -182,7 +183,7 @@ export default function AccountPage() {
       if (!res.ok) {
         setPasswordError(data.error)
       } else {
-        setPasswordMessage('Password changed successfully')
+        showToast('Password changed successfully')
         setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
       }
     } catch (err) {
@@ -334,7 +335,6 @@ export default function AccountPage() {
           </div>
 
           {passwordError && <p className="text-[13px] text-error mb-5">{passwordError}</p>}
-          {passwordMessage && <p className="text-[13px] text-success mb-5">{passwordMessage}</p>}
 
           <button
             type="submit"

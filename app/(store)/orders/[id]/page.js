@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Loader from '@/components/Loader'
 import ConfirmModal from '@/components/ConfirmModal'
+import { useToast } from '@/lib/useToast'
 
 const STATUS_STYLES = {
   Pending: 'bg-cream text-forest border-cream/40',
@@ -21,9 +22,9 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const showToast = useToast()
   const [cancelling, setCancelling] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
-  const [cancelMessage, setCancelMessage] = useState('')
   const [downloadingInvoice, setDownloadingInvoice] = useState(false)
   const [invoiceError, setInvoiceError] = useState('')
 
@@ -54,13 +55,14 @@ export default function OrderDetailPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        setCancelMessage(data.error)
+        showToast(data.error || 'Could not cancel order', 'error')
       } else {
         setShowCancelModal(false)
+        showToast('Order cancelled')
         fetchOrder()
       }
     } catch (err) {
-      setCancelMessage('Something went wrong')
+      showToast('Something went wrong', 'error')
     }
     setCancelling(false)
   }
@@ -237,7 +239,7 @@ export default function OrderDetailPage() {
 
           {order.status === 'Pending' && (
             <button
-              onClick={() => { setCancelMessage(''); setShowCancelModal(true) }}
+              onClick={() => setShowCancelModal(true)}
               className="rounded-full border-[1.5px] border-error text-error text-[13px] font-bold uppercase tracking-wide px-7 py-3.5 hover:bg-error hover:text-cream transition-colors"
             >
               Cancel Order
@@ -276,11 +278,6 @@ export default function OrderDetailPage() {
         danger
         loading={cancelling}
       />
-      {cancelMessage && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-full bg-error text-cream text-[13px] font-medium px-6 py-3 shadow-lg">
-          {cancelMessage}
-        </div>
-      )}
     </div>
   )
 }

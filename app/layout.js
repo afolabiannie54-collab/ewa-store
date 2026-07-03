@@ -6,6 +6,7 @@ import SessionWrapper from "@/components/SessionWrapper";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
 import SageChatWidget from "@/components/SageChatWidget";
+import { ToastProvider } from "@/lib/useToast";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -32,11 +33,13 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col">
         <Script src="https://js.paystack.co/v1/inline.js" strategy="beforeInteractive" />
       <SessionWrapper>
+        <ToastProvider>
           <Navbar />
           {children}
           <Footer />
           <BackToTop />
           <SageChatWidget />
+        </ToastProvider>
         </SessionWrapper>
       </body>
     </html>

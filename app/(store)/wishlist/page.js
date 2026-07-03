@@ -8,7 +8,6 @@ import EmptyWishlistIllustration from '@/components/EmptyWishlistIllustration'
 import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
 import ProductCard from '@/components/ProductCard'
 import QuickAddModal from '@/components/QuickAddModal'
-import Toast from '@/components/Toast'
 import { useToast } from '@/lib/useToast'
 
 export default function WishlistPage() {
@@ -17,7 +16,7 @@ export default function WishlistPage() {
   const [wishlist, setWishlist] = useState([])
   const [loading, setLoading] = useState(true)
   const [quickAddProduct, setQuickAddProduct] = useState(null)
-  const { toast, showToast, dismissToast } = useToast()
+  const showToast = useToast()
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -120,7 +119,6 @@ export default function WishlistPage() {
             }}
           />
         )}
-        {toast && <Toast message={toast.message} type={toast.type} duration={toast.duration} onDismiss={dismissToast} key={toast.id} />}
       </div>
     </div>
   )

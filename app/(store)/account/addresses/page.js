@@ -7,8 +7,10 @@ import FieldError from '@/components/FieldError'
 import AccountNav from '@/components/AccountNav'
 import ConfirmModal from '@/components/ConfirmModal'
 import { isRequired, isValidPhone } from '@/lib/validation'
+import { useToast } from '@/lib/useToast'
 
 export default function AddressesPage() {
+  const showToast = useToast()
   const [addresses, setAddresses] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -99,6 +101,7 @@ export default function AddressesPage() {
         return
       }
 
+      showToast(editingId ? 'Address updated' : 'Address added')
       resetForm()
       fetchAddresses()
     } catch (err) {

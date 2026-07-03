@@ -4,12 +4,13 @@ import { useState } from 'react'
 import Loader from '@/components/Loader'
 import FieldError from '@/components/FieldError'
 import { isRequired, isValidEmail } from '@/lib/validation'
+import { useToast } from '@/lib/useToast'
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', message: '' })
+  const showToast = useToast()
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
 
   const validate = () => {
@@ -50,7 +51,7 @@ export default function ContactPage() {
       if (!res.ok) {
         setError(data.error)
       } else {
-        setSuccess(true)
+        showToast("Message sent — we'll get back to you soon!")
         setForm({ name: '', email: '', message: '' })
       }
     } catch (err) {
@@ -76,15 +77,7 @@ export default function ContactPage() {
           Have a question or feedback? Send us a message and we&apos;ll get back to you by email.
         </p>
 
-        {success ? (
-          <div className="rounded-[20px] border-[1.5px] border-success/25 bg-success/10 px-7 py-10 text-center">
-            <p className="font-display font-bold text-forest text-[22px] mb-2">Message sent!</p>
-            <p className="text-[14px] text-success leading-relaxed">
-              Thank you for reaching out. We&apos;ll respond to your email shortly.
-            </p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit} noValidate>
 
             {error && (
               <div className="rounded-[12px] bg-error/10 border-[1.5px] border-error/25 px-5 py-4 text-[13px] text-error mb-6">
@@ -136,7 +129,6 @@ export default function ContactPage() {
               {submitting ? <Loader size="sm" color="cream" /> : 'Send Message'}
             </button>
           </form>
-        )}
       </div>
     </div>
   )

@@ -12,7 +12,6 @@ import StarInput from '@/components/StarInput'
 import ProductCard from '@/components/ProductCard'
 import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
 import FadeInSection from '@/components/FadeInSection'
-import Toast from '@/components/Toast'
 import { useToast } from '@/lib/useToast'
 
 function HeartIcon(props) {
@@ -35,7 +34,7 @@ export default function ProductDetailPage() {
   const [selectedVariant, setSelectedVariant] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [activeTab, setActiveTab] = useState('description')
-  const { toast, showToast, dismissToast } = useToast()
+  const showToast = useToast()
   const { data: session, status: sessionStatus } = useSession()
   const isAdmin = session?.user?.role === 'admin'
   const [inWishlist, setInWishlist] = useState(false)
@@ -129,7 +128,6 @@ export default function ProductDetailPage() {
   const handleSubmitReview = async (e) => {
     e.preventDefault()
     setReviewError('')
-    setReviewMessage('')
 
     if (!reviewComment.trim()) {
       setReviewError('Please write a comment')
@@ -497,7 +495,6 @@ export default function ProductDetailPage() {
         )}
 
       </div>
-      {toast && <Toast message={toast.message} type={toast.type} duration={toast.duration} onDismiss={dismissToast} key={toast.id} />}
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Loader from '@/components/Loader'
 import FieldError from '@/components/FieldError'
 import { isRequired } from '@/lib/validation'
+import { useToast } from '@/lib/useToast'
 
 function VerifyForm() {
   const router = useRouter()
@@ -12,6 +13,7 @@ function VerifyForm() {
   const email = searchParams.get('email') || ''
   const callbackUrl = searchParams.get('callbackUrl') || '/'
 
+  const showToast = useToast()
   const [otp, setOtp] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -45,6 +47,7 @@ function VerifyForm() {
         return
       }
 
+      showToast('Account verified!')
       router.push(`/login?verified=true&callbackUrl=${encodeURIComponent(callbackUrl)}`)
 
     } catch (err) {

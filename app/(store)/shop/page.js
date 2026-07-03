@@ -7,7 +7,6 @@ import ProductCard from '@/components/ProductCard'
 import QuickAddModal from '@/components/QuickAddModal'
 import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
 import FadeInSection from '@/components/FadeInSection'
-import Toast from '@/components/Toast'
 import { useToast } from '@/lib/useToast'
 
 const SKIN_TYPES = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']
@@ -41,7 +40,7 @@ function ShopContent() {
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
   const [quickAddSlug, setQuickAddSlug] = useState(null)
-  const { toast, showToast, dismissToast } = useToast()
+  const showToast = useToast()
 
   const sortRef = useRef(null)
 
@@ -320,7 +319,6 @@ function ShopContent() {
         isOpen={!!quickAddSlug}
         onClose={() => setQuickAddSlug(null)}
       />
-      {toast && <Toast message={toast.message} type={toast.type} duration={toast.duration} onDismiss={dismissToast} key={toast.id} />}
     </div>
   )
 }
