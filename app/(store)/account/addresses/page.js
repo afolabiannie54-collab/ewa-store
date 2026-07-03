@@ -57,7 +57,7 @@ export default function AddressesPage() {
   const validate = () => {
     const errors = {}
     if (!isRequired(form.fullName)) errors.fullName = 'Please enter a full name'
-    if (!isValidPhone(form.phone)) errors.phone = 'Please enter a valid phone number'
+    if (!isValidPhone(form.phone)) errors.phone = 'Please enter a valid Nigerian phone number (e.g. 08012345678)'
     if (!isRequired(form.street)) errors.street = 'Please enter a street address'
     if (!isRequired(form.city)) errors.city = 'Please enter a city'
     if (!isRequired(form.state)) errors.state = 'Please select a state'

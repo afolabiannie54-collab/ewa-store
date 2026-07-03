@@ -7,7 +7,7 @@ import Link from 'next/link'
 import Loader from '@/components/Loader'
 import FieldError from '@/components/FieldError'
 import { getGuestCart, clearGuestCart } from '@/lib/cart-client'
-import { isValidEmail, isRequired } from '@/lib/validation'
+import { isValidEmail, isRequired, isValidPhone } from '@/lib/validation'
 import { NIGERIAN_STATES, getShippingTier } from '@/lib/shipping'
 
 export default function CheckoutPage() {
@@ -93,13 +93,21 @@ export default function CheckoutPage() {
       } else if (!isValidEmail(form.guestEmail)) {
         errors.guestEmail = 'Please enter a valid email'
       }
-      if (!isRequired(form.guestPhone)) errors.guestPhone = 'Phone is required'
+      if (!isRequired(form.guestPhone)) {
+        errors.guestPhone = 'Phone number is required'
+      } else if (!isValidPhone(form.guestPhone)) {
+        errors.guestPhone = 'Please enter a valid Nigerian phone number (e.g. 08012345678)'
+      }
     }
 
     // Validate shipping address
     if (useNewAddress) {
       if (!isRequired(form.fullName)) errors.fullName = 'Full name is required'
-      if (!isRequired(form.phone)) errors.phone = 'Phone is required'
+      if (!isRequired(form.phone)) {
+        errors.phone = 'Phone number is required'
+      } else if (!isValidPhone(form.phone)) {
+        errors.phone = 'Please enter a valid Nigerian phone number (e.g. 08012345678)'
+      }
       if (!isRequired(form.street)) errors.street = 'Street address is required'
       if (!isRequired(form.city)) errors.city = 'City is required'
       if (!isRequired(form.state)) errors.state = 'State is required'
