@@ -7,8 +7,10 @@ import ProductCard from '@/components/ProductCard'
 import QuickAddModal from '@/components/QuickAddModal'
 import FadeInSection from '@/components/FadeInSection'
 import { motion } from 'framer-motion'
+import { useToast } from '@/lib/useToast'
 
 export default function HomePage() {
+  const showToast = useToast()
   const [featured, setFeatured] = useState([])
   const [loading, setLoading] = useState(true)
   const [wishlistIds, setWishlistIds] = useState([])
@@ -501,6 +503,10 @@ export default function HomePage() {
         slug={quickAddSlug}
         isOpen={!!quickAddSlug}
         onClose={() => setQuickAddSlug(null)}
+        onAdded={() => {
+          setQuickAddSlug(null)
+          showToast('Added to cart!')
+        }}
       />
 
     </div>

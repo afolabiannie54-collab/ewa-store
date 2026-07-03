@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import AuthPromptModal from '@/components/AuthPromptModal'
+import { useToast } from '@/lib/useToast'
 
 function HeartIcon(props) {
   return (
@@ -17,6 +18,7 @@ function HeartIcon(props) {
 export default function ProductCard({ product, isWishlisted = false, onWishlistToggle, onQuickAdd }) {
   const { data: session, status } = useSession()
   const isAdmin = session?.user?.role === 'admin'
+  const showToast = useToast()
   const [imageError, setImageError] = useState(false)
   const [wishlistBusy, setWishlistBusy] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -36,6 +38,7 @@ export default function ProductCard({ product, isWishlisted = false, onWishlistT
     if (wishlistBusy || !onWishlistToggle) return
     setWishlistBusy(true)
     await onWishlistToggle(product._id, isWishlisted)
+    showToast(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist', isWishlisted ? 'info' : 'success')
     setWishlistBusy(false)
   }
 

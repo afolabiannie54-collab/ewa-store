@@ -7,7 +7,6 @@ import ProductCard from '@/components/ProductCard'
 import QuickAddModal from '@/components/QuickAddModal'
 import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
 import FadeInSection from '@/components/FadeInSection'
-import { useToast } from '@/lib/useToast'
 
 const SKIN_TYPES = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']
 const SKIN_CONCERNS = ['Acne', 'Aging', 'Hyperpigmentation', 'Hydration', 'Brightening']
@@ -40,7 +39,6 @@ function ShopContent() {
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
   const [quickAddSlug, setQuickAddSlug] = useState(null)
-  const showToast = useToast()
 
   const sortRef = useRef(null)
 
@@ -113,7 +111,6 @@ function ShopContent() {
         const res = await fetch(`/api/users/me/wishlist/${productId}`, { method: 'DELETE' })
         if (res.ok) {
           setWishlistIds(prev => prev.filter(id => id !== productId))
-          showToast('Removed from wishlist', 'info')
         }
       } else {
         const res = await fetch('/api/users/me/wishlist', {
@@ -123,7 +120,6 @@ function ShopContent() {
         })
         if (res.ok) {
           setWishlistIds(prev => [...prev, productId])
-          showToast('Added to wishlist')
         }
       }
     } catch (err) {

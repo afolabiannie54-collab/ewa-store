@@ -102,7 +102,7 @@ export default function AboutPage() {
                 alt="EWA skincare lifestyle"
                 fill
                 priority
-                sizes="(max-width: 1024px) 100vw, 50vw"
+                sizes="100vw"
                 className="object-cover"
               />
             </div>

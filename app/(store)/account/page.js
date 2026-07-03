@@ -236,7 +236,7 @@ export default function AccountPage() {
             <input
               type="text"
               value={profile.name}
-              onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+              onChange={(e) => { setProfile({ ...profile, name: e.target.value }); setError(''); setMessage(''); }}
               className={inputClass(profileFieldErrors.name)}
             />
             <FieldError message={profileFieldErrors.name} />
@@ -247,7 +247,7 @@ export default function AccountPage() {
             <input
               type="text"
               value={profile.email}
-              onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+              onChange={(e) => { setProfile({ ...profile, email: e.target.value }); setError(''); setMessage(''); }}
               className={inputClass(profileFieldErrors.email)}
             />
             <FieldError message={profileFieldErrors.email} />
@@ -278,7 +278,8 @@ export default function AccountPage() {
 
           {emailChangePending && (
             <div className="mt-7 pt-7 border-t-[1.5px] border-border">
-              <p className="text-[14px] font-bold text-forest mb-3">Confirm Email Change</p>
+              <p className="text-[14px] font-bold text-forest mb-1">Confirm Email Change</p>
+              <p className="text-[13px] text-forest/55 mb-4">Check your new email for a 6-digit verification code.</p>
               <input
                 type="text"
                 placeholder="Enter 6-digit code"
@@ -307,7 +308,7 @@ export default function AccountPage() {
               type="password"
               placeholder="Current Password"
               value={passwordForm.currentPassword}
-              onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+              onChange={(e) => { setPasswordForm({ ...passwordForm, currentPassword: e.target.value }); setPasswordError(''); }}
               className={inputClass(passwordFieldErrors.currentPassword)}
             />
             <FieldError message={passwordFieldErrors.currentPassword} />
@@ -317,7 +318,7 @@ export default function AccountPage() {
               type="password"
               placeholder="New Password"
               value={passwordForm.newPassword}
-              onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+              onChange={(e) => { setPasswordForm({ ...passwordForm, newPassword: e.target.value }); setPasswordError(''); }}
               className={inputClass(passwordFieldErrors.newPassword)}
             />
             <FieldError message={passwordFieldErrors.newPassword} />
@@ -327,7 +328,7 @@ export default function AccountPage() {
               type="password"
               placeholder="Confirm New Password"
               value={passwordForm.confirmPassword}
-              onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+              onChange={(e) => { setPasswordForm({ ...passwordForm, confirmPassword: e.target.value }); setPasswordError(''); }}
               className={inputClass(passwordFieldErrors.confirmPassword)}
             />
             <FieldError message={passwordFieldErrors.confirmPassword} />
@@ -337,7 +338,7 @@ export default function AccountPage() {
 
           <button
             type="submit"
-            disabled={changingPassword}
+            disabled={changingPassword || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword}
             className="rounded-full bg-forest text-cream px-8 py-3.5 text-[13px] font-bold uppercase tracking-wide hover:bg-olive transition-colors disabled:opacity-60"
           >
             {changingPassword ? <Loader size="sm" color="cream" /> : 'Change Password'}
