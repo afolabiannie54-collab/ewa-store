@@ -9,7 +9,7 @@ import AccountNav from '@/components/AccountNav'
 import { isValidEmail, isRequired } from '@/lib/validation'
 
 export default function AccountPage() {
-  const { data: session, status } = useSession()
+  const { data: session, status, update } = useSession()
 
   const [profile, setProfile] = useState({ name: '', email: '' })
   const [loading, setLoading] = useState(true)
@@ -86,6 +86,8 @@ export default function AccountPage() {
         setMessage(data.message)
         if (data.emailChangePending) {
           setEmailChangePending(true)
+        } else {
+          await update()
         }
         setProfilePassword('')
       }

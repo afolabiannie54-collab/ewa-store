@@ -33,14 +33,16 @@ export async function PUT(req) {
 
     await connectDB()
 
-    const { name, email, currentPassword } = await req.json()
+    const { name: rawName, email: rawEmail, currentPassword } = await req.json()
+    const name = rawName?.trim()
+    const email = rawEmail?.trim()
 
     if (!name) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
     }
 
     const dbUser = await User.findById(user.id)
-    const emailChanged = email && email.toLowerCase() !== dbUser.email
+    const emailChanged = email && email.toLowerCase().trim() !== dbUser.email
 
     if (emailChanged) {
       if (!dbUser.password) {

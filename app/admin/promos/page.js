@@ -63,6 +63,7 @@ export default function AdminPromosPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          code: form.code.trim().toUpperCase(),
           discountValue: Number(form.discountValue),
           minimumOrderAmount: Number(form.minimumOrderAmount) || 0,
           usageLimit: Number(form.usageLimit)

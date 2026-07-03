@@ -76,10 +76,19 @@ export default function AddressesPage() {
       const url = editingId ? `/api/users/me/addresses/${editingId}` : '/api/users/me/addresses'
       const method = editingId ? 'PUT' : 'POST'
 
+      const trimmedForm = {
+        ...form,
+        fullName: form.fullName?.trim(),
+        phone: form.phone?.trim(),
+        street: form.street?.trim(),
+        city: form.city?.trim(),
+        label: form.label?.trim(),
+      }
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+        body: JSON.stringify(trimmedForm)
       })
 
       const data = await res.json()

@@ -189,9 +189,9 @@ export default function CheckoutPage() {
           items: items.map(i => ({ productId: i.productId, size: i.size, quantity: i.quantity })),
           shippingAddress,
           promoCode: promoApplied?.code || null,
-          guestEmail: form.guestEmail,
-          guestName: form.guestName,
-          guestPhone: form.guestPhone
+          guestEmail: form.guestEmail?.trim(),
+          guestName: form.guestName?.trim(),
+          guestPhone: form.guestPhone?.trim()
         })
       })
 
