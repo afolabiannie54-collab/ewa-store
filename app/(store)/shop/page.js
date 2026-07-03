@@ -7,6 +7,8 @@ import ProductCard from '@/components/ProductCard'
 import QuickAddModal from '@/components/QuickAddModal'
 import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
 import FadeInSection from '@/components/FadeInSection'
+import Toast from '@/components/Toast'
+import { useToast } from '@/lib/useToast'
 
 const SKIN_TYPES = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']
 const SKIN_CONCERNS = ['Acne', 'Aging', 'Hyperpigmentation', 'Hydration', 'Brightening']
@@ -39,6 +41,7 @@ function ShopContent() {
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
   const [quickAddSlug, setQuickAddSlug] = useState(null)
+  const { toast, showToast, dismissToast } = useToast()
 
   const sortRef = useRef(null)
 
@@ -108,15 +111,21 @@ function ShopContent() {
   const handleWishlistToggle = async (productId, currentlyWishlisted) => {
     try {
       if (currentlyWishlisted) {
-        await fetch(`/api/users/me/wishlist/${productId}`, { method: 'DELETE' })
-        setWishlistIds(prev => prev.filter(id => id !== productId))
+        const res = await fetch(`/api/users/me/wishlist/${productId}`, { method: 'DELETE' })
+        if (res.ok) {
+          setWishlistIds(prev => prev.filter(id => id !== productId))
+          showToast('Removed from wishlist', 'info')
+        }
       } else {
-        await fetch('/api/users/me/wishlist', {
+        const res = await fetch('/api/users/me/wishlist', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productId })
         })
-        setWishlistIds(prev => [...prev, productId])
+        if (res.ok) {
+          setWishlistIds(prev => [...prev, productId])
+          showToast('Added to wishlist')
+        }
       }
     } catch (err) {
       console.error('Wishlist toggle failed')
@@ -311,6 +320,7 @@ function ShopContent() {
         isOpen={!!quickAddSlug}
         onClose={() => setQuickAddSlug(null)}
       />
+      {toast && <Toast message={toast.message} type={toast.type} duration={toast.duration} onDismiss={dismissToast} key={toast.id} />}
     </div>
   )
 }

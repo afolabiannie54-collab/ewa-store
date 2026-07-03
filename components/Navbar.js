@@ -69,6 +69,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [searchLoading, setSearchLoading] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
 
   const accountRef = useRef(null)
 
@@ -81,6 +82,20 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  useEffect(() => {
+    if (session) {
+      fetch('/api/cart')
+        .then(r => r.json())
+        .then(data => {
+          const count = (data.items || []).reduce((sum, item) => sum + item.quantity, 0)
+          setCartCount(count)
+        })
+        .catch(() => {})
+    } else {
+      setCartCount(0)
+    }
+  }, [session])
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -172,8 +187,13 @@ export default function Navbar() {
             )}
 
             {session?.user?.role !== 'admin' && (
-              <Link href="/cart" aria-label="Cart" className="inline-flex text-cream hover:text-olive transition-colors duration-200">
+              <Link href="/cart" aria-label="Cart" className="inline-flex text-cream hover:text-olive transition-colors duration-200 relative">
                 <BagIcon className="w-6 h-6" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-olive text-cream text-[10px] font-bold flex items-center justify-center leading-none">
+                    {cartCount > 9 ? '9+' : cartCount}
+                  </span>
+                )}
               </Link>
             )}
 

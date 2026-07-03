@@ -49,6 +49,7 @@ export default function Footer() {
             <ul className="flex flex-col gap-3.5">
               <li><Link href="/#our-story" className="text-[17px] font-medium text-cream hover:text-olive transition-colors">About</Link></li>
               <li><Link href="/contact" className="text-[17px] font-medium text-cream hover:text-olive transition-colors">Contact</Link></li>
+              <li><Link href="/faq" className="text-[17px] font-medium text-cream hover:text-olive transition-colors">FAQ</Link></li>
               <li><Link href="/privacy-policy" className="text-[17px] font-medium text-cream hover:text-olive transition-colors">Privacy Policy</Link></li>
               <li><Link href="/return-policy" className="text-[17px] font-medium text-cream hover:text-olive transition-colors">Return Policy</Link></li>
               <li><Link href="/terms" className="text-[17px] font-medium text-cream hover:text-olive transition-colors">Terms & Conditions</Link></li>

@@ -15,7 +15,7 @@ function CloseIcon(props) {
   )
 }
 
-export default function QuickAddModal({ slug, isOpen, onClose }) {
+export default function QuickAddModal({ slug, product: productProp, isOpen, onClose, onAdded }) {
   const { data: session } = useSession()
   const isAdmin = session?.user?.role === 'admin'
   const [product, setProduct] = useState(null)
@@ -26,8 +26,15 @@ export default function QuickAddModal({ slug, isOpen, onClose }) {
   const [adding, setAdding] = useState(false)
 
   useEffect(() => {
-    if (isOpen && slug) {
-      fetchProduct()
+    if (isOpen && (slug || productProp)) {
+      if (productProp) {
+        setProduct(productProp)
+        const firstInStock = productProp.variants.find(v => v.stockQuantity > 0)
+        setSelectedVariant(firstInStock || productProp.variants[0])
+        setLoading(false)
+      } else {
+        fetchProduct()
+      }
     } else {
       // reset state when modal closes, so reopening on a different product starts clean
       setProduct(null)
@@ -35,7 +42,7 @@ export default function QuickAddModal({ slug, isOpen, onClose }) {
       setQuantity(1)
       setMessage('')
     }
-  }, [isOpen, slug])
+  }, [isOpen, slug, productProp])
 
   const fetchProduct = async () => {
     setLoading(true)
@@ -56,6 +63,7 @@ export default function QuickAddModal({ slug, isOpen, onClose }) {
   const handleAddToCart = async () => {
     if (!selectedVariant || selectedVariant.stockQuantity === 0 || adding) return
     setAdding(true)
+    let success = false
 
     if (session) {
       try {
@@ -69,20 +77,30 @@ export default function QuickAddModal({ slug, isOpen, onClose }) {
           })
         })
         const data = await res.json()
-        setMessage(res.ok ? 'Added to cart!' : (data.error || 'Could not add to cart'))
+        if (res.ok) {
+          setMessage('Added to cart!')
+          success = true
+        } else {
+          setMessage(data.error || 'Could not add to cart')
+        }
       } catch (err) {
         setMessage('Something went wrong')
       }
     } else {
       addToGuestCart(product._id, selectedVariant.size, quantity)
       setMessage('Added to cart!')
+      success = true
     }
 
     setAdding(false)
-    setTimeout(() => {
-      setMessage('')
-      onClose()
-    }, 1200)
+    if (success && onAdded) {
+      onAdded()
+    } else {
+      setTimeout(() => {
+        setMessage('')
+        onClose()
+      }, 1200)
+    }
   }
 
   if (!isOpen) return null

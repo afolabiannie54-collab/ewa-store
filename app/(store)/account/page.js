@@ -12,6 +12,7 @@ export default function AccountPage() {
   const { data: session, status, update } = useSession()
 
   const [profile, setProfile] = useState({ name: '', email: '' })
+  const [originalProfile, setOriginalProfile] = useState({ name: '', email: '' })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -42,7 +43,9 @@ export default function AccountPage() {
       const res = await fetch('/api/users/me')
       const data = await res.json()
       if (res.ok) {
-        setProfile({ name: data.user.name, email: data.user.email })
+        const loaded = { name: data.user.name, email: data.user.email }
+        setProfile(loaded)
+        setOriginalProfile(loaded)
       }
     } catch (err) {
       console.error('Failed to load profile')
@@ -69,6 +72,13 @@ export default function AccountPage() {
     const errors = validateProfile()
     setProfileFieldErrors(errors)
     if (Object.keys(errors).length > 0) return
+
+    const nameUnchanged = profile.name.trim() === originalProfile.name.trim()
+    const emailUnchanged = profile.email.trim().toLowerCase() === originalProfile.email.trim().toLowerCase()
+    if (nameUnchanged && emailUnchanged) {
+      setMessage('No changes to save.')
+      return
+    }
 
     setSaving(true)
 

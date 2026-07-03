@@ -6,12 +6,18 @@ import Link from 'next/link'
 import Loader from '@/components/Loader'
 import EmptyWishlistIllustration from '@/components/EmptyWishlistIllustration'
 import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
+import ProductCard from '@/components/ProductCard'
+import QuickAddModal from '@/components/QuickAddModal'
+import Toast from '@/components/Toast'
+import { useToast } from '@/lib/useToast'
 
 export default function WishlistPage() {
   const { data: session, status } = useSession()
   const isAdmin = session?.user?.role === 'admin'
   const [wishlist, setWishlist] = useState([])
   const [loading, setLoading] = useState(true)
+  const [quickAddProduct, setQuickAddProduct] = useState(null)
+  const { toast, showToast, dismissToast } = useToast()
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -35,11 +41,6 @@ export default function WishlistPage() {
   const handleRemove = async (productId) => {
     await fetch(`/api/users/me/wishlist/${productId}`, { method: 'DELETE' })
     setWishlist(wishlist.filter(p => p._id !== productId))
-  }
-
-  const getStartingPrice = (variants) => {
-    if (!variants || variants.length === 0) return 0
-    return Math.min(...variants.map(v => v.price))
   }
 
   if (status === 'loading' || loading) {
@@ -98,33 +99,28 @@ export default function WishlistPage() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
             {wishlist.map(product => (
-              <div key={product._id} className="rounded-[20px] border-[1.5px] border-border bg-surface overflow-hidden">
-                <Link href={`/shop/${product.slug}`}>
-                  <div className="aspect-square bg-cream">
-                    {product.images?.[0] && (
-                      <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
-                    )}
-                  </div>
-                </Link>
-                <div className="p-4">
-                  <Link href={`/shop/${product.slug}`}>
-                    <p className="text-[14px] font-medium text-forest mb-1.5 hover:text-olive transition-colors">{product.name}</p>
-                  </Link>
-                  <p className="text-[15px] font-bold text-forest mb-4">
-                    From ₦{getStartingPrice(product.variants).toLocaleString()}
-                  </p>
-                  <button
-                    onClick={() => handleRemove(product._id)}
-                    disabled={isAdmin}
-                    className="w-full rounded-full border-[1.5px] border-error text-error text-[12px] font-bold uppercase tracking-wide py-2 hover:bg-error hover:text-cream transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
+              <ProductCard
+                key={product._id}
+                product={product}
+                isWishlisted={true}
+                onWishlistToggle={() => handleRemove(product._id)}
+                onQuickAdd={() => setQuickAddProduct(product)}
+              />
             ))}
           </div>
         )}
+        {quickAddProduct && (
+          <QuickAddModal
+            product={quickAddProduct}
+            isOpen={!!quickAddProduct}
+            onClose={() => setQuickAddProduct(null)}
+            onAdded={() => {
+              setQuickAddProduct(null)
+              showToast('Added to cart!')
+            }}
+          />
+        )}
+        {toast && <Toast message={toast.message} type={toast.type} duration={toast.duration} onDismiss={dismissToast} key={toast.id} />}
       </div>
     </div>
   )

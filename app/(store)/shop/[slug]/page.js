@@ -12,6 +12,8 @@ import StarInput from '@/components/StarInput'
 import ProductCard from '@/components/ProductCard'
 import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
 import FadeInSection from '@/components/FadeInSection'
+import Toast from '@/components/Toast'
+import { useToast } from '@/lib/useToast'
 
 function HeartIcon(props) {
   return (
@@ -33,7 +35,7 @@ export default function ProductDetailPage() {
   const [selectedVariant, setSelectedVariant] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [activeTab, setActiveTab] = useState('description')
-  const [addedMessage, setAddedMessage] = useState('')
+  const { toast, showToast, dismissToast } = useToast()
   const { data: session, status: sessionStatus } = useSession()
   const isAdmin = session?.user?.role === 'admin'
   const [inWishlist, setInWishlist] = useState(false)
@@ -42,7 +44,6 @@ export default function ProductDetailPage() {
   const [reviewRating, setReviewRating] = useState(5)
   const [reviewComment, setReviewComment] = useState('')
   const [reviewError, setReviewError] = useState('')
-  const [reviewMessage, setReviewMessage] = useState('')
   const [submittingReview, setSubmittingReview] = useState(false)
 
   const [relatedProducts, setRelatedProducts] = useState([])
@@ -149,7 +150,7 @@ export default function ProductDetailPage() {
       if (!res.ok) {
         setReviewError(data.error)
       } else {
-        setReviewMessage(data.message)
+        showToast(data.message)
         setReviewComment('')
         fetchReviews(product._id)
       }
@@ -177,19 +178,17 @@ export default function ProductDetailPage() {
         const data = await res.json()
 
         if (res.ok) {
-          setAddedMessage('Added to cart!')
+          showToast('Added to cart!')
         } else {
-          setAddedMessage(data.error || 'Could not add to cart')
+          showToast(data.error || 'Could not add to cart', 'error')
         }
       } catch (err) {
-        setAddedMessage('Something went wrong')
+        showToast('Something went wrong', 'error')
       }
     } else {
       addToGuestCart(product._id, selectedVariant.size, quantity)
-      setAddedMessage('Added to cart!')
+      showToast('Added to cart!')
     }
-
-    setTimeout(() => setAddedMessage(''), 2000)
   }
 
   if (loading) {
@@ -368,10 +367,6 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            {addedMessage && (
-              <p className="text-[14px] font-medium text-success text-center mb-4">{addedMessage}</p>
-            )}
-
             <p className="text-[12px] text-muted text-center">
               For external use only. Patch test before use.
             </p>
@@ -469,7 +464,6 @@ export default function ProductDetailPage() {
               />
 
               {reviewError && <p className="text-[13px] text-error mb-4">{reviewError}</p>}
-              {reviewMessage && <p className="text-[13px] text-success mb-4">{reviewMessage}</p>}
 
               <button
                 type="submit"
@@ -503,6 +497,7 @@ export default function ProductDetailPage() {
         )}
 
       </div>
+      {toast && <Toast message={toast.message} type={toast.type} duration={toast.duration} onDismiss={dismissToast} key={toast.id} />}
     </div>
   )
 }
