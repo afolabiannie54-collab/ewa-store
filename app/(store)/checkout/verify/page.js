@@ -56,6 +56,10 @@ function VerifyContent() {
       if (res.ok && data.order) {
         setOrder(data.order)
         setStatus('found')
+        // Notify the Navbar to refresh its cart count — the cart was cleared
+        // server-side by the webhook, so the badge should drop to 0 immediately
+        // without requiring a page refresh.
+        window.dispatchEvent(new Event('cart:updated'))
       } else if (attempts < 8) {
         setAttempts(prev => prev + 1)
         setTimeout(checkOrder, 2000)

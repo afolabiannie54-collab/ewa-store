@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb'
 import Order from '@/models/Order'
 import Product from '@/models/Product'
 import PromoCode from '@/models/PromoCode'
+import Cart from '@/models/Cart'
 import { sendOrderEmail } from '@/lib/email'
 import { generateInvoicePDF } from '@/lib/invoice'
 import { uploadInvoicePDF } from '@/lib/cloudinary'
@@ -84,6 +85,18 @@ export async function POST(req) {
       await Product.updateOne(
         { _id: item.productId, 'variants.size': item.size },
         { $inc: { 'variants.$.stockQuantity': -item.quantity } }
+      )
+    }
+
+    // Clear the user's server-side cart after confirmed payment.
+    // Guest carts are localStorage-only and already cleared client-side in checkout.js.
+    // Logged-in carts live in the database and must be cleared here in the webhook,
+    // since this is the authoritative moment payment is confirmed — the same place
+    // stock quantities are decremented.
+    if (metadata.userId) {
+      await Cart.findOneAndUpdate(
+        { userId: metadata.userId },
+        { $set: { items: [] } }
       )
     }
 
