@@ -165,6 +165,10 @@ export default function ProductDetailPage() {
   }
 
   const handleAddToCart = async () => {
+    if (isAdmin) {
+      showToast("Admin accounts can't make purchases", 'info')
+      return
+    }
     if (!selectedVariant || selectedVariant.stockQuantity === 0) return
 
     if (session) {
@@ -353,7 +357,7 @@ export default function ProductDetailPage() {
             <div className="flex gap-3 mb-4">
               <button
                 onClick={handleAddToCart}
-                disabled={isAdmin || maxStock === 0}
+                disabled={maxStock === 0}
                 className="flex-1 rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-[18px] hover:bg-forest transition-colors disabled:bg-border disabled:text-muted disabled:cursor-not-allowed"
               >
                 {maxStock === 0 ? 'Sold Out' : 'Add to Cart'}
@@ -362,7 +366,6 @@ export default function ProductDetailPage() {
               {session && (
                 <button
                   onClick={handleToggleWishlist}
-                  disabled={isAdmin}
                   aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
                   className={`w-[60px] flex-shrink-0 flex items-center justify-center rounded-full border-[1.5px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     inWishlist ? 'bg-olive border-olive text-cream' : 'border-border text-forest hover:border-olive'

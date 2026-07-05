@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react'
 import Loader from '@/components/Loader'
 import { addToGuestCart } from '@/lib/cart-client'
 import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
+import { useToast } from '@/lib/useToast'
 
 function CloseIcon(props) {
   return (
@@ -18,6 +19,7 @@ function CloseIcon(props) {
 export default function QuickAddModal({ slug, product: productProp, isOpen, onClose, onAdded }) {
   const { data: session } = useSession()
   const isAdmin = session?.user?.role === 'admin'
+  const showToast = useToast()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [selectedVariant, setSelectedVariant] = useState(null)
@@ -61,6 +63,11 @@ export default function QuickAddModal({ slug, product: productProp, isOpen, onCl
   }
 
   const handleAddToCart = async () => {
+    if (isAdmin) {
+      showToast("Admin accounts can't make purchases", 'info')
+      onClose()
+      return
+    }
     if (!selectedVariant || selectedVariant.stockQuantity === 0 || adding) return
     setAdding(true)
     let success = false
@@ -198,7 +205,7 @@ export default function QuickAddModal({ slug, product: productProp, isOpen, onCl
 
               <button
                 onClick={handleAddToCart}
-                disabled={isAdmin || !selectedVariant || selectedVariant.stockQuantity === 0 || adding}
+                disabled={!selectedVariant || selectedVariant.stockQuantity === 0 || adding}
                 className="w-full rounded-full bg-olive text-cream text-[14px] font-bold uppercase tracking-[0.1em] py-4 hover:bg-forest transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {message || (selectedVariant?.stockQuantity === 0 ? 'Out of Stock' : adding ? <Loader size="sm" color="cream" /> : 'Add to Cart')}
