@@ -22,6 +22,8 @@ const UserSchema = new mongoose.Schema({
   pendingEmail: { type: String },
   emailChangeOTP: { type: String },
   emailChangeOTPExpiry: { type: Date },
+  resetPasswordOTP: { type: String },
+  resetPasswordOTPExpiry: { type: Date },
   lastLoginAt: { type: Date },
   addresses: [AddressSchema],
   wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]

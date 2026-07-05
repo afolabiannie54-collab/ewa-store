@@ -7,6 +7,7 @@ import ProductCard from '@/components/ProductCard'
 import QuickAddModal from '@/components/QuickAddModal'
 import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
 import FadeInSection from '@/components/FadeInSection'
+import { useToast } from '@/lib/useToast'
 
 const SKIN_TYPES = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']
 const SKIN_CONCERNS = ['Acne', 'Aging', 'Hyperpigmentation', 'Hydration', 'Brightening']
@@ -31,6 +32,7 @@ function ShopContent() {
   const searchParams = useSearchParams()
   const { data: session } = useSession()
   const isAdmin = session?.user?.role === 'admin'
+  const showToast = useToast()
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -314,6 +316,10 @@ function ShopContent() {
         slug={quickAddSlug}
         isOpen={!!quickAddSlug}
         onClose={() => setQuickAddSlug(null)}
+        onAdded={() => {
+          setQuickAddSlug(null)
+          showToast('Added to cart!')
+        }}
       />
     </div>
   )

@@ -197,7 +197,7 @@ export default function CartPage() {
             </div>
 
             {/* ORDER SUMMARY */}
-            <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8 h-fit lg:sticky lg:top-8">
+            <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8 h-fit lg:sticky lg:top-[96px]">
               <h2 className="font-display font-bold text-forest text-[22px] mb-6">Order Summary</h2>
 
               <div className="flex items-center justify-between text-[15px] text-forest mb-3">

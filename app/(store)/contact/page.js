@@ -112,7 +112,7 @@ export default function ContactPage() {
             <div className="mb-8">
               <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Message</label>
               <textarea
-                placeholder="Tell us what&apos;s on your mind..."
+                placeholder="Tell us what's on your mind..."
                 value={form.message}
                 onChange={(e) => setForm({ ...form, message: e.target.value })}
                 rows={6}

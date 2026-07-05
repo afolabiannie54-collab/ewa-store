@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Loader from '@/components/Loader'
+import AccountNav from '@/components/AccountNav'
 
 const STATUS_STYLES = {
   Pending: 'bg-cream text-forest border-border',
@@ -64,9 +65,11 @@ export default function MyIssuesPage() {
         <h1 className="font-display font-bold text-forest text-[44px] md:text-[60px] leading-none mb-2" style={{ letterSpacing: '-0.02em' }}>
           Reported Issues
         </h1>
-        <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-12">
+        <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-10">
           {issues.length} issue{issues.length !== 1 ? 's' : ''}
         </p>
+
+        <AccountNav />
 
         {issues.length === 0 ? (
           <div className="text-center py-16">
@@ -81,9 +84,12 @@ export default function MyIssuesPage() {
               >
                 <div className="flex items-center justify-between px-7 py-5 bg-forest">
                   <div>
-                    <p className="text-[12px] font-bold uppercase tracking-wide text-cream/50 mb-1">
-                      Order {issue.orderId?.orderNumber}
-                    </p>
+                    <Link
+                      href={`/orders/${issue.orderId?._id}`}
+                      className="text-[12px] font-bold uppercase tracking-wide text-cream/50 hover:text-cream transition-colors mb-1 block"
+                    >
+                      Order {issue.orderId?.orderNumber} →
+                    </Link>
                     <p className="font-display font-bold text-cream text-[18px] md:text-[20px]">
                       {issue.reasonType}
                     </p>

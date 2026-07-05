@@ -405,7 +405,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* RIGHT: ORDER SUMMARY */}
-          <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8 h-fit lg:sticky lg:top-8">
+          <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8 h-fit lg:sticky lg:top-[96px]">
             <h2 className="font-display font-bold text-forest text-[22px] mb-6">Order Summary</h2>
 
             <div className="flex flex-col gap-3 mb-6 max-h-[240px] overflow-y-auto pr-1">

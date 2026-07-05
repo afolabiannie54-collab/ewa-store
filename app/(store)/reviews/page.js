@@ -7,9 +7,12 @@ import Loader from '@/components/Loader'
 import StarRating from '@/components/StarRating'
 import StarInput from '@/components/StarInput'
 import ConfirmModal from '@/components/ConfirmModal'
+import AccountNav from '@/components/AccountNav'
+import { useToast } from '@/lib/useToast'
 
 export default function MyReviewsPage() {
   const { status } = useSession()
+  const showToast = useToast()
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState(null)
@@ -50,23 +53,31 @@ export default function MyReviewsPage() {
 
   const saveEdit = async (productId, reviewId) => {
     setSaving(true)
-    await fetch(`/api/products/${productId}/reviews/${reviewId}`, {
+    const res = await fetch(`/api/products/${productId}/reviews/${reviewId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rating: editRating, comment: editComment })
     })
-    setEditingId(null)
     setSaving(false)
-    fetchReviews()
+    if (res.ok) {
+      setEditingId(null)
+      fetchReviews()
+    } else {
+      showToast('Failed to save changes', 'error')
+    }
   }
 
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
-    await fetch(`/api/products/${deleteTarget.productId}/reviews/${deleteTarget.reviewId}`, { method: 'DELETE' })
+    const res = await fetch(`/api/products/${deleteTarget.productId}/reviews/${deleteTarget.reviewId}`, { method: 'DELETE' })
     setDeleting(false)
     setDeleteTarget(null)
-    fetchReviews()
+    if (res.ok) {
+      fetchReviews()
+    } else {
+      showToast('Failed to delete review', 'error')
+    }
   }
 
   if (status === 'loading' || loading) {
@@ -97,9 +108,11 @@ export default function MyReviewsPage() {
         <h1 className="font-display font-bold text-forest text-[44px] md:text-[60px] leading-none mb-2" style={{ letterSpacing: '-0.02em' }}>
           My Reviews
         </h1>
-        <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-12">
+        <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-10">
           {reviews.length} review{reviews.length !== 1 ? 's' : ''}
         </p>
+
+        <AccountNav />
 
         {reviews.length === 0 ? (
           <div className="text-center py-16">

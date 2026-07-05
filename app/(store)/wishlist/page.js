@@ -8,6 +8,7 @@ import EmptyWishlistIllustration from '@/components/EmptyWishlistIllustration'
 import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
 import ProductCard from '@/components/ProductCard'
 import QuickAddModal from '@/components/QuickAddModal'
+import AccountNav from '@/components/AccountNav'
 import { useToast } from '@/lib/useToast'
 
 export default function WishlistPage() {
@@ -38,8 +39,8 @@ export default function WishlistPage() {
   }
 
   const handleRemove = async (productId) => {
-    await fetch(`/api/users/me/wishlist/${productId}`, { method: 'DELETE' })
-    setWishlist(wishlist.filter(p => p._id !== productId))
+    const res = await fetch(`/api/users/me/wishlist/${productId}`, { method: 'DELETE' })
+    if (res.ok) setWishlist(wishlist.filter(p => p._id !== productId))
   }
 
   if (status === 'loading' || loading) {
@@ -71,11 +72,7 @@ export default function WishlistPage() {
           My Wishlist
         </h1>
 
-        <div className="flex gap-2 mb-10">
-          <Link href="/account" className="px-4 py-2 rounded-full border-[1.5px] border-border text-forest text-[12px] font-medium hover:border-olive transition-colors">Profile</Link>
-          <Link href="/account/addresses" className="px-4 py-2 rounded-full border-[1.5px] border-border text-forest text-[12px] font-medium hover:border-olive transition-colors">Addresses</Link>
-          <span className="px-4 py-2 rounded-full bg-olive text-cream text-[12px] font-medium">Wishlist</span>
-        </div>
+        <AccountNav />
 
         {isAdmin && <AdminBrowsingBanner />}
 

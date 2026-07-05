@@ -9,7 +9,10 @@ export default function AccountNav() {
   const links = [
     { href: '/account', label: 'Profile' },
     { href: '/account/addresses', label: 'Addresses' },
+    { href: '/orders', label: 'Orders' },
     { href: '/wishlist', label: 'Wishlist' },
+    { href: '/issues', label: 'Issues' },
+    { href: '/reviews', label: 'Reviews' },
   ]
 
   return (

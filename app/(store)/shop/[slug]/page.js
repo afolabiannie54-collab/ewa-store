@@ -111,14 +111,20 @@ export default function ProductDetailPage() {
     try {
       if (inWishlist) {
         const res = await fetch(`/api/users/me/wishlist/${product._id}`, { method: 'DELETE' })
-        if (res.ok) setInWishlist(false)
+        if (res.ok) {
+          setInWishlist(false)
+          showToast('Removed from wishlist', 'info')
+        }
       } else {
         const res = await fetch('/api/users/me/wishlist', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productId: product._id })
         })
-        if (res.ok) setInWishlist(true)
+        if (res.ok) {
+          setInWishlist(true)
+          showToast('Added to wishlist!')
+        }
       }
     } catch (err) {
       console.error('Failed to update wishlist')

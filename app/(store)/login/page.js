@@ -39,6 +39,7 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const justVerified = searchParams.get('verified') === 'true'
+  const justReset = searchParams.get('reset') === 'true'
   const callbackUrl = searchParams.get('callbackUrl') || '/'
 
   const [form, setForm] = useState({ email: '', password: '' })
@@ -109,6 +110,12 @@ function LoginForm() {
             </div>
           )}
 
+          {justReset && (
+            <div className="rounded-[12px] bg-success/10 border-[1.5px] border-success/25 px-5 py-4 text-[13px] text-success mb-6">
+              Password updated! You can now log in with your new password.
+            </div>
+          )}
+
           {error && (
             <div className="rounded-[12px] bg-error/10 border-[1.5px] border-error/25 px-5 py-4 text-[13px] text-error mb-6">
               {error}
@@ -130,7 +137,10 @@ function LoginForm() {
             </div>
 
             <div className="mb-7">
-              <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Password</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-[12px] font-bold uppercase tracking-wide text-forest">Password</label>
+                <Link href="/forgot-password" className="text-[12px] text-olive font-medium hover:underline">Forgot password?</Link>
+              </div>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
