@@ -93,7 +93,7 @@ const DEFAULT_WIDTH = 260
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(true)
   const [width, setWidth] = useState(DEFAULT_WIDTH)
   const [isDragging, setIsDragging] = useState(false)
   const dragStartRef = useRef({ startX: 0, startWidth: DEFAULT_WIDTH })
