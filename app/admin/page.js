@@ -114,7 +114,11 @@ export default function AdminDashboard() {
         </div>
 
         {/* NEEDS ATTENTION */}
-        <div className="rounded-[24px] border-[1.5px] border-border bg-surface p-7 md:p-8 shadow-[0_10px_28px_-10px_rgba(40,54,24,0.12)]">
+        <div className={`rounded-[24px] border-[1.5px] p-7 md:p-8 shadow-[0_10px_28px_-10px_rgba(40,54,24,0.12)] ${
+          attentionItems.length > 0
+            ? 'border-error/25 bg-error/[0.04]'
+            : 'border-border bg-surface'
+        }`}>
           <p className="text-forest text-[15px] font-bold mb-5">Needs Attention</p>
 
           {attentionItems.length === 0 ? (

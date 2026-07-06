@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { signIn } from 'next-auth/react'
+import { signIn, getSession } from 'next-auth/react'
 import Link from 'next/link'
 import Loader from '@/components/Loader'
 import FieldError from '@/components/FieldError'
@@ -85,7 +85,12 @@ function LoginForm() {
       return
     }
 
-    router.push(callbackUrl)
+    const session = await getSession()
+    if (session?.user?.role === 'admin') {
+      router.push('/admin')
+    } else {
+      router.push(callbackUrl)
+    }
     router.refresh()
   }
 

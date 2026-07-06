@@ -67,10 +67,10 @@ function InquiriesIcon(props) {
     </svg>
   )
 }
-function CollapseIcon(props) {
+function CloseIcon(props) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M15 6l-6 6 6 6" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" {...props}>
+      <path d="M18 6 6 18M6 6l12 12" />
     </svg>
   )
 }
@@ -90,42 +90,35 @@ const NAV_LINKS = [
 const MIN_WIDTH = 200
 const MAX_WIDTH = 360
 const DEFAULT_WIDTH = 260
-const COLLAPSED_WIDTH = 76
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
+  const [open, setOpen] = useState(false)
   const [width, setWidth] = useState(DEFAULT_WIDTH)
   const [isDragging, setIsDragging] = useState(false)
   const dragStartRef = useRef({ startX: 0, startWidth: DEFAULT_WIDTH })
 
   useEffect(() => {
     const savedWidth = localStorage.getItem('adminSidebarWidth')
-    const savedCollapsed = localStorage.getItem('adminSidebarCollapsed')
     if (savedWidth) setWidth(Number(savedWidth))
-    if (savedCollapsed === 'true') setCollapsed(true)
   }, [])
 
   useEffect(() => {
     function handleMouseMove(e) {
       if (!isDragging) return
-      const delta = e.clientX - dragStartRef.current.startX
-      const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, dragStartRef.current.startWidth + delta))
+      const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, dragStartRef.current.startWidth + (e.clientX - dragStartRef.current.startX)))
       setWidth(newWidth)
     }
-
     function handleMouseUp() {
       if (isDragging) {
         setIsDragging(false)
         localStorage.setItem('adminSidebarWidth', String(width))
       }
     }
-
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
     }
-
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
@@ -133,14 +126,9 @@ export default function AdminLayout({ children }) {
   }, [isDragging, width])
 
   const startDrag = (e) => {
+    e.preventDefault()
     dragStartRef.current = { startX: e.clientX, startWidth: width }
     setIsDragging(true)
-  }
-
-  const toggleCollapsed = () => {
-    const next = !collapsed
-    setCollapsed(next)
-    localStorage.setItem('adminSidebarCollapsed', String(next))
   }
 
   const isActive = (href) => {
@@ -148,63 +136,71 @@ export default function AdminLayout({ children }) {
     return pathname.startsWith(href)
   }
 
-  const sidebarWidth = collapsed ? COLLAPSED_WIDTH : width
-
   return (
-    <div className="flex min-h-screen bg-cream">
+    <div className="min-h-screen bg-cream">
+
+      {/* Hover trigger strip — only visible when sidebar is closed */}
+      {!open && (
+        <div
+          className="fixed left-0 top-0 h-full z-40 hidden md:block"
+          style={{ width: 6, background: '#283618', cursor: 'e-resize' }}
+          onMouseEnter={() => setOpen(true)}
+        />
+      )}
+
+      {/* Sidebar overlay */}
       <aside
-        style={{ width: sidebarWidth }}
-        className={`relative flex-shrink-0 bg-forest min-h-screen sticky top-0 self-start py-8 hidden md:flex flex-col ${
-          isDragging ? '' : 'transition-[width] duration-200'
-        }`}
+        style={{
+          width: open ? width : 0,
+          transition: isDragging ? 'none' : 'width 220ms cubic-bezier(0.4,0,0.2,1)',
+        }}
+        className="fixed left-0 top-0 h-full z-40 bg-forest overflow-hidden hidden md:flex flex-col shadow-[4px_0_40px_-4px_rgba(0,0,0,0.3)]"
       >
-        <div className={`flex items-center justify-between mb-1 ${collapsed ? 'px-4' : 'px-5'}`}>
-          {!collapsed && (
+        <div style={{ width, minWidth: width }} className="flex flex-col flex-1 py-8">
+
+          <div className="flex items-center justify-between mb-1 px-5">
             <Link href="/" className="font-display font-bold text-cream text-[26px]" style={{ letterSpacing: '-0.04em' }}>
               Ewa
             </Link>
-          )}
-          <button
-            onClick={toggleCollapsed}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full text-cream/60 hover:bg-cream/10 hover:text-cream transition-colors"
-          >
-            <CollapseIcon className={`w-4 h-4 transition-transform duration-200 ${collapsed ? 'rotate-180' : ''}`} />
-          </button>
+            <button
+              onClick={() => setOpen(false)}
+              aria-label="Close sidebar"
+              className="w-8 h-8 flex items-center justify-center rounded-full text-cream/50 hover:bg-cream/10 hover:text-cream transition-colors"
+            >
+              <CloseIcon className="w-4 h-4" />
+            </button>
+          </div>
+
+          <p className="text-cream/40 text-[11px] font-bold uppercase tracking-wide px-5 mb-8">Admin</p>
+
+          <nav className="flex flex-col gap-1 px-3">
+            {NAV_LINKS.map(link => {
+              const Icon = link.icon
+              const active = isActive(link.href)
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-[14px] font-medium transition-colors whitespace-nowrap ${
+                    active ? 'bg-cream text-forest' : 'text-cream/65 hover:bg-cream/10 hover:text-cream'
+                  }`}
+                >
+                  <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+                  {link.label}
+                </Link>
+              )
+            })}
+          </nav>
         </div>
 
-        {!collapsed && <p className="text-cream/40 text-[11px] font-bold uppercase tracking-wide px-5 mb-8">Admin</p>}
-        {collapsed && <div className="mb-8" />}
-
-        <nav className="flex flex-col gap-1 px-3">
-          {NAV_LINKS.map(link => {
-            const Icon = link.icon
-            const active = isActive(link.href)
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                title={collapsed ? link.label : undefined}
-                className={`flex items-center gap-3 py-2.5 rounded-[12px] text-[14px] font-medium transition-colors ${
-                  collapsed ? 'justify-center px-0' : 'px-3'
-                } ${active ? 'bg-cream text-forest' : 'text-cream/65 hover:bg-cream/10 hover:text-cream'}`}
-              >
-                <Icon className="w-[18px] h-[18px] flex-shrink-0" />
-                {!collapsed && link.label}
-              </Link>
-            )
-          })}
-        </nav>
-
-        {!collapsed && (
-          <div
-            onMouseDown={startDrag}
-            className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-olive/40 transition-colors"
-          />
-        )}
+        {/* Drag-to-resize handle */}
+        <div
+          onMouseDown={startDrag}
+          className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-olive/40 transition-colors"
+        />
       </aside>
 
-      <main className="flex-1 min-w-0">
+      <main className="min-h-screen">
         {children}
       </main>
     </div>
