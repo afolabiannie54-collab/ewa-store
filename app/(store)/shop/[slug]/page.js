@@ -391,7 +391,7 @@ export default function ProductDetailPage() {
         {/* TABS */}
         <FadeInSection>
         <div className="mb-20">
-          <div className="flex gap-4 md:gap-8 border-b-[1.5px] border-border mb-8 overflow-x-auto">
+          <div className="flex gap-4 md:gap-8 border-b-[1.5px] border-border mb-8 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
             {['description', 'ingredients', 'how to use'].map(tab => (
               <button
                 key={tab}
