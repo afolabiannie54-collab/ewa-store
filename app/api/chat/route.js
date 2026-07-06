@@ -145,6 +145,13 @@ export async function POST(req) {
                 const parsed = JSON.parse(data)
                 if (parsed.type === 'response.output_text.delta' && parsed.delta) {
                   controller.enqueue(encoder.encode(parsed.delta))
+                } else if (parsed.type === 'error') {
+                  const msg = parsed.message?.message || parsed.error?.message || ''
+                  const isQuota = msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('billing') || msg.toLowerCase().includes('insufficient')
+                  controller.enqueue(encoder.encode(
+                    `__ERROR__${isQuota ? "Sage is temporarily unavailable — we're looking into it. Please try again later." : "Something went wrong. Please try again."}__END_ERROR__`
+                  ))
+                  return
                 }
               } catch (e) {
                 // Skip malformed/partial JSON chunks rather than crashing the stream

@@ -218,6 +218,9 @@ export default function SageChatWidget() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deletingConversation, setDeletingConversation] = useState(false)
 
+  const panelRef = useRef(null)
+  const openButtonRef = useRef(null)
+
   const [panelWidth, setPanelWidth] = useState(380)
   const [panelHeight, setPanelHeight] = useState(560)
   const [isResizing, setIsResizing] = useState(false)
@@ -322,6 +325,20 @@ export default function SageChatWidget() {
     window.addEventListener('sage:open', handler)
     return () => window.removeEventListener('sage:open', handler)
   }, [])
+
+  useEffect(() => {
+    if (!isOpen || isMobile) return
+    function handleClickOutside(e) {
+      if (
+        panelRef.current && !panelRef.current.contains(e.target) &&
+        openButtonRef.current && !openButtonRef.current.contains(e.target)
+      ) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isOpen, isMobile])
 
   useEffect(() => {
     function handleMouseMove(e) {
@@ -514,6 +531,11 @@ export default function SageChatWidget() {
           fullReply += chunk
         }
 
+        const errorMatch = fullReply.match(/__ERROR__(.*?)__END_ERROR__/s)
+        if (errorMatch) {
+          throw new Error(errorMatch[1])
+        }
+
         setMessages(prev => {
           const updated = [...prev]
           updated[updated.length - 1] = { role: 'assistant', content: fullReply, products: parsedProducts }
@@ -593,6 +615,7 @@ export default function SageChatWidget() {
       `}</style>
       {!(isMobile && isOpen) && (
         <button
+          ref={openButtonRef}
           onClick={() => setIsOpen(!isOpen)}
           aria-label={isOpen ? 'Close Sage chat' : 'Open Sage chat'}
           style={{
@@ -610,6 +633,7 @@ export default function SageChatWidget() {
 
       {isOpen && (
         <div
+          ref={panelRef}
           style={isMobile ? {
             position: 'fixed', top: 0, left: 0,
             width: '100vw', height: '100vh',

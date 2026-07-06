@@ -63,6 +63,19 @@ export default function Navbar() {
   const router = useRouter()
   const pathname = usePathname()
 
+  const isAdminPage = pathname?.startsWith('/admin')
+  const [navVisible, setNavVisible] = useState(false)
+  const hideTimerRef = useRef(null)
+
+  const showNav = useCallback(() => {
+    clearTimeout(hideTimerRef.current)
+    setNavVisible(true)
+  }, [])
+
+  const hideNav = useCallback(() => {
+    hideTimerRef.current = setTimeout(() => setNavVisible(false), 150)
+  }, [])
+
   const [accountOpen, setAccountOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -161,7 +174,24 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 w-full bg-forest border-b-[2px] border-olive shadow-[0_4px_16px_-2px_rgba(0,0,0,0.3)]">
+      {/* Invisible hover trigger at the top edge — admin pages only */}
+      {isAdminPage && (
+        <div
+          className="fixed top-0 left-0 w-full z-[51]"
+          style={{ height: navVisible ? 0 : 20 }}
+          onMouseEnter={showNav}
+        />
+      )}
+
+      <nav
+        className={`${isAdminPage ? 'fixed' : 'sticky'} top-0 z-50 w-full bg-forest border-b-[2px] border-olive shadow-[0_4px_16px_-2px_rgba(0,0,0,0.3)]`}
+        style={isAdminPage ? {
+          transform: navVisible ? 'translateY(0)' : 'translateY(-100%)',
+          transition: 'transform 220ms cubic-bezier(0.4,0,0.2,1)',
+        } : {}}
+        onMouseEnter={isAdminPage ? showNav : undefined}
+        onMouseLeave={isAdminPage ? hideNav : undefined}
+      >
         <div className="mx-auto flex h-[80px] max-w-[1320px] items-center justify-between px-6 md:px-12">
 
           <Link
