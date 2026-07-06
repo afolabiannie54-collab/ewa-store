@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import FadeInSection from '@/components/FadeInSection'
 
 const FAQS = [
   {
@@ -137,45 +136,41 @@ export default function FAQPage() {
 
       {/* CONTENT */}
       <div className="max-w-[1100px] mx-auto px-6 md:px-12 py-16 md:py-24">
-        {FAQS.map((section, si) => (
-          <FadeInSection key={section.category} delay={si * 80}>
-            <div className="mb-16 md:mb-20">
-              <div className="flex items-center gap-4 mb-8">
-                <p className="text-[13px] font-bold uppercase tracking-[0.2em] text-olive">
-                  {section.category}
-                </p>
-                <div className="flex-1 h-px bg-border" />
-              </div>
-              <div>
-                {section.items.map((item, ii) => (
-                  <FAQItem key={ii} question={item.question} answer={item.answer} />
-                ))}
-              </div>
+        {FAQS.map((section) => (
+          <div key={section.category} className="mb-16 md:mb-20">
+            <div className="flex items-center gap-4 mb-8">
+              <p className="text-[13px] font-bold uppercase tracking-[0.2em] text-olive">
+                {section.category}
+              </p>
+              <div className="flex-1 h-px bg-border" />
             </div>
-          </FadeInSection>
+            <div>
+              {section.items.map((item, ii) => (
+                <FAQItem key={ii} question={item.question} answer={item.answer} />
+              ))}
+            </div>
+          </div>
         ))}
 
         {/* STILL NEED HELP */}
-        <FadeInSection delay={200}>
-          <div className="rounded-[28px] bg-forest px-8 md:px-16 py-14 md:py-16 text-center mt-8">
-            <p className="text-olive text-[13px] font-bold uppercase tracking-[0.2em] mb-4">Still need help?</p>
-            <h2
-              className="font-display font-bold text-cream text-[36px] md:text-[48px] leading-none mb-5"
-              style={{ letterSpacing: '-0.02em' }}
-            >
-              We&apos;re here for you
-            </h2>
-            <p className="text-cream/60 text-[17px] mb-9 max-w-[400px] mx-auto leading-relaxed">
-              Our team responds to every message. Send us a note and we&apos;ll be in touch.
-            </p>
-            <Link
-              href="/contact"
-              className="inline-block rounded-full bg-cream text-forest text-[13px] font-bold uppercase tracking-[0.1em] px-10 py-4 hover:bg-olive hover:text-cream transition-colors"
-            >
-              Get in Touch
-            </Link>
-          </div>
-        </FadeInSection>
+        <div className="rounded-[28px] bg-forest px-8 md:px-16 py-14 md:py-16 text-center mt-8">
+          <p className="text-olive text-[13px] font-bold uppercase tracking-[0.2em] mb-4">Still need help?</p>
+          <h2
+            className="font-display font-bold text-cream text-[36px] md:text-[48px] leading-none mb-5"
+            style={{ letterSpacing: '-0.02em' }}
+          >
+            We&apos;re here for you
+          </h2>
+          <p className="text-cream/60 text-[17px] mb-9 max-w-[400px] mx-auto leading-relaxed">
+            Our team responds to every message. Send us a note and we&apos;ll be in touch.
+          </p>
+          <Link
+            href="/contact"
+            className="inline-block rounded-full bg-cream text-forest text-[13px] font-bold uppercase tracking-[0.1em] px-10 py-4 hover:bg-olive hover:text-cream transition-colors"
+          >
+            Get in Touch
+          </Link>
+        </div>
       </div>
 
     </div>
