@@ -29,7 +29,7 @@ export async function POST(req) {
         size: item.size,
         price: variant.price,
         availableStock: variant.stockQuantity,
-        quantity: item.quantity
+        quantity: Math.min(item.quantity, variant.stockQuantity)
       })
     }
 

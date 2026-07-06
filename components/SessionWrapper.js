@@ -20,12 +20,17 @@ function CartMerger() {
     if (guestItems.length === 0) return
 
     try {
-      await fetch('/api/cart/merge', {
+      const res = await fetch('/api/cart/merge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: guestItems })
       })
+      const data = await res.json()
       clearGuestCart()
+      window.dispatchEvent(new Event('cart:updated'))
+      if (data.quantitiesAdjusted > 0) {
+        window.dispatchEvent(new CustomEvent('cart:quantities-adjusted'))
+      }
     } catch (err) {
       console.error('Failed to merge cart', err)
     }

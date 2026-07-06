@@ -19,22 +19,25 @@ export async function GET(req) {
       return NextResponse.json({ items: [] }, { status: 200 })
     }
 
-    // Build enriched response with live product/variant data
-    const enrichedItems = cart.items.map(item => {
-      const product = item.productId
-      const variant = product?.variants.find(v => v.size === item.size)
-
-      return {
-        productId: product?._id,
-        name: product?.name,
-        slug: product?.slug,
-        image: product?.images?.[0],
-        size: item.size,
-        price: variant?.price || 0,
-        availableStock: variant?.stockQuantity || 0,
-        quantity: item.quantity
-      }
-    })
+    // Build enriched response with live product/variant data; skip deleted products/variants
+    const enrichedItems = cart.items
+      .map(item => {
+        const product = item.productId
+        if (!product) return null
+        const variant = product.variants.find(v => v.size === item.size)
+        if (!variant) return null
+        return {
+          productId: product._id,
+          name: product.name,
+          slug: product.slug,
+          image: product.images?.[0],
+          size: item.size,
+          price: variant.price,
+          availableStock: variant.stockQuantity,
+          quantity: item.quantity
+        }
+      })
+      .filter(Boolean)
 
     return NextResponse.json({ items: enrichedItems }, { status: 200 })
 

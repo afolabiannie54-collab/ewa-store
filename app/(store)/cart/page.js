@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Loader from '@/components/Loader'
 import { getGuestCart, updateGuestCartItem, removeFromGuestCart } from '@/lib/cart-client'
 import EmptyCartIllustration from '@/components/EmptyCartIllustration'
+import { useToast } from '@/lib/useToast'
 
 function TrashIcon(props) {
   return (
@@ -19,14 +20,10 @@ function TrashIcon(props) {
 export default function CartPage() {
   const { data: session, status } = useSession()
   const isAdmin = session?.user?.role === 'admin'
+  const showToast = useToast()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (status !== 'loading') {
-      fetchCart()
-    }
-  }, [status])
+  const fetchCartRef = useRef(null)
 
   const fetchCart = async () => {
     setLoading(true)
@@ -34,10 +31,14 @@ export default function CartPage() {
     if (session) {
       try {
         const res = await fetch('/api/cart')
-        const data = await res.json()
-        setItems(data.items || [])
+        if (!res.ok) {
+          showToast('Failed to load cart', 'error')
+        } else {
+          const data = await res.json()
+          setItems(data.items || [])
+        }
       } catch (err) {
-        console.error('Failed to load cart')
+        showToast('Failed to load cart', 'error')
       }
     } else {
       const guestItems = getGuestCart()
@@ -61,15 +62,38 @@ export default function CartPage() {
     setLoading(false)
   }
 
+  fetchCartRef.current = fetchCart
+
+  useEffect(() => {
+    if (status !== 'loading') {
+      fetchCart()
+    }
+  }, [status])
+
+  useEffect(() => {
+    function onAdjusted() {
+      showToast('Some cart quantities were adjusted to match available stock.', 'info')
+      fetchCartRef.current?.()
+    }
+    window.addEventListener('cart:quantities-adjusted', onAdjusted)
+    return () => window.removeEventListener('cart:quantities-adjusted', onAdjusted)
+  }, [showToast])
+
   const handleUpdateQuantity = async (productId, size, newQuantity) => {
     if (newQuantity < 1) return
 
     if (session) {
-      await fetch('/api/cart/update', {
+      const res = await fetch('/api/cart/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId, size, quantity: newQuantity })
       })
+      if (!res.ok) {
+        const data = await res.json()
+        showToast(data.error || 'Could not update quantity', 'error')
+        fetchCart()
+        return
+      }
     } else {
       updateGuestCartItem(productId, size, newQuantity)
     }
@@ -80,11 +104,15 @@ export default function CartPage() {
 
   const handleRemove = async (productId, size) => {
     if (session) {
-      await fetch('/api/cart/remove', {
+      const res = await fetch('/api/cart/remove', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId, size })
       })
+      if (!res.ok) {
+        showToast('Could not remove item', 'error')
+        return
+      }
     } else {
       removeFromGuestCart(productId, size)
     }
@@ -94,6 +122,7 @@ export default function CartPage() {
   }
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const hasOverstock = items.some(i => i.quantity > i.availableStock)
 
   if (loading) {
     return (
@@ -139,61 +168,69 @@ export default function CartPage() {
 
             {/* CART ITEMS */}
             <div>
-              {items.map((item) => (
-                <div
-                  key={`${item.productId}-${item.size}`}
-                  className="flex gap-5 py-6 border-b-[1.5px] border-border"
-                >
-                  <div className="relative w-[100px] h-[100px] rounded-[16px] overflow-hidden bg-surface border-[1.5px] border-border flex-shrink-0">
-                    {item.image && (
-                      <Image src={item.image} alt={item.name} fill sizes="100px" className="object-cover" />
-                    )}
-                  </div>
+              {items.map((item) => {
+                const outOfStock = item.availableStock === 0
+                return (
+                  <div
+                    key={`${item.productId}-${item.size}`}
+                    className={`flex gap-5 py-6 border-b-[1.5px] border-border transition-opacity ${outOfStock ? 'opacity-60' : ''}`}
+                  >
+                    <div className="relative w-[100px] h-[100px] rounded-[16px] overflow-hidden bg-surface border-[1.5px] border-border flex-shrink-0">
+                      {item.image && (
+                        <Image src={item.image} alt={item.name} fill sizes="100px" className="object-cover" />
+                      )}
+                    </div>
 
-                  <div className="flex-1 min-w-0">
-                    <Link href={`/shop/${item.slug}`} className="font-display font-bold text-forest text-[19px] md:text-[21px] hover:text-olive transition-colors">
-                      {item.name}
-                    </Link>
-                    <p className="text-[13px] text-forest/50 mt-1">Size: {item.size}</p>
-                    <p className="font-display font-bold text-forest text-[18px] mt-2">
-                      ₦{item.price.toLocaleString()}
-                    </p>
-
-                    {item.quantity > item.availableStock && (
-                      <p className="text-[12px] font-medium text-error mt-1.5">
-                        Only {item.availableStock} left in stock
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/shop/${item.slug}`} className="font-display font-bold text-forest text-[19px] md:text-[21px] hover:text-olive transition-colors">
+                        {item.name}
+                      </Link>
+                      <p className="text-[13px] text-forest/50 mt-1">Size: {item.size}</p>
+                      <p className="font-display font-bold text-forest text-[18px] mt-2">
+                        ₦{item.price.toLocaleString()}
                       </p>
-                    )}
-                  </div>
 
-                  <div className="flex flex-col items-end justify-between flex-shrink-0">
-                    <button
-                      onClick={() => handleRemove(item.productId, item.size)}
-                      aria-label="Remove item"
-                      className="text-forest/40 hover:text-error transition-colors"
-                    >
-                      <TrashIcon className="w-5 h-5" />
-                    </button>
+                      {outOfStock ? (
+                        <span className="inline-flex items-center text-[11px] font-bold uppercase tracking-wide text-error bg-error/8 px-2.5 py-1 rounded-full mt-2">
+                          Out of Stock
+                        </span>
+                      ) : item.quantity > item.availableStock ? (
+                        <p className="text-[12px] font-medium text-error mt-1.5">
+                          Only {item.availableStock} left in stock
+                        </p>
+                      ) : null}
+                    </div>
 
-                    <div className="flex items-center rounded-full border-[1.5px] border-border">
+                    <div className="flex flex-col items-end justify-between flex-shrink-0">
                       <button
-                        onClick={() => handleUpdateQuantity(item.productId, item.size, item.quantity - 1)}
-                        className="w-9 h-9 flex items-center justify-center text-forest text-[16px] hover:bg-surface transition-colors rounded-l-full"
+                        onClick={() => handleRemove(item.productId, item.size)}
+                        aria-label="Remove item"
+                        className="text-forest/40 hover:text-error transition-colors"
                       >
-                        −
+                        <TrashIcon className="w-5 h-5" />
                       </button>
-                      <span className="w-9 text-center text-[14px] font-bold text-forest">{item.quantity}</span>
-                      <button
-                        onClick={() => handleUpdateQuantity(item.productId, item.size, item.quantity + 1)}
-                        disabled={item.quantity >= item.availableStock}
-                        className="w-9 h-9 flex items-center justify-center text-forest text-[16px] hover:bg-surface transition-colors rounded-r-full disabled:opacity-30"
-                      >
-                        +
-                      </button>
+
+                      <div className="flex items-center rounded-full border-[1.5px] border-border">
+                        <button
+                          onClick={() => handleUpdateQuantity(item.productId, item.size, item.quantity - 1)}
+                          disabled={outOfStock}
+                          className="w-9 h-9 flex items-center justify-center text-forest text-[16px] hover:bg-surface transition-colors rounded-l-full disabled:opacity-30"
+                        >
+                          −
+                        </button>
+                        <span className="w-9 text-center text-[14px] font-bold text-forest">{item.quantity}</span>
+                        <button
+                          onClick={() => handleUpdateQuantity(item.productId, item.size, item.quantity + 1)}
+                          disabled={item.quantity >= item.availableStock}
+                          className="w-9 h-9 flex items-center justify-center text-forest text-[16px] hover:bg-surface transition-colors rounded-r-full disabled:opacity-30"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             {/* ORDER SUMMARY */}
@@ -216,6 +253,15 @@ export default function CartPage() {
                   </div>
                   <p className="text-[12px] text-forest/45 text-center mt-3">
                     Admin accounts cannot complete purchases.
+                  </p>
+                </div>
+              ) : hasOverstock ? (
+                <div>
+                  <div className="block text-center w-full rounded-full bg-border text-muted text-[14px] font-bold uppercase tracking-[0.1em] py-[18px] cursor-not-allowed">
+                    Proceed to Checkout
+                  </div>
+                  <p className="text-[12px] text-error/80 text-center mt-3">
+                    Adjust quantities or remove sold-out items to continue.
                   </p>
                 </div>
               ) : (

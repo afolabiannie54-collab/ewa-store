@@ -24,6 +24,8 @@ export async function POST(req) {
       cart = await Cart.create({ userId: user.id, items: [] })
     }
 
+    let quantitiesAdjusted = 0
+
     for (const guestItem of items) {
       const product = await Product.findById(guestItem.productId)
       if (!product) continue
@@ -37,9 +39,12 @@ export async function POST(req) {
 
       if (existingItem) {
         const combinedQuantity = existingItem.quantity + guestItem.quantity
-        existingItem.quantity = Math.min(combinedQuantity, variant.stockQuantity)
+        const capped = Math.min(combinedQuantity, variant.stockQuantity)
+        if (capped < combinedQuantity) quantitiesAdjusted++
+        existingItem.quantity = capped
       } else {
         const safeQuantity = Math.min(guestItem.quantity, variant.stockQuantity)
+        if (safeQuantity < guestItem.quantity) quantitiesAdjusted++
         if (safeQuantity > 0) {
           cart.items.push({ productId: guestItem.productId, size: guestItem.size, quantity: safeQuantity })
         }
@@ -48,7 +53,7 @@ export async function POST(req) {
 
     await cart.save()
 
-    return NextResponse.json({ message: 'Cart merged successfully' }, { status: 200 })
+    return NextResponse.json({ message: 'Cart merged successfully', quantitiesAdjusted }, { status: 200 })
 
   } catch (error) {
     console.error('Merge cart error:', error)
