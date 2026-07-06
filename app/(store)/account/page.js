@@ -245,7 +245,7 @@ export default function AccountPage() {
           <div className="mb-4">
             <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Email</label>
             <input
-              type="text"
+              type="email"
               value={profile.email}
               onChange={(e) => { setProfile({ ...profile, email: e.target.value }); setError(''); setMessage(''); }}
               className={inputClass(profileFieldErrors.email)}
@@ -282,6 +282,8 @@ export default function AccountPage() {
               <p className="text-[13px] text-forest/55 mb-4">Check your new email for a 6-digit verification code.</p>
               <input
                 type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 placeholder="Enter 6-digit code"
                 value={confirmOtp}
                 onChange={(e) => setConfirmOtp(e.target.value)}

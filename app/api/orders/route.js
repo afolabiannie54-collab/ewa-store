@@ -14,6 +14,9 @@ export async function GET(req) {
     await connectDB()
 
     const dbUser = await User.findById(user.id)
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 401 })
+    }
 
     // Match orders by userId OR by guestEmail if the account's email is verified
     // This is our locked architecture: guest orders are never rewritten,

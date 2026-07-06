@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+
 import ProductCard from '@/components/ProductCard'
 import QuickAddModal from '@/components/QuickAddModal'
 import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
@@ -36,13 +37,17 @@ function ShopContent() {
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
   const [categories, setCategories] = useState([])
   const [wishlistIds, setWishlistIds] = useState([])
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
   const [quickAddSlug, setQuickAddSlug] = useState(null)
+  const [searchInput, setSearchInput] = useState(searchParams.get('search') || '')
 
   const sortRef = useRef(null)
+  const isFirstSearchRender = useRef(true)
+  const isFirstUrlRender = useRef(true)
 
   const [filters, setFilters] = useState({
     category: searchParams.get('category') || '',
@@ -52,15 +57,45 @@ function ShopContent() {
     sort: ''
   })
 
+  // Fetch immediately when non-search filters change
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchProducts()
-    }, 300)
-    return () => clearTimeout(timer)
+    fetchProducts()
   }, [filters])
 
+  // Debounce only the search text input
   useEffect(() => {
-    fetchWishlist()
+    if (isFirstSearchRender.current) {
+      isFirstSearchRender.current = false
+      return
+    }
+    const timer = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: searchInput }))
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
+  // React to URL changes (e.g. category links from other pages)
+  useEffect(() => {
+    if (isFirstUrlRender.current) {
+      isFirstUrlRender.current = false
+      return
+    }
+    const newSearch = searchParams.get('search') || ''
+    setSearchInput(newSearch)
+    setFilters(prev => ({
+      ...prev,
+      category: searchParams.get('category') || '',
+      skinType: searchParams.get('skinType') || '',
+      skinConcern: searchParams.get('skinConcern') || '',
+      search: newSearch,
+    }))
+  }, [searchParams])
+
+  useEffect(() => {
+    if (session) fetchWishlist()
+  }, [session])
+
+  useEffect(() => {
     fetch('/api/categories')
       .then(r => r.json())
       .then(data => setCategories((data.categories || []).map(c => c.name)))
@@ -79,6 +114,7 @@ function ShopContent() {
 
   const fetchProducts = async () => {
     setLoading(true)
+    setFetchError(false)
     const params = new URLSearchParams()
     if (filters.category) params.set('category', filters.category)
     if (filters.skinType) params.set('skinType', filters.skinType)
@@ -88,10 +124,11 @@ function ShopContent() {
 
     try {
       const res = await fetch(`/api/products?${params.toString()}`)
+      if (!res.ok) { setFetchError(true); setLoading(false); return }
       const data = await res.json()
       setProducts(data.products || [])
-    } catch (err) {
-      console.error('Failed to fetch products', err)
+    } catch {
+      setFetchError(true)
     }
     setLoading(false)
   }
@@ -102,8 +139,8 @@ function ShopContent() {
       if (!res.ok) return
       const data = await res.json()
       setWishlistIds((data.wishlist || []).map(p => p._id))
-    } catch (err) {
-      // not logged in — fine to ignore
+    } catch {
+      // ignore
     }
   }
 
@@ -113,6 +150,9 @@ function ShopContent() {
         const res = await fetch(`/api/users/me/wishlist/${productId}`, { method: 'DELETE' })
         if (res.ok) {
           setWishlistIds(prev => prev.filter(id => id !== productId))
+          showToast('Removed from wishlist', 'info')
+        } else {
+          showToast('Could not update wishlist', 'error')
         }
       } else {
         const res = await fetch('/api/users/me/wishlist', {
@@ -122,10 +162,13 @@ function ShopContent() {
         })
         if (res.ok) {
           setWishlistIds(prev => [...prev, productId])
+          showToast('Added to wishlist!')
+        } else {
+          showToast('Could not update wishlist', 'error')
         }
       }
-    } catch (err) {
-      console.error('Wishlist toggle failed')
+    } catch {
+      showToast('Could not update wishlist', 'error')
     }
   }
 
@@ -178,8 +221,8 @@ function ShopContent() {
           <input
             type="text"
             placeholder="Search products..."
-            value={filters.search}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="flex-1 rounded-[12px] border-[1.5px] border-border bg-surface px-5 py-3.5 md:px-6 md:py-4 text-[14px] md:text-[16px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors"
           />
 
@@ -294,6 +337,8 @@ function ShopContent() {
               <div key={i} className="aspect-[4/5] rounded-[20px] bg-border/30 animate-pulse" />
             ))}
           </div>
+        ) : fetchError ? (
+          <p className="text-center text-error/80 py-24 text-[15px]">Failed to load products. Please refresh the page.</p>
         ) : products.length === 0 ? (
           <p className="text-center text-forest/60 py-24 text-[16px]">No products match your filters.</p>
         ) : (

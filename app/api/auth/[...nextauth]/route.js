@@ -68,6 +68,7 @@ export const authOptions = {
           existingUser.lastLoginAt = new Date()
           if (!existingUser.googleId) {
             existingUser.googleId = account.providerAccountId
+            existingUser.isEmailVerified = true
           }
           await existingUser.save()
         }

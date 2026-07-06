@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Loader from '@/components/Loader'
 import ConfirmModal from '@/components/ConfirmModal'
@@ -18,6 +19,8 @@ const STATUS_STYLES = {
 export default function OrderDetailPage() {
   const params = useParams()
   const orderId = params.id
+  const router = useRouter()
+  const { status } = useSession()
 
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -29,8 +32,12 @@ export default function OrderDetailPage() {
   const [invoiceError, setInvoiceError] = useState('')
 
   useEffect(() => {
-    fetchOrder()
-  }, [orderId])
+    if (status === 'unauthenticated') {
+      router.push(`/login?callbackUrl=/orders/${orderId}`)
+    } else if (status === 'authenticated') {
+      fetchOrder()
+    }
+  }, [status, orderId])
 
   const fetchOrder = async () => {
     try {

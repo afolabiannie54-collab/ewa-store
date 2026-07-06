@@ -18,6 +18,7 @@ export default function OrdersPage() {
   const { data: session, status } = useSession()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -30,10 +31,14 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     try {
       const res = await fetch('/api/orders')
-      const data = await res.json()
-      setOrders(data.orders || [])
+      if (!res.ok) {
+        setFetchError(true)
+      } else {
+        const data = await res.json()
+        setOrders(data.orders || [])
+      }
     } catch (err) {
-      console.error('Failed to load orders')
+      setFetchError(true)
     }
     setLoading(false)
   }
@@ -69,7 +74,17 @@ export default function OrdersPage() {
           </h1>
         )}
 
-        {orders.length === 0 ? (
+        {fetchError ? (
+          <div className="flex flex-col items-center text-center py-12 md:py-20">
+            <p className="text-[16px] text-forest/60 mb-6">Failed to load your orders. Please try again.</p>
+            <button
+              onClick={() => { setFetchError(false); setLoading(true); fetchOrders() }}
+              className="inline-block rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-10 py-[17px] hover:bg-forest transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        ) : orders.length === 0 ? (
           <div className="flex flex-col items-center text-center py-12 md:py-20">
             <EmptyOrdersIllustration />
             <h2 className="font-display font-bold text-forest text-[26px] md:text-[30px] mt-6 mb-3" style={{ letterSpacing: '-0.01em' }}>

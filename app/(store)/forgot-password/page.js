@@ -23,6 +23,29 @@ export default function ForgotPasswordPage() {
       hasError ? 'border-error' : 'border-forest/15 focus:border-olive'
     }`
 
+  const sendCode = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || 'Something went wrong. Please try again.')
+        setLoading(false)
+        return false
+      }
+    } catch {
+      setError('Something went wrong. Please try again.')
+      setLoading(false)
+      return false
+    }
+    setLoading(false)
+    return true
+  }
+
   const handleSendCode = async (e) => {
     e.preventDefault()
     setError('')
@@ -32,19 +55,13 @@ export default function ForgotPasswordPage() {
       return
     }
     setFieldErrors({})
-    setLoading(true)
+    const ok = await sendCode()
+    if (ok) setStep('otp')
+  }
 
-    try {
-      await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      })
-      setStep('otp')
-    } catch {
-      setError('Something went wrong. Please try again.')
-    }
-    setLoading(false)
+  const handleResendCode = async () => {
+    setError('')
+    await sendCode()
   }
 
   const handleReset = async (e) => {
@@ -107,7 +124,7 @@ export default function ForgotPasswordPage() {
               <div className="mb-7">
                 <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Email</label>
                 <input
-                  type="text"
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
@@ -173,10 +190,11 @@ export default function ForgotPasswordPage() {
 
               <button
                 type="button"
-                onClick={() => { setStep('email'); setOtp(''); setPassword(''); setConfirm(''); setError('') }}
-                className="w-full text-center text-[13px] text-forest/50 hover:text-olive transition-colors"
+                onClick={handleResendCode}
+                disabled={loading}
+                className="w-full text-center text-[13px] text-forest/50 hover:text-olive transition-colors disabled:opacity-50"
               >
-                Resend code
+                {loading ? <Loader size="sm" color="olive" /> : 'Resend code'}
               </button>
             </form>
           )}

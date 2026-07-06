@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
+import bcrypt from 'bcryptjs'
 import { sendPasswordResetEmail } from '@/lib/email'
 
 function generateOTP() {
@@ -20,7 +21,7 @@ export async function POST(req) {
 
     if (user && user.password) {
       const otp = generateOTP()
-      user.resetPasswordOTP = otp
+      user.resetPasswordOTP = await bcrypt.hash(otp, 10)
       user.resetPasswordOTPExpiry = new Date(Date.now() + 10 * 60 * 1000)
       await user.save()
       await sendPasswordResetEmail(user.email, user.name, otp)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Loader from '@/components/Loader'
@@ -32,18 +32,10 @@ function VerifyContent() {
 
   const [status, setStatus] = useState('checking') // checking | found | failed
   const [order, setOrder] = useState(null)
-  const [attempts, setAttempts] = useState(0)
+  const attemptsRef = useRef(0)
+  const timerRef = useRef(null)
 
-  useEffect(() => {
-    if (!reference) {
-      setStatus('failed')
-      return
-    }
-
-    checkOrder()
-  }, [reference])
-
-  const checkOrder = async () => {
+  const checkOrder = useCallback(async () => {
     try {
       const res = await fetch('/api/payments/verify', {
         method: 'POST',
@@ -56,20 +48,28 @@ function VerifyContent() {
       if (res.ok && data.order) {
         setOrder(data.order)
         setStatus('found')
-        // Notify the Navbar to refresh its cart count — the cart was cleared
-        // server-side by the webhook, so the badge should drop to 0 immediately
-        // without requiring a page refresh.
         window.dispatchEvent(new Event('cart:updated'))
-      } else if (attempts < 8) {
-        setAttempts(prev => prev + 1)
-        setTimeout(checkOrder, 2000)
+      } else if (attemptsRef.current < 8) {
+        attemptsRef.current++
+        timerRef.current = setTimeout(checkOrder, 2000)
       } else {
         setStatus('failed')
       }
     } catch (err) {
       setStatus('failed')
     }
-  }
+  }, [reference])
+
+  useEffect(() => {
+    if (!reference) {
+      setStatus('failed')
+      return
+    }
+    checkOrder()
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [checkOrder])
 
   if (status === 'checking') {
     return (

@@ -56,6 +56,7 @@ const OrderSchema = new mongoose.Schema({
     default: 'Pending'
   },
   invoiceUrl: { type: String },
+  oversell: { type: Boolean, default: false },
   confirmedAt: { type: Date },
   shippedAt: { type: Date },
   deliveredAt: { type: Date }

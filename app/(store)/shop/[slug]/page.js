@@ -46,6 +46,7 @@ export default function ProductDetailPage() {
   const [submittingReview, setSubmittingReview] = useState(false)
 
   const [relatedProducts, setRelatedProducts] = useState([])
+  const [reviewsError, setReviewsError] = useState(false)
 
   useEffect(() => {
     fetchProduct()
@@ -80,10 +81,11 @@ export default function ProductDetailPage() {
   const fetchReviews = async (productId) => {
     try {
       const res = await fetch(`/api/products/${productId}/reviews`)
+      if (!res.ok) { setReviewsError(true); return }
       const data = await res.json()
       setReviews(data.reviews || [])
-    } catch (err) {
-      console.error('Failed to load reviews')
+    } catch {
+      setReviewsError(true)
     }
   }
 
@@ -114,6 +116,8 @@ export default function ProductDetailPage() {
         if (res.ok) {
           setInWishlist(false)
           showToast('Removed from wishlist', 'info')
+        } else {
+          showToast('Could not remove from wishlist', 'error')
         }
       } else {
         const res = await fetch('/api/users/me/wishlist', {
@@ -124,10 +128,12 @@ export default function ProductDetailPage() {
         if (res.ok) {
           setInWishlist(true)
           showToast('Added to wishlist!')
+        } else {
+          showToast('Could not add to wishlist', 'error')
         }
       }
-    } catch (err) {
-      console.error('Failed to update wishlist')
+    } catch {
+      showToast('Could not update wishlist', 'error')
     }
   }
 
@@ -437,7 +443,9 @@ export default function ProductDetailPage() {
             Reviews {reviews.length > 0 && `(${reviews.length})`}
           </h2>
 
-          {reviews.length === 0 ? (
+          {reviewsError ? (
+            <p className="text-[15px] text-error/70 mb-10">Failed to load reviews.</p>
+          ) : reviews.length === 0 ? (
             <p className="text-[15px] text-forest/50 mb-10">No reviews yet. Be the first to share your experience.</p>
           ) : (
             <div className="flex flex-col gap-6 mb-10">

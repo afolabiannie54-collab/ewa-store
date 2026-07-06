@@ -47,14 +47,14 @@ export async function POST(req) {
     }
 
     // Re-validate stock one final time before creating the order
+    let hasOversell = false
     for (const item of metadata.items) {
       const product = await Product.findById(item.productId)
       const variant = product?.variants.find(v => v.size === item.size)
 
       if (!variant || variant.stockQuantity < item.quantity) {
-        // Stock ran out between checkout and payment confirmation
         console.error(`Insufficient stock for ${item.name} (${item.size}) on order ${reference}`)
-        // We still create the order to honor the payment, but flag it for admin attention
+        hasOversell = true
       }
     }
 
@@ -77,7 +77,8 @@ export async function POST(req) {
       paymentReference: reference,
       paymentMethod: 'Paystack',
       paymentStatus: 'Paid',
-      status: 'Pending'
+      status: 'Pending',
+      oversell: hasOversell
     })
 
     // Decrement stock for each purchased variant

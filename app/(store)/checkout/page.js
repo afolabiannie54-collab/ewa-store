@@ -64,9 +64,12 @@ export default function CheckoutPage() {
   }
 
   const loadShippingRates = async () => {
-    const res = await fetch('/api/shipping/rates')
-    const data = await res.json()
-    setShippingRates(data.rates || [])
+    try {
+      const res = await fetch('/api/shipping/rates')
+      if (!res.ok) return
+      const data = await res.json()
+      setShippingRates(data.rates || [])
+    } catch {}
   }
 
   const loadAddresses = async () => {
@@ -211,6 +214,12 @@ export default function CheckoutPage() {
         return
       }
 
+      if (!window.PaystackPop) {
+        setError('Payment is loading. Please wait a moment and try again.')
+        setSubmitting(false)
+        return
+      }
+
       const handler = window.PaystackPop.setup({
         key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
         email: data.email,
@@ -296,7 +305,7 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <input
-                      type="text" placeholder="Email" value={form.guestEmail}
+                      type="email" placeholder="Email" value={form.guestEmail}
                       onChange={(e) => setForm({ ...form, guestEmail: e.target.value })}
                       className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
                         fieldErrors.guestEmail ? 'border-error' : 'border-border'
@@ -332,14 +341,14 @@ export default function CheckoutPage() {
                     <input
                       type="radio"
                       checked={!useNewAddress && selectedAddressId === addr._id}
-                      onChange={() => { setUseNewAddress(false); setSelectedAddressId(addr._id) }}
+                      onChange={() => { setUseNewAddress(false); setSelectedAddressId(addr._id); setFieldErrors({}) }}
                       className="mt-0.5 accent-olive"
                     />
                     <span className="text-[14px] text-forest">{addr.fullName}, {addr.street}, {addr.city}, {addr.state}</span>
                   </label>
                 ))}
                 <label className="flex items-center gap-3 text-[14px] font-medium text-forest cursor-pointer px-1">
-                  <input type="radio" checked={useNewAddress} onChange={() => setUseNewAddress(true)} className="accent-olive" />
+                  <input type="radio" checked={useNewAddress} onChange={() => { setUseNewAddress(true); setFieldErrors({}) }} className="accent-olive" />
                   Use a new address
                 </label>
               </div>

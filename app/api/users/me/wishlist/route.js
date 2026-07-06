@@ -40,7 +40,7 @@ export async function POST(req) {
 
     const dbUser = await User.findById(user.id)
 
-    if (!dbUser.wishlist.includes(productId)) {
+    if (!dbUser.wishlist.some(id => id.toString() === productId)) {
       dbUser.wishlist.push(productId)
       await dbUser.save()
     }

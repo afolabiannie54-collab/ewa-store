@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Loader from '@/components/Loader'
 import FieldError from '@/components/FieldError'
@@ -12,6 +12,10 @@ function VerifyForm() {
   const searchParams = useSearchParams()
   const email = searchParams.get('email') || ''
   const callbackUrl = searchParams.get('callbackUrl') || '/'
+
+  useEffect(() => {
+    if (!email) router.replace('/register')
+  }, [email])
 
   const showToast = useToast()
   const [otp, setOtp] = useState('')

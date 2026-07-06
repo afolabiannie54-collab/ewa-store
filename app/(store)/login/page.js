@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { signIn, getSession } from 'next-auth/react'
+import { signIn, getSession, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Loader from '@/components/Loader'
 import FieldError from '@/components/FieldError'
@@ -37,10 +37,18 @@ function EyeOffIcon() {
 
 function LoginForm() {
   const router = useRouter()
+  const { status } = useSession()
   const searchParams = useSearchParams()
   const justVerified = searchParams.get('verified') === 'true'
   const justReset = searchParams.get('reset') === 'true'
-  const callbackUrl = searchParams.get('callbackUrl') || '/'
+  const rawCallbackUrl = searchParams.get('callbackUrl') || '/'
+  const callbackUrl = rawCallbackUrl.startsWith('/') && !rawCallbackUrl.startsWith('//') ? rawCallbackUrl : '/'
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace(callbackUrl)
+    }
+  }, [status])
 
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
@@ -131,7 +139,7 @@ function LoginForm() {
             <div className="mb-4">
               <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Email</label>
               <input
-                type="text"
+                type="email"
                 name="email"
                 value={form.email}
                 onChange={handleChange}

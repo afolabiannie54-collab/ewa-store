@@ -39,8 +39,16 @@ export default function WishlistPage() {
   }
 
   const handleRemove = async (productId) => {
-    const res = await fetch(`/api/users/me/wishlist/${productId}`, { method: 'DELETE' })
-    if (res.ok) setWishlist(wishlist.filter(p => p._id !== productId))
+    try {
+      const res = await fetch(`/api/users/me/wishlist/${productId}`, { method: 'DELETE' })
+      if (res.ok) {
+        setWishlist(wishlist.filter(p => p._id !== productId))
+      } else {
+        showToast('Could not remove item', 'error')
+      }
+    } catch {
+      showToast('Could not remove item', 'error')
+    }
   }
 
   if (status === 'loading' || loading) {
