@@ -10,9 +10,25 @@ export async function GET(req) {
     await requireAdmin()
     await connectDB()
 
-    const products = await Product.find().sort({ createdAt: -1 })
+    const { searchParams } = new URL(req.url)
+    const search = searchParams.get('search') || ''
+    const statusFilter = searchParams.get('status') || ''
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
+    const LIMIT = 15
 
-    return NextResponse.json({ products }, { status: 200 })
+    const query = {}
+    if (statusFilter) query.status = statusFilter
+    if (search.trim()) {
+      const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      query.name = { $regex: escaped, $options: 'i' }
+    }
+
+    const [products, total] = await Promise.all([
+      Product.find(query).sort({ createdAt: -1 }).skip((page - 1) * LIMIT).limit(LIMIT),
+      Product.countDocuments(query)
+    ])
+
+    return NextResponse.json({ products, total, page, totalPages: Math.ceil(total / LIMIT) }, { status: 200 })
 
   } catch (error) {
     if (error.message === 'Not authorized') {

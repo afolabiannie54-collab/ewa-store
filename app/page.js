@@ -134,9 +134,11 @@ export default function HomePage() {
                 background: 'radial-gradient(ellipse 50% 50% at center, rgba(40,54,24,0.22) 0%, rgba(40,54,24,0.10) 40%, transparent 80%)'
               }}
             />
-            <div
-              className="relative w-[350px] md:w-[600px] h-full md:h-[105%] transition-transform duration-500 ease-out group-hover:-rotate-1 group-hover:scale-105"
+            <Link
+              href="/shop/hydrating-cleanser"
+              className="relative w-[350px] md:w-[600px] h-full md:h-[105%] block transition-transform duration-500 ease-out group-hover:-rotate-1 group-hover:scale-105"
               style={{ transformOrigin: 'bottom right' }}
+              aria-label="Shop the EWA Hydrating Cleanser"
             >
               <Image
                 src="/hero-product.png"
@@ -146,7 +148,7 @@ export default function HomePage() {
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-contain object-bottom"
               />
-            </div>
+            </Link>
           </motion.div>
         </div>
       </section>

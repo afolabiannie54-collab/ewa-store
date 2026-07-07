@@ -54,8 +54,12 @@ function ShopContent() {
     skinType: searchParams.get('skinType') || '',
     skinConcern: searchParams.get('skinConcern') || '',
     search: searchParams.get('search') || '',
-    sort: ''
+    sort: '',
+    minPrice: '',
+    maxPrice: ''
   })
+  const [priceInput, setPriceInput] = useState({ min: '', max: '' })
+  const priceTimerRef = useRef(null)
 
   // Fetch immediately when non-search filters change
   useEffect(() => {
@@ -121,6 +125,8 @@ function ShopContent() {
     if (filters.skinConcern) params.set('skinConcern', filters.skinConcern)
     if (filters.search) params.set('search', filters.search)
     if (filters.sort) params.set('sort', filters.sort)
+    if (filters.minPrice) params.set('minPrice', filters.minPrice)
+    if (filters.maxPrice) params.set('maxPrice', filters.maxPrice)
 
     try {
       const res = await fetch(`/api/products?${params.toString()}`)
@@ -176,7 +182,24 @@ function ShopContent() {
     setFilters(prev => ({ ...prev, [key]: prev[key] === value ? '' : value }))
   }
 
-  const activeMoreFiltersCount = (filters.skinType ? 1 : 0) + (filters.skinConcern ? 1 : 0)
+  // Debounce price range inputs
+  const applyPriceFilter = (min, max) => {
+    clearTimeout(priceTimerRef.current)
+    priceTimerRef.current = setTimeout(() => {
+      setFilters(prev => ({ ...prev, minPrice: min, maxPrice: max }))
+    }, 500)
+  }
+
+  const handlePriceChange = (field, value) => {
+    const next = { ...priceInput, [field]: value }
+    setPriceInput(next)
+    applyPriceFilter(next.min, next.max)
+  }
+
+  const activeMoreFiltersCount =
+    (filters.skinType ? 1 : 0) +
+    (filters.skinConcern ? 1 : 0) +
+    (filters.minPrice || filters.maxPrice ? 1 : 0)
   const currentSortLabel = SORT_OPTIONS.find(o => o.value === filters.sort)?.label || 'Sort by'
 
   return (
@@ -316,11 +339,40 @@ function ShopContent() {
                   ))}
                 </div>
               </div>
+
+              {/* Price range */}
+              <div className="md:col-span-2 border-t-[1.5px] border-border pt-7 md:pt-8">
+              <h3 className="text-[12px] md:text-[14px] font-bold uppercase tracking-wide text-forest/60 mb-3.5 md:mb-4">
+                Price Range (₦)
+              </h3>
+              <div className="flex items-center gap-3 max-w-[320px]">
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Min"
+                  value={priceInput.min}
+                  onChange={e => handlePriceChange('min', e.target.value)}
+                  className="flex-1 rounded-[12px] border-[1.5px] border-border bg-cream px-4 py-2.5 text-[14px] text-forest placeholder:text-forest/35 outline-none focus:border-olive transition-colors"
+                />
+                <span className="text-forest/40 text-[13px] font-medium">to</span>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Max"
+                  value={priceInput.max}
+                  onChange={e => handlePriceChange('max', e.target.value)}
+                  className="flex-1 rounded-[12px] border-[1.5px] border-border bg-cream px-4 py-2.5 text-[14px] text-forest placeholder:text-forest/35 outline-none focus:border-olive transition-colors"
+                />
+              </div>
+              </div>
             </div>
 
             {activeMoreFiltersCount > 0 && (
               <button
-                onClick={() => setFilters(prev => ({ ...prev, skinType: '', skinConcern: '' }))}
+                onClick={() => {
+                  setPriceInput({ min: '', max: '' })
+                  setFilters(prev => ({ ...prev, skinType: '', skinConcern: '', minPrice: '', maxPrice: '' }))
+                }}
                 className="mt-6 text-[13px] md:text-[14px] font-bold text-error hover:underline"
               >
                 Clear these filters

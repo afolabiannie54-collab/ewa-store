@@ -21,13 +21,23 @@ export async function GET(req) {
     // Match orders by userId OR by guestEmail if the account's email is verified
     // This is our locked architecture: guest orders are never rewritten,
     // they're surfaced via this query-time join instead
-    const query = dbUser.isEmailVerified
+    const base = dbUser.isEmailVerified
       ? { $or: [{ userId: user.id }, { guestEmail: dbUser.email }] }
       : { userId: user.id }
 
-    const orders = await Order.find(query).sort({ createdAt: -1 })
+    const { searchParams } = new URL(req.url)
+    const statusFilter = searchParams.get('status') || ''
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
+    const LIMIT = 10
 
-    return NextResponse.json({ orders }, { status: 200 })
+    const query = statusFilter ? { ...base, status: statusFilter } : base
+
+    const [orders, total] = await Promise.all([
+      Order.find(query).sort({ createdAt: -1 }).skip((page - 1) * LIMIT).limit(LIMIT),
+      Order.countDocuments(query)
+    ])
+
+    return NextResponse.json({ orders, total, page, totalPages: Math.ceil(total / LIMIT) }, { status: 200 })
 
   } catch (error) {
     console.error('Get orders error:', error)

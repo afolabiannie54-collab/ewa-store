@@ -8,9 +8,29 @@ export async function GET(req) {
     await requireAdmin()
     await connectDB()
 
-    const orders = await Order.find().populate('userId', 'name email').sort({ createdAt: -1 })
+    const { searchParams } = new URL(req.url)
+    const statusFilter = searchParams.get('status') || ''
+    const search = searchParams.get('search') || ''
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
+    const LIMIT = 15
 
-    return NextResponse.json({ orders }, { status: 200 })
+    const query = {}
+    if (statusFilter) query.status = statusFilter
+    if (search.trim()) {
+      const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      query.$or = [
+        { orderNumber: { $regex: escaped, $options: 'i' } },
+        { guestEmail: { $regex: escaped, $options: 'i' } },
+        { guestName: { $regex: escaped, $options: 'i' } }
+      ]
+    }
+
+    const [orders, total] = await Promise.all([
+      Order.find(query).populate('userId', 'name email').sort({ createdAt: -1 }).skip((page - 1) * LIMIT).limit(LIMIT),
+      Order.countDocuments(query)
+    ])
+
+    return NextResponse.json({ orders, total, page, totalPages: Math.ceil(total / LIMIT) }, { status: 200 })
 
   } catch (error) {
     if (error.message === 'Not authorized') {
