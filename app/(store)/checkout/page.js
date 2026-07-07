@@ -44,21 +44,27 @@ export default function CheckoutPage() {
   }, [status])
 
   const loadCart = async () => {
-    if (session) {
-      const res = await fetch('/api/cart')
-      const data = await res.json()
-      setItems(data.items || [])
-    } else {
-      const guestItems = getGuestCart()
-      if (guestItems.length > 0) {
-        const res = await fetch('/api/cart/guest', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: guestItems })
-        })
+    try {
+      if (session) {
+        const res = await fetch('/api/cart')
+        if (!res.ok) { setLoading(false); return }
         const data = await res.json()
         setItems(data.items || [])
+      } else {
+        const guestItems = getGuestCart()
+        if (guestItems.length > 0) {
+          const res = await fetch('/api/cart/guest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: guestItems })
+          })
+          if (!res.ok) { setLoading(false); return }
+          const data = await res.json()
+          setItems(data.items || [])
+        }
       }
+    } catch {
+      // network error — leave items empty, page will show empty-cart state
     }
     setLoading(false)
   }
@@ -264,6 +270,24 @@ export default function CheckoutPage() {
     )
   }
 
+  const hasOverstock = items.some(i => i.quantity > i.availableStock || i.availableStock === 0)
+
+  if (hasOverstock) {
+    return (
+      <div className="bg-cream min-h-screen flex items-center justify-center px-6">
+        <div className="text-center max-w-[440px]">
+          <p className="font-display font-bold text-forest text-[26px] mb-3" style={{ letterSpacing: '-0.01em' }}>Some items need attention</p>
+          <p className="text-forest/60 text-[15px] mb-7 leading-relaxed">
+            One or more items in your cart are out of stock or over the available quantity. Please update your cart before checking out.
+          </p>
+          <Link href="/cart" className="inline-block rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors">
+            Back to Cart
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   if (items.length === 0) {
     return (
       <div className="bg-cream min-h-screen flex items-center justify-center px-6">
@@ -294,8 +318,9 @@ export default function CheckoutPage() {
                 <h2 className="font-display font-bold text-forest text-[22px] mb-5">Contact Details</h2>
                 <div className="flex flex-col gap-3">
                   <div>
+                    <label htmlFor="guestName" className="sr-only">Full Name</label>
                     <input
-                      type="text" placeholder="Full Name" value={form.guestName}
+                      id="guestName" type="text" placeholder="Full Name" value={form.guestName}
                       onChange={(e) => setForm({ ...form, guestName: e.target.value })}
                       className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
                         fieldErrors.guestName ? 'border-error' : 'border-border'
@@ -304,8 +329,9 @@ export default function CheckoutPage() {
                     <FieldError message={fieldErrors.guestName} />
                   </div>
                   <div>
+                    <label htmlFor="guestEmail" className="sr-only">Email</label>
                     <input
-                      type="email" placeholder="Email" value={form.guestEmail}
+                      id="guestEmail" type="email" placeholder="Email" value={form.guestEmail}
                       onChange={(e) => setForm({ ...form, guestEmail: e.target.value })}
                       className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
                         fieldErrors.guestEmail ? 'border-error' : 'border-border'
@@ -314,8 +340,9 @@ export default function CheckoutPage() {
                     <FieldError message={fieldErrors.guestEmail} />
                   </div>
                   <div>
+                    <label htmlFor="guestPhone" className="sr-only">Phone</label>
                     <input
-                      type="tel" placeholder="Phone" value={form.guestPhone}
+                      id="guestPhone" type="tel" placeholder="Phone" value={form.guestPhone}
                       onChange={(e) => setForm({ ...form, guestPhone: e.target.value })}
                       className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
                         fieldErrors.guestPhone ? 'border-error' : 'border-border'
@@ -357,8 +384,9 @@ export default function CheckoutPage() {
             {useNewAddress && (
               <div className="flex flex-col gap-3">
                 <div>
+                  <label htmlFor="addrFullName" className="sr-only">Full Name</label>
                   <input
-                    type="text" placeholder="Full Name" value={form.fullName}
+                    id="addrFullName" type="text" placeholder="Full Name" value={form.fullName}
                     onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                     className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
                       fieldErrors.fullName ? 'border-error' : 'border-border'
@@ -367,8 +395,9 @@ export default function CheckoutPage() {
                   <FieldError message={fieldErrors.fullName} />
                 </div>
                 <div>
+                  <label htmlFor="addrPhone" className="sr-only">Phone</label>
                   <input
-                    type="tel" placeholder="Phone" value={form.phone}
+                    id="addrPhone" type="tel" placeholder="Phone" value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
                       fieldErrors.phone ? 'border-error' : 'border-border'
@@ -377,8 +406,9 @@ export default function CheckoutPage() {
                   <FieldError message={fieldErrors.phone} />
                 </div>
                 <div>
+                  <label htmlFor="addrStreet" className="sr-only">Street Address</label>
                   <input
-                    type="text" placeholder="Street Address" value={form.street}
+                    id="addrStreet" type="text" placeholder="Street Address" value={form.street}
                     onChange={(e) => setForm({ ...form, street: e.target.value })}
                     className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
                       fieldErrors.street ? 'border-error' : 'border-border'
@@ -387,8 +417,9 @@ export default function CheckoutPage() {
                   <FieldError message={fieldErrors.street} />
                 </div>
                 <div>
+                  <label htmlFor="addrCity" className="sr-only">City</label>
                   <input
-                    type="text" placeholder="City" value={form.city}
+                    id="addrCity" type="text" placeholder="City" value={form.city}
                     onChange={(e) => setForm({ ...form, city: e.target.value })}
                     className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors ${
                       fieldErrors.city ? 'border-error' : 'border-border'
@@ -397,8 +428,9 @@ export default function CheckoutPage() {
                   <FieldError message={fieldErrors.city} />
                 </div>
                 <div>
+                  <label htmlFor="addrState" className="sr-only">State</label>
                   <select
-                    value={form.state}
+                    id="addrState" value={form.state}
                     onChange={(e) => setForm({ ...form, state: e.target.value })}
                     className={`w-full rounded-[12px] border-[1.5px] px-5 py-3.5 text-[14px] text-forest focus:border-olive outline-none transition-colors cursor-pointer ${
                       fieldErrors.state ? 'border-error' : 'border-border'

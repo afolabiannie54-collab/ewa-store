@@ -23,6 +23,7 @@ export default function CartPage() {
   const showToast = useToast()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isUpdating, setIsUpdating] = useState(false)
   const fetchCartRef = useRef(null)
 
   const fetchCart = async () => {
@@ -53,8 +54,8 @@ export default function CartPage() {
           })
           const data = await res.json()
           setItems(data.items || [])
-        } catch (err) {
-          console.error('Failed to load guest cart')
+        } catch {
+          showToast('Failed to load cart', 'error')
         }
       }
     }
@@ -80,7 +81,8 @@ export default function CartPage() {
   }, [showToast])
 
   const handleUpdateQuantity = async (productId, size, newQuantity) => {
-    if (newQuantity < 1) return
+    if (newQuantity < 1 || isUpdating) return
+    setIsUpdating(true)
 
     if (session) {
       const res = await fetch('/api/cart/update', {
@@ -91,6 +93,7 @@ export default function CartPage() {
       if (!res.ok) {
         const data = await res.json()
         showToast(data.error || 'Could not update quantity', 'error')
+        setIsUpdating(false)
         fetchCart()
         return
       }
@@ -99,10 +102,14 @@ export default function CartPage() {
     }
 
     window.dispatchEvent(new Event('cart:updated'))
-    fetchCart()
+    await fetchCart()
+    setIsUpdating(false)
   }
 
   const handleRemove = async (productId, size) => {
+    if (isUpdating) return
+    setIsUpdating(true)
+
     if (session) {
       const res = await fetch('/api/cart/remove', {
         method: 'POST',
@@ -111,6 +118,7 @@ export default function CartPage() {
       })
       if (!res.ok) {
         showToast('Could not remove item', 'error')
+        setIsUpdating(false)
         return
       }
     } else {
@@ -118,7 +126,8 @@ export default function CartPage() {
     }
 
     window.dispatchEvent(new Event('cart:updated'))
-    fetchCart()
+    await fetchCart()
+    setIsUpdating(false)
   }
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -213,15 +222,17 @@ export default function CartPage() {
                       <div className="flex items-center rounded-full border-[1.5px] border-border">
                         <button
                           onClick={() => handleUpdateQuantity(item.productId, item.size, item.quantity - 1)}
-                          disabled={outOfStock}
+                          disabled={outOfStock || isUpdating}
+                          aria-label={`Decrease quantity of ${item.name}`}
                           className="w-9 h-9 flex items-center justify-center text-forest text-[16px] hover:bg-surface transition-colors rounded-l-full disabled:opacity-30"
                         >
                           −
                         </button>
-                        <span className="w-9 text-center text-[14px] font-bold text-forest">{item.quantity}</span>
+                        <span className="w-9 text-center text-[14px] font-bold text-forest" aria-label={`Quantity: ${item.quantity}`}>{item.quantity}</span>
                         <button
                           onClick={() => handleUpdateQuantity(item.productId, item.size, item.quantity + 1)}
-                          disabled={item.quantity >= item.availableStock}
+                          disabled={item.quantity >= item.availableStock || isUpdating}
+                          aria-label={`Increase quantity of ${item.name}`}
                           className="w-9 h-9 flex items-center justify-center text-forest text-[16px] hover:bg-surface transition-colors rounded-r-full disabled:opacity-30"
                         >
                           +

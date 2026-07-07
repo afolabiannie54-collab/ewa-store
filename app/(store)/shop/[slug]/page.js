@@ -47,6 +47,7 @@ export default function ProductDetailPage() {
 
   const [relatedProducts, setRelatedProducts] = useState([])
   const [reviewsError, setReviewsError] = useState(false)
+  const [isAdding, setIsAdding] = useState(false)
 
   useEffect(() => {
     fetchProduct()
@@ -175,8 +176,9 @@ export default function ProductDetailPage() {
       showToast("Admin accounts can't make purchases", 'info')
       return
     }
-    if (!selectedVariant || selectedVariant.stockQuantity === 0) return
+    if (!selectedVariant || selectedVariant.stockQuantity === 0 || isAdding) return
 
+    setIsAdding(true)
     if (session) {
       try {
         const res = await fetch('/api/cart', {
@@ -197,7 +199,7 @@ export default function ProductDetailPage() {
         } else {
           showToast(data.error || 'Could not add to cart', 'error')
         }
-      } catch (err) {
+      } catch {
         showToast('Something went wrong', 'error')
       }
     } else {
@@ -205,6 +207,7 @@ export default function ProductDetailPage() {
       showToast('Added to cart!')
       window.dispatchEvent(new Event('cart:updated'))
     }
+    setIsAdding(false)
   }
 
   if (loading) {
@@ -252,7 +255,7 @@ export default function ProductDetailPage() {
                       selectedImage === i ? 'border-[2.5px] border-olive' : 'border-[1.5px] border-border hover:border-olive/50'
                     }`}
                   >
-                    <Image src={img} alt="" fill sizes="88px" className="object-cover" />
+                    <Image src={img} alt={`${product.name} view ${i + 1}`} fill sizes="88px" className="object-cover" />
                   </button>
                 ))}
               </div>

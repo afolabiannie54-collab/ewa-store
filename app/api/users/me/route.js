@@ -84,7 +84,7 @@ export async function PUT(req) {
     dbUser.name = name
     await dbUser.save()
 
-    return NextResponse.json({ message: 'Profile updated', user: dbUser }, { status: 200 })
+    return NextResponse.json({ message: 'Profile updated', user: { name: dbUser.name, email: dbUser.email } }, { status: 200 })
 
   } catch (error) {
     console.error('Update profile error:', error)

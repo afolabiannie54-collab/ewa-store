@@ -2,10 +2,16 @@ import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
 import bcrypt from 'bcryptjs'
 import { sendOTPEmail } from '@/lib/email'
+import { rateLimit } from '@/lib/rateLimit'
 import { NextResponse } from 'next/server'
 
 export async function POST(req) {
   try {
+    const ip = req.headers.get('x-forwarded-for') || 'unknown'
+    if (!rateLimit(`register:${ip}`, 5, 60_000)) {
+      return NextResponse.json({ error: 'Too many requests. Please wait before trying again.' }, { status: 429 })
+    }
+
     const { name, email, password } = await req.json()
 
     if (!name || !email || !password) {

@@ -36,7 +36,15 @@ export async function POST(req) {
       return NextResponse.json({ received: true }, { status: 200 })
     }
 
-    const { reference, metadata } = event.data
+    const { reference, metadata, amount: chargedAmountKobo } = event.data
+
+    // Verify the amount Paystack actually charged matches the total in metadata.
+    // metadata is client-submitted so without this check a tampered price would pass.
+    const expectedKobo = Math.round(metadata.total * 100)
+    if (chargedAmountKobo !== expectedKobo) {
+      console.error(`Amount mismatch on ${reference}: charged ${chargedAmountKobo} kobo, expected ${expectedKobo} kobo`)
+      return NextResponse.json({ received: true }, { status: 200 })
+    }
 
     await connectDB()
 
@@ -46,16 +54,23 @@ export async function POST(req) {
       return NextResponse.json({ received: true }, { status: 200 })
     }
 
-    // Re-validate stock one final time before creating the order
+    // Re-validate stock and compute safe decrements
     let hasOversell = false
+    const stockUpdates = []
     for (const item of metadata.items) {
       const product = await Product.findById(item.productId)
       const variant = product?.variants.find(v => v.size === item.size)
 
-      if (!variant || variant.stockQuantity < item.quantity) {
-        console.error(`Insufficient stock for ${item.name} (${item.size}) on order ${reference}`)
+      if (!variant) {
         hasOversell = true
+        continue
       }
+
+      const deduct = Math.min(item.quantity, variant.stockQuantity)
+      if (deduct < item.quantity) hasOversell = true
+
+      const newQty = variant.stockQuantity - deduct
+      stockUpdates.push({ productId: item.productId, size: item.size, newQty })
     }
 
     const orderNumber = generateOrderNumber()
@@ -81,11 +96,11 @@ export async function POST(req) {
       oversell: hasOversell
     })
 
-    // Decrement stock for each purchased variant
-    for (const item of metadata.items) {
+    // Apply capped stock decrements and sync the inStock boolean
+    for (const { productId, size, newQty } of stockUpdates) {
       await Product.updateOne(
-        { _id: item.productId, 'variants.size': item.size },
-        { $inc: { 'variants.$.stockQuantity': -item.quantity } }
+        { _id: productId, 'variants.size': size },
+        { $set: { 'variants.$.stockQuantity': newQty, 'variants.$.inStock': newQty > 0 } }
       )
     }
 

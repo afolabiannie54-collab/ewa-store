@@ -44,7 +44,7 @@ function RegisterForm() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      router.replace('/')
+      router.replace(callbackUrl)
     }
   }, [status])
 
@@ -170,8 +170,9 @@ function RegisterForm() {
                   className={`${inputClass(fieldErrors.password)} pr-12`}
                 />
                 <button
-                  type="button" tabIndex={-1}
+                  type="button"
                   onClick={() => setShowPassword(p => !p)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   className="text-forest/35 hover:text-forest/70 transition-colors"
                   style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', lineHeight: 0 }}
                 >
@@ -190,8 +191,9 @@ function RegisterForm() {
                   className={`${inputClass(fieldErrors.confirmPassword)} pr-12`}
                 />
                 <button
-                  type="button" tabIndex={-1}
+                  type="button"
                   onClick={() => setShowConfirm(p => !p)}
+                  aria-label={showConfirm ? 'Hide confirm password' : 'Show confirm password'}
                   className="text-forest/35 hover:text-forest/70 transition-colors"
                   style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', lineHeight: 0 }}
                 >

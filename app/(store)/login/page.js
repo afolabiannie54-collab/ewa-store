@@ -165,8 +165,8 @@ function LoginForm() {
                 />
                 <button
                   type="button"
-                  tabIndex={-1}
                   onClick={() => setShowPassword(p => !p)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   className="text-forest/35 hover:text-forest/70 transition-colors"
                   style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', lineHeight: 0 }}
                 >

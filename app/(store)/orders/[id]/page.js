@@ -165,9 +165,9 @@ export default function OrderDetailPage() {
                     <div className={`absolute top-[15px] right-1/2 left-[-50%] h-[2px] ${i <= currentIndex ? 'bg-olive' : 'bg-border'}`} />
                   )}
                   <div className={`relative w-8 h-8 rounded-full mx-auto mb-3 flex items-center justify-center ${isComplete ? 'bg-olive' : 'bg-border'}`}>
-                    {isComplete && <span className="text-cream text-[13px]">✓</span>}
+                    {isComplete && <span className="text-cream text-[13px]" aria-hidden="true">✓</span>}
                   </div>
-                  <p className={`text-[13px] font-bold ${isComplete ? 'text-forest' : 'text-forest/35'}`}>{step}</p>
+                  <p className={`text-[13px] font-bold ${isComplete ? 'text-forest' : 'text-forest/35'}`} aria-current={i === currentIndex ? 'step' : undefined}>{step}</p>
                   {date && (
                     <p className="text-[11px] text-forest/45 mt-1">
                       {new Date(date).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}

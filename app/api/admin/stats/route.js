@@ -12,15 +12,22 @@ export async function GET(req) {
 
     const totalOrders = await Order.countDocuments()
 
-    const paidOrders = await Order.find({ paymentStatus: 'Paid' })
-    const totalRevenue = paidOrders.reduce((sum, order) => sum + order.total, 0)
+    const [revenueAgg] = await Order.aggregate([
+      { $match: { paymentStatus: 'Paid' } },
+      { $group: { _id: null, total: { $sum: '$total' } } }
+    ])
+    const totalRevenue = revenueAgg?.total || 0
+
+    const [oosAgg] = await Product.aggregate([
+      { $match: { status: 'Active' } },
+      { $addFields: { hasStock: { $anyElementTrue: { $map: { input: '$variants', as: 'v', in: { $gt: ['$$v.stockQuantity', 0] } } } } } },
+      { $group: { _id: null, outOfStock: { $sum: { $cond: [{ $not: '$hasStock' }, 1, 0] } } } }
+    ])
 
     const pendingOrders = await Order.countDocuments({ status: 'Pending' })
     const openIssues = await OrderIssue.countDocuments({ status: 'Pending' })
     const totalProducts = await Product.countDocuments({ status: 'Active' })
-    const outOfStockProducts = await Product.find({ status: 'Active' }).then(products =>
-      products.filter(p => !p.variants.some(v => v.stockQuantity > 0)).length
-    )
+    const outOfStockProducts = oosAgg?.outOfStock || 0
 
     return NextResponse.json({
       totalOrders,

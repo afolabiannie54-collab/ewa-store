@@ -48,7 +48,7 @@ export async function POST(req) {
           promoCode: promo.code,
           $or: [
             { guestEmail: customerEmail },
-            { userId: user?._id }
+            { userId: user?.id }
           ]
         })
 

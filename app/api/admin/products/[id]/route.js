@@ -61,21 +61,21 @@ export async function PUT(req, { params }) {
       }
     }
 
-   
     const uploadedImages = []
-    for (const img of images) {
-      if (img.startsWith('data:image')) {
-        const url = await uploadImage(img)
-        uploadedImages.push(url)
-      } else {
-        uploadedImages.push(img)
+    if (Array.isArray(images)) {
+      for (const img of images) {
+        if (img.startsWith('data:image')) {
+          const url = await uploadImage(img)
+          uploadedImages.push(url)
+        } else {
+          uploadedImages.push(img)
+        }
       }
-    }
 
- 
-    const removedImages = product.images.filter(img => !uploadedImages.includes(img))
-    for (const img of removedImages) {
-      await deleteImage(img).catch(() => {})
+      const removedImages = product.images.filter(img => !uploadedImages.includes(img))
+      for (const img of removedImages) {
+        await deleteImage(img).catch(() => {})
+      }
     }
 
     product.name = name ?? product.name
@@ -88,7 +88,7 @@ export async function PUT(req, { params }) {
     product.keyActives = keyActives ?? product.keyActives
     product.howToUse = howToUse ?? product.howToUse
     product.usageTime = usageTime ?? product.usageTime
-    product.images = uploadedImages
+    if (Array.isArray(images)) product.images = uploadedImages
     product.variants = variants ?? product.variants
     product.status = status ?? product.status
     product.isFeatured = isFeatured ?? product.isFeatured

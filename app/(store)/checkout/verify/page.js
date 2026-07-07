@@ -93,7 +93,10 @@ function VerifyContent() {
             We couldn&apos;t confirm your order
           </h1>
           <p className="text-forest/55 text-[14px] leading-relaxed mb-7">
-            If you were charged, please contact us with this reference: <strong className="text-forest">{reference}</strong>
+            {reference
+            ? <>If you were charged, please contact us with this reference: <strong className="text-forest">{reference}</strong></>
+            : 'If you were charged, please contact us with your payment reference.'
+          }
           </p>
           <Link href="/" className="inline-block rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors">
             Return Home

@@ -67,6 +67,10 @@ export default function Navbar() {
   const [navVisible, setNavVisible] = useState(false)
   const hideTimerRef = useRef(null)
 
+  useEffect(() => {
+    return () => clearTimeout(hideTimerRef.current)
+  }, [])
+
   const showNav = useCallback(() => {
     clearTimeout(hideTimerRef.current)
     setNavVisible(true)

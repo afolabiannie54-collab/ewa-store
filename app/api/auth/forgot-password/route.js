@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
 import bcrypt from 'bcryptjs'
 import { sendPasswordResetEmail } from '@/lib/email'
+import { rateLimit } from '@/lib/rateLimit'
 
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString()
@@ -10,6 +11,11 @@ function generateOTP() {
 
 export async function POST(req) {
   try {
+    const ip = req.headers.get('x-forwarded-for') || 'unknown'
+    if (!rateLimit(ip, 5, 60_000)) {
+      return NextResponse.json({ error: 'Too many requests. Please wait before trying again.' }, { status: 429 })
+    }
+
     const { email } = await req.json()
 
     if (!email) {

@@ -25,11 +25,29 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
     }
 
-    if (rating) review.rating = rating
+    if (rating !== undefined) {
+      if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+        return NextResponse.json({ error: 'Rating must be between 1 and 5' }, { status: 400 })
+      }
+      review.rating = rating
+    }
     if (comment) review.comment = comment
+
+    const wasApproved = review.isApproved
     review.isApproved = false // edited reviews need re-approval
 
     await review.save()
+
+    // If the review was previously contributing to the product average, recalculate
+    if (wasApproved) {
+      const Product = (await import('@/models/Product')).default
+      const approvedReviews = await Review.find({ productId: review.productId, isApproved: true })
+      const reviewCount = approvedReviews.length
+      const averageRating = reviewCount > 0
+        ? approvedReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount
+        : 0
+      await Product.findByIdAndUpdate(review.productId, { averageRating, reviewCount })
+    }
 
     return NextResponse.json({ review, message: 'Review updated. It will be re-reviewed before appearing.' }, { status: 200 })
 

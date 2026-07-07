@@ -15,33 +15,41 @@ export async function POST(req, { params }) {
     await connectDB()
 
     const { id } = await params
-    const order = await Order.findById(id)
+    const dbUser = await User.findById(user.id)
+
+    // Atomically find-and-update only if the order is still Pending and belongs to this user
+    const order = await Order.findOneAndUpdate(
+      {
+        _id: id,
+        status: 'Pending',
+        $or: [
+          { userId: user.id },
+          { guestEmail: dbUser?.isEmailVerified ? dbUser.email : null }
+        ]
+      },
+      { $set: { status: 'Cancelled' } },
+      { new: true }
+    )
 
     if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
-    }
-
-    const dbUser = await User.findById(user.id)
-    const isOwner = order.userId?.toString() === user.id
-    const isGuestMatch = dbUser.isEmailVerified && order.guestEmail === dbUser.email
-
-    if (!isOwner && !isGuestMatch) {
+      // Check if order exists at all to give the right error message
+      const exists = await Order.findById(id)
+      if (!exists) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+      if (exists.status !== 'Pending') return NextResponse.json({ error: 'Only pending orders can be cancelled' }, { status: 400 })
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
     }
 
-    if (order.status !== 'Pending') {
-      return NextResponse.json({ error: 'Only pending orders can be cancelled' }, { status: 400 })
-    }
-
-    order.status = 'Cancelled'
-    await order.save()
-
-    // Restore stock since the order never shipped
+    // Restore stock and sync inStock flag
     for (const item of order.items) {
-      await Product.updateOne(
-        { _id: item.productId, 'variants.size': item.size },
-        { $inc: { 'variants.$.stockQuantity': item.quantity } }
-      )
+      const product = await Product.findOne({ _id: item.productId, 'variants.size': item.size })
+      const variant = product?.variants.find(v => v.size === item.size)
+      if (variant) {
+        const newQty = variant.stockQuantity + item.quantity
+        await Product.updateOne(
+          { _id: item.productId, 'variants.size': item.size },
+          { $set: { 'variants.$.stockQuantity': newQty, 'variants.$.inStock': newQty > 0 } }
+        )
+      }
     }
 
     return NextResponse.json({ message: 'Order cancelled' }, { status: 200 })

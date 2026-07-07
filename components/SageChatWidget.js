@@ -105,6 +105,7 @@ function linkifyProducts(text, products) {
   if (!products || products.length === 0) return text
   const sorted = [...products].sort((a, b) => b.name.length - a.name.length)
   let segments = [text]
+  let linkIdx = 0
 
   for (const product of sorted) {
     const next = []
@@ -119,7 +120,7 @@ function linkifyProducts(text, products) {
         if (i < parts.length - 1) {
           next.push(
             <Link
-              key={`${product.slug}-${Math.random()}`}
+              key={`link-${linkIdx++}`}
               href={`/shop/${product.slug}`}
               className="font-bold text-olive underline hover:text-forest"
             >
@@ -220,6 +221,7 @@ export default function SageChatWidget() {
 
   const panelRef = useRef(null)
   const openButtonRef = useRef(null)
+  const abortControllerRef = useRef(null)
 
   const [panelWidth, setPanelWidth] = useState(380)
   const [panelHeight, setPanelHeight] = useState(560)
@@ -324,6 +326,18 @@ export default function SageChatWidget() {
     const handler = () => setIsOpen(true)
     window.addEventListener('sage:open', handler)
     return () => window.removeEventListener('sage:open', handler)
+  }, [])
+
+  // Abort any in-flight stream when the widget closes or the component unmounts
+  useEffect(() => {
+    if (!isOpen && abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    return () => { if (abortControllerRef.current) abortControllerRef.current.abort() }
   }, [])
 
   useEffect(() => {
@@ -480,6 +494,11 @@ export default function SageChatWidget() {
     const shouldShowLoginNudge = !isLoggedIn && userMessageCount === GUEST_NUDGE_THRESHOLD
       && !messages.some(m => m.isLoginNudge)
 
+    // Cancel any in-flight stream before starting a new one
+    if (abortControllerRef.current) abortControllerRef.current.abort()
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
     setError('')
     const isFirstUserMessage = userMessageCount === 0
     const newMessages = [...messages, { role: 'user', content: trimmed }]
@@ -492,7 +511,8 @@ export default function SageChatWidget() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages })
+        body: JSON.stringify({ messages: newMessages }),
+        signal: controller.signal
       })
 
       if (!res.ok || !res.body) {
@@ -506,11 +526,10 @@ export default function SageChatWidget() {
       let fullReply = ''
       let parsedProducts = []
       let headerExtracted = false
-      let finalMessages = newMessages
 
       while (true) {
         const { done, value } = await reader.read()
-        if (done) break
+        if (done || controller.signal.aborted) break
 
         const chunk = decoder.decode(value, { stream: true })
 
@@ -536,23 +555,35 @@ export default function SageChatWidget() {
           throw new Error(errorMatch[1])
         }
 
+        // Capture values outside the setter to avoid side effects inside it
+        const currentContent = fullReply
+        const currentProducts = parsedProducts
         setMessages(prev => {
           const updated = [...prev]
-          updated[updated.length - 1] = { role: 'assistant', content: fullReply, products: parsedProducts }
-          finalMessages = updated
+          updated[updated.length - 1] = { role: 'assistant', content: currentContent, products: currentProducts }
           return updated
         })
       }
 
-      if (shouldShowLoginNudge) {
-        setMessages(prev => [...prev, { role: 'assistant', content: '', products: [], isLoginNudge: true }])
+      if (!controller.signal.aborted) {
+        // Build finalMessages for persistence outside the state setter
+        const finalMessages = [
+          ...newMessages,
+          { role: 'assistant', content: fullReply, products: parsedProducts }
+        ]
+
+        if (shouldShowLoginNudge) {
+          setMessages(prev => [...prev, { role: 'assistant', content: '', products: [], isLoginNudge: true }])
+        }
+
+        await persistConversation(finalMessages, isFirstUserMessage ? trimmed : null)
       }
 
-      await persistConversation(finalMessages, isFirstUserMessage ? trimmed : null)
-
     } catch (err) {
-      setError(err.message || 'Something went wrong. Please try again.')
-      setMessages(prev => prev.filter((m, i) => !(i === prev.length - 1 && m.role === 'assistant' && m.content === '')))
+      if (err.name !== 'AbortError') {
+        setError(err.message || 'Something went wrong. Please try again.')
+        setMessages(prev => prev.filter((m, i) => !(i === prev.length - 1 && m.role === 'assistant' && m.content === '')))
+      }
     }
 
     setStreaming(false)

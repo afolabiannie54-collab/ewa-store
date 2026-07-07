@@ -12,7 +12,10 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Reference is required' }, { status: 400 })
     }
 
-    const order = await Order.findOne({ paymentReference: reference })
+    const order = await Order.findOne(
+      { paymentReference: reference },
+      { _id: 1, orderNumber: 1, status: 1, paymentStatus: 1 }
+    )
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found yet' }, { status: 404 })

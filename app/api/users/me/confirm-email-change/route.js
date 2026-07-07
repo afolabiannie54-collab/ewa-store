@@ -40,7 +40,10 @@ export async function POST(req) {
     dbUser.emailChangeOTPExpiry = undefined
     await dbUser.save()
 
-    return NextResponse.json({ message: 'Email updated successfully', user: dbUser }, { status: 200 })
+    return NextResponse.json({
+      message: 'Email updated successfully',
+      user: { name: dbUser.name, email: dbUser.email }
+    }, { status: 200 })
 
   } catch (error) {
     console.error('Confirm email change error:', error)

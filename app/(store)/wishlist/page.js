@@ -16,6 +16,7 @@ export default function WishlistPage() {
   const isAdmin = session?.user?.role === 'admin'
   const [wishlist, setWishlist] = useState([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
   const [quickAddProduct, setQuickAddProduct] = useState(null)
   const showToast = useToast()
 
@@ -30,10 +31,11 @@ export default function WishlistPage() {
   const fetchWishlist = async () => {
     try {
       const res = await fetch('/api/users/me/wishlist')
+      if (!res.ok) { setFetchError(true); setLoading(false); return }
       const data = await res.json()
       setWishlist(data.wishlist || [])
-    } catch (err) {
-      console.error('Failed to load wishlist')
+    } catch {
+      setFetchError(true)
     }
     setLoading(false)
   }
@@ -55,6 +57,19 @@ export default function WishlistPage() {
     return (
       <div className="bg-cream min-h-screen flex items-center justify-center">
         <Loader size="lg" />
+      </div>
+    )
+  }
+
+  if (fetchError) {
+    return (
+      <div className="bg-cream min-h-screen flex items-center justify-center px-6">
+        <div className="text-center">
+          <p className="text-forest/60 text-[15px] mb-6">Could not load your wishlist. Please try again.</p>
+          <button onClick={fetchWishlist} className="inline-block rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors">
+            Try Again
+          </button>
+        </div>
       </div>
     )
   }

@@ -16,6 +16,7 @@ export default function AccountPage() {
   const [profile, setProfile] = useState({ name: '', email: '' })
   const [originalProfile, setOriginalProfile] = useState({ name: '', email: '' })
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -47,9 +48,11 @@ export default function AccountPage() {
         const loaded = { name: data.user.name, email: data.user.email }
         setProfile(loaded)
         setOriginalProfile(loaded)
+      } else {
+        setFetchError(true)
       }
-    } catch (err) {
-      console.error('Failed to load profile')
+    } catch {
+      setFetchError(true)
     }
     setLoading(false)
   }
@@ -131,6 +134,7 @@ export default function AccountPage() {
       if (!res.ok) {
         setError(data.error)
       } else {
+        await update({ name: data.user?.name, email: data.user?.email })
         showToast('Email updated successfully')
         setEmailChangePending(false)
         setConfirmOtp('')
@@ -200,6 +204,19 @@ export default function AccountPage() {
     return (
       <div className="bg-cream min-h-screen flex items-center justify-center">
         <Loader size="lg" />
+      </div>
+    )
+  }
+
+  if (fetchError) {
+    return (
+      <div className="bg-cream min-h-screen flex items-center justify-center px-6">
+        <div className="text-center">
+          <p className="text-forest/60 text-[15px] mb-6">Could not load your profile. Please try again.</p>
+          <button onClick={fetchProfile} className="inline-block rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-9 py-4 hover:bg-forest transition-colors">
+            Try Again
+          </button>
+        </div>
       </div>
     )
   }

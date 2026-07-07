@@ -2,9 +2,15 @@ import { NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
 import bcrypt from 'bcryptjs'
+import { rateLimit } from '@/lib/rateLimit'
 
 export async function POST(req) {
   try {
+    const ip = req.headers.get('x-forwarded-for') || 'unknown'
+    if (!rateLimit(`reset:${ip}`, 10, 60_000)) {
+      return NextResponse.json({ error: 'Too many requests. Please wait before trying again.' }, { status: 429 })
+    }
+
     const { email, otp, password } = await req.json()
 
     if (!email || !otp || !password) {
