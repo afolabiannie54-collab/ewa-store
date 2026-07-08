@@ -99,7 +99,7 @@ function Badge({ count, collapsed }) {
     return (
       <span
         aria-label={`${count} pending`}
-        className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-none flex items-center justify-center"
+        className="absolute top-1 right-1.5 min-w-[17px] h-[17px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-none flex items-center justify-center"
       >
         {label}
       </span>
@@ -239,12 +239,9 @@ export default function AdminLayout({ children }) {
                   collapsed ? 'justify-center px-0' : 'px-3'
                 } ${active ? 'bg-cream text-forest' : 'text-cream/65 hover:bg-cream/10 hover:text-cream'}`}
               >
-                <span className="relative flex-shrink-0">
-                  <Icon className="w-[18px] h-[18px]" />
-                  {collapsed && <Badge count={badgeCount} collapsed />}
-                </span>
+                <Icon className="w-[18px] h-[18px] flex-shrink-0" />
                 {!collapsed && link.label}
-                {!collapsed && <Badge count={badgeCount} collapsed={false} />}
+                <Badge count={badgeCount} collapsed={collapsed} />
               </Link>
             )
           })}
