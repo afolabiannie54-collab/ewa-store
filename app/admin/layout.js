@@ -79,12 +79,12 @@ const NAV_LINKS = [
   { href: '/admin', label: 'Dashboard', icon: DashboardIcon },
   { href: '/admin/products', label: 'Products', icon: ProductsIcon },
   { href: '/admin/categories', label: 'Categories', icon: CategoriesIcon },
-  { href: '/admin/orders', label: 'Orders', icon: OrdersIcon },
-  { href: '/admin/issues', label: 'Issues', icon: IssuesIcon },
-  { href: '/admin/reviews', label: 'Reviews', icon: ReviewsIcon },
+  { href: '/admin/orders', label: 'Orders', icon: OrdersIcon, badgeKey: 'pendingOrders' },
+  { href: '/admin/issues', label: 'Issues', icon: IssuesIcon, badgeKey: 'pendingIssues' },
+  { href: '/admin/reviews', label: 'Reviews', icon: ReviewsIcon, badgeKey: 'pendingReviews' },
   { href: '/admin/promos', label: 'Promo Codes', icon: PromosIcon },
   { href: '/admin/shipping', label: 'Shipping Rates', icon: ShippingIcon },
-  { href: '/admin/inquiries', label: 'Inquiries', icon: InquiriesIcon },
+  { href: '/admin/inquiries', label: 'Inquiries', icon: InquiriesIcon, badgeKey: 'unreadInquiries' },
 ]
 
 const MIN_WIDTH = 200
@@ -92,18 +92,66 @@ const MAX_WIDTH = 360
 const DEFAULT_WIDTH = 260
 const COLLAPSED_WIDTH = 76
 
+function Badge({ count, collapsed }) {
+  if (!count) return null
+  const label = count > 99 ? '99+' : String(count)
+  if (collapsed) {
+    return (
+      <span
+        aria-label={`${count} pending`}
+        className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-none flex items-center justify-center"
+      >
+        {label}
+      </span>
+    )
+  }
+  return (
+    <span
+      aria-label={`${count} pending`}
+      className="ml-auto min-w-[18px] h-[18px] px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none flex items-center justify-center flex-shrink-0"
+    >
+      {label}
+    </span>
+  )
+}
+
 export default function AdminLayout({ children }) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const [width, setWidth] = useState(DEFAULT_WIDTH)
   const [isDragging, setIsDragging] = useState(false)
+  const [notifications, setNotifications] = useState({})
   const dragStartRef = useRef({ startX: 0, startWidth: DEFAULT_WIDTH })
+  const pollRef = useRef(null)
 
   useEffect(() => {
     const savedWidth = localStorage.getItem('adminSidebarWidth')
     const savedCollapsed = localStorage.getItem('adminSidebarCollapsed')
     if (savedWidth) setWidth(Number(savedWidth))
     if (savedCollapsed === 'true') setCollapsed(true)
+  }, [])
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch('/api/admin/notifications')
+      if (res.ok) {
+        const data = await res.json()
+        setNotifications(data)
+      }
+    } catch {
+      // non-critical — leave previous counts visible
+    }
+  }
+
+  // Fetch on mount and whenever the route changes (admin navigates between sections)
+  useEffect(() => {
+    fetchNotifications()
+  }, [pathname])
+
+  // Poll every 60s to catch new orders/reviews coming in while admin is idle
+  useEffect(() => {
+    pollRef.current = setInterval(fetchNotifications, 60_000)
+    return () => clearInterval(pollRef.current)
   }, [])
 
   useEffect(() => {
@@ -180,17 +228,23 @@ export default function AdminLayout({ children }) {
           {NAV_LINKS.map(link => {
             const Icon = link.icon
             const active = isActive(link.href)
+            const badgeCount = link.badgeKey ? (notifications[link.badgeKey] || 0) : 0
+
             return (
               <Link
                 key={link.href}
                 href={link.href}
                 title={collapsed ? link.label : undefined}
-                className={`flex items-center gap-3 py-2.5 rounded-[12px] text-[14px] font-medium transition-colors ${
+                className={`relative flex items-center gap-3 py-2.5 rounded-[12px] text-[14px] font-medium transition-colors ${
                   collapsed ? 'justify-center px-0' : 'px-3'
                 } ${active ? 'bg-cream text-forest' : 'text-cream/65 hover:bg-cream/10 hover:text-cream'}`}
               >
-                <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+                <span className="relative flex-shrink-0">
+                  <Icon className="w-[18px] h-[18px]" />
+                  {collapsed && <Badge count={badgeCount} collapsed />}
+                </span>
                 {!collapsed && link.label}
+                {!collapsed && <Badge count={badgeCount} collapsed={false} />}
               </Link>
             )
           })}
