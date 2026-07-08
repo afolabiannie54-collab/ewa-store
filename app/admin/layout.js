@@ -77,7 +77,7 @@ function CollapseIcon(props) {
 
 const NAV_LINKS = [
   { href: '/admin', label: 'Dashboard', icon: DashboardIcon },
-  { href: '/admin/products', label: 'Products', icon: ProductsIcon },
+  { href: '/admin/products', label: 'Products', icon: ProductsIcon, badgeKey: 'outOfStockProducts' },
   { href: '/admin/categories', label: 'Categories', icon: CategoriesIcon },
   { href: '/admin/orders', label: 'Orders', icon: OrdersIcon, badgeKey: 'pendingOrders' },
   { href: '/admin/issues', label: 'Issues', icon: IssuesIcon, badgeKey: 'pendingIssues' },
