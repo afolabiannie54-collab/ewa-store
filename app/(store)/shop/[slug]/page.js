@@ -111,6 +111,10 @@ export default function ProductDetailPage() {
   }
 
   const handleToggleWishlist = async () => {
+    if (isAdmin) {
+      showToast("Admin accounts can't use the wishlist", 'info')
+      return
+    }
     try {
       if (inWishlist) {
         const res = await fetch(`/api/users/me/wishlist/${product._id}`, { method: 'DELETE' })
@@ -467,7 +471,9 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {session ? (
+          {isAdmin ? (
+            <p className="text-[14px] text-forest/45 italic">Admin accounts can&apos;t leave reviews.</p>
+          ) : session ? (
             <form onSubmit={handleSubmitReview} className="rounded-[20px] border-[1.5px] border-border bg-surface p-7">
               <p className="text-[16px] font-bold text-forest mb-4">Leave a Review</p>
 
