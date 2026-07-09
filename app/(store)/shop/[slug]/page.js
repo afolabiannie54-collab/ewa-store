@@ -471,9 +471,7 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {isAdmin ? (
-            <p className="text-[14px] text-forest/45 italic">Admin accounts can&apos;t leave reviews.</p>
-          ) : session ? (
+          {(isAdmin || session) ? (
             <form onSubmit={handleSubmitReview} className="rounded-[20px] border-[1.5px] border-border bg-surface p-7">
               <p className="text-[16px] font-bold text-forest mb-4">Leave a Review</p>
 
@@ -486,18 +484,24 @@ export default function ProductDetailPage() {
                 onChange={(e) => setReviewComment(e.target.value)}
                 placeholder="Share your experience with this product..."
                 rows={3}
-                className="w-full rounded-[12px] border-[1.5px] border-border px-4 py-3 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors mb-4 resize-none"
+                disabled={isAdmin}
+                className="w-full rounded-[12px] border-[1.5px] border-border px-4 py-3 text-[14px] text-forest placeholder:text-muted focus:border-olive outline-none transition-colors mb-4 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
               />
 
               {reviewError && <p className="text-[13px] text-error mb-4">{reviewError}</p>}
 
-              <button
-                type="submit"
-                disabled={submittingReview}
-                className="rounded-full bg-olive text-cream px-7 py-3 text-[13px] font-bold uppercase tracking-wide hover:bg-forest transition-colors disabled:opacity-50"
-              >
-                {submittingReview ? <Loader size="sm" color="cream" /> : 'Submit Review'}
-              </button>
+              <div className="flex items-center gap-4 flex-wrap">
+                <button
+                  type="submit"
+                  disabled={submittingReview || isAdmin}
+                  className="rounded-full bg-olive text-cream px-7 py-3 text-[13px] font-bold uppercase tracking-wide hover:bg-forest transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submittingReview ? <Loader size="sm" color="cream" /> : 'Submit Review'}
+                </button>
+                {isAdmin && (
+                  <p className="text-[13px] text-forest/45 italic">Admin accounts can&apos;t leave reviews.</p>
+                )}
+              </div>
             </form>
           ) : (
             <p className="text-[15px] text-forest/60">
