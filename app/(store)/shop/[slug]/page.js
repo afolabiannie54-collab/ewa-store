@@ -510,8 +510,8 @@ export default function ProductDetailPage() {
         {relatedProducts.length > 0 && (
           <FadeInSection>
           <div>
-            <h2 className="font-display font-bold text-forest text-[28px] md:text-[34px] mb-8">
-              You May Also Like
+            <h2 className="font-display font-bold text-forest text-[28px] md:text-[34px] mb-8 text-center">
+              Complete Your Routine
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
               {relatedProducts.map(related => (
