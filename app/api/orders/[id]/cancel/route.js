@@ -3,6 +3,7 @@ import Order from '@/models/Order'
 import Product from '@/models/Product'
 import User from '@/models/User'
 import { getCurrentUser } from '@/lib/auth'
+import { sendOrderEmail } from '@/lib/email'
 import { NextResponse } from 'next/server'
 
 export async function POST(req, { params }) {
@@ -50,6 +51,16 @@ export async function POST(req, { params }) {
           { $set: { 'variants.$.stockQuantity': newQty, 'variants.$.inStock': newQty > 0 } }
         )
       }
+    }
+
+    const recipientEmail = order.guestEmail || dbUser?.email
+    if (recipientEmail) {
+      await sendOrderEmail(
+        recipientEmail,
+        'Your EWA order has been cancelled',
+        'Order Cancelled',
+        `Your order ${order.orderNumber} has been successfully cancelled. If you paid online, your refund will be processed within 3–5 business days.`
+      ).catch(err => console.error('Cancel email failed:', err))
     }
 
     return NextResponse.json({ message: 'Order cancelled' }, { status: 200 })

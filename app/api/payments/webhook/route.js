@@ -54,23 +54,26 @@ export async function POST(req) {
       return NextResponse.json({ received: true }, { status: 200 })
     }
 
-    // Re-validate stock and compute safe decrements
+    // Atomically decrement stock — only succeeds if enough stock exists.
+    // This prevents oversell when two payments for the same item land simultaneously.
     let hasOversell = false
-    const stockUpdates = []
+    const inStockUpdates = [] // variants that hit zero and need inStock: false
+
     for (const item of metadata.items) {
-      const product = await Product.findById(item.productId)
-      const variant = product?.variants.find(v => v.size === item.size)
+      const result = await Product.findOneAndUpdate(
+        { _id: item.productId, variants: { $elemMatch: { size: item.size, stockQuantity: { $gte: item.quantity } } } },
+        { $inc: { 'variants.$.stockQuantity': -item.quantity } },
+        { new: true }
+      )
 
-      if (!variant) {
+      if (!result) {
         hasOversell = true
-        continue
+      } else {
+        const updatedVariant = result.variants.find(v => v.size === item.size)
+        if (updatedVariant && updatedVariant.stockQuantity === 0) {
+          inStockUpdates.push({ productId: item.productId, size: item.size })
+        }
       }
-
-      const deduct = Math.min(item.quantity, variant.stockQuantity)
-      if (deduct < item.quantity) hasOversell = true
-
-      const newQty = variant.stockQuantity - deduct
-      stockUpdates.push({ productId: item.productId, size: item.size, newQty })
     }
 
     const orderNumber = generateOrderNumber()
@@ -96,11 +99,11 @@ export async function POST(req) {
       oversell: hasOversell
     })
 
-    // Apply capped stock decrements and sync the inStock boolean
-    for (const { productId, size, newQty } of stockUpdates) {
+    // Sync inStock: false for any variant that just hit zero
+    for (const { productId, size } of inStockUpdates) {
       await Product.updateOne(
         { _id: productId, 'variants.size': size },
-        { $set: { 'variants.$.stockQuantity': newQty, 'variants.$.inStock': newQty > 0 } }
+        { $set: { 'variants.$.inStock': false } }
       )
     }
 

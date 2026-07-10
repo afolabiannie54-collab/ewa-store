@@ -150,7 +150,12 @@ export default function AdminOrdersPage() {
                       key={order._id}
                       className={`hover:bg-cream/60 transition-colors ${i < orders.length - 1 ? 'border-b-[1.5px] border-border' : ''}`}
                     >
-                      <td className="px-6 py-4 font-bold text-forest text-[14px]">{order.orderNumber}</td>
+                      <td className="px-6 py-4 font-bold text-forest text-[14px]">
+                        {order.orderNumber}
+                        {order.oversell && (
+                          <span className="ml-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-error/15 text-error">Stock issue</span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 text-[13px] text-forest">{order.guestName || order.userId?.name || 'N/A'}</td>
                       <td className="px-6 py-4 text-[13px] text-forest/50">
                         {new Date(order.createdAt).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}

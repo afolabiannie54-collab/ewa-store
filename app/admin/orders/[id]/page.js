@@ -173,16 +173,6 @@ export default function AdminOrderDetailPage() {
               </button>
             )}
 
-            {order.status !== 'Cancelled' && order.status !== 'Delivered' && (
-              <button
-                onClick={() => setConfirmStatus('Cancelled')}
-                disabled={updating}
-                className="w-full mt-3 rounded-full border-[1.5px] border-error/40 text-error text-[13px] font-bold uppercase tracking-wide py-3.5 hover:bg-error/5 transition-colors disabled:opacity-60"
-              >
-                Cancel Order
-              </button>
-            )}
-
             {!nextStatus && order.status !== 'Cancelled' && (
               <p className="text-[13px] text-forest/50 mt-4">Order lifecycle complete.</p>
             )}
@@ -199,10 +189,9 @@ export default function AdminOrderDetailPage() {
         isOpen={!!confirmStatus}
         onClose={() => setConfirmStatus(null)}
         onConfirm={() => handleStatusUpdate(confirmStatus)}
-        title={confirmStatus === 'Cancelled' ? 'Cancel this order?' : `Mark as ${confirmStatus}?`}
-        message={confirmStatus === 'Cancelled' ? 'This will cancel the order permanently.' : `Update this order's status to ${confirmStatus}.`}
-        confirmLabel={confirmStatus === 'Cancelled' ? 'Cancel Order' : `Mark as ${confirmStatus}`}
-        danger={confirmStatus === 'Cancelled'}
+        title={`Mark as ${confirmStatus}?`}
+        message={`Update this order's status to ${confirmStatus}.`}
+        confirmLabel={`Mark as ${confirmStatus}`}
         loading={updating}
       />
     </div>
