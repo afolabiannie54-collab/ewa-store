@@ -33,6 +33,10 @@ export async function POST(req, { params }) {
       return NextResponse.json({ error: 'A photo is required for this issue type' }, { status: 400 })
     }
 
+    if (images && images.length > 5) {
+      return NextResponse.json({ error: 'You can upload a maximum of 5 photos' }, { status: 400 })
+    }
+
     const order = await Order.findById(id)
 
     if (!order) {
@@ -49,6 +53,11 @@ export async function POST(req, { params }) {
 
     if (order.status !== 'Delivered') {
       return NextResponse.json({ error: 'Issues can only be reported for delivered orders' }, { status: 400 })
+    }
+
+    const existingIssue = await OrderIssue.findOne({ orderId: id })
+    if (existingIssue) {
+      return NextResponse.json({ error: 'An issue has already been reported for this order' }, { status: 409 })
     }
 
     // Upload images to Cloudinary

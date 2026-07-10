@@ -1,5 +1,6 @@
 import connectDB from '@/lib/mongodb'
 import Order from '@/models/Order'
+import OrderIssue from '@/models/OrderIssue'
 import User from '@/models/User'
 import { getCurrentUser } from '@/lib/auth'
 import { NextResponse } from 'next/server'
@@ -31,7 +32,9 @@ export async function GET(req, { params }) {
       }
     }
 
-    return NextResponse.json({ order }, { status: 200 })
+    const existingIssue = await OrderIssue.findOne({ orderId: id }).select('_id status adminNote reasonType')
+
+    return NextResponse.json({ order, issue: existingIssue || null }, { status: 200 })
 
   } catch (error) {
     console.error('Get order error:', error)

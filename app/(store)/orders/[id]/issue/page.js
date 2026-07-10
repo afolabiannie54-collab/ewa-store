@@ -23,6 +23,7 @@ export default function ReportIssuePage() {
   const orderId = params.id
 
   const [order, setOrder] = useState(null)
+  const [existingIssue, setExistingIssue] = useState(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -44,6 +45,7 @@ export default function ReportIssuePage() {
         setError(data.error)
       } else {
         setOrder(data.order)
+        setExistingIssue(data.issue || null)
       }
     } catch (err) {
       setError('Failed to load order')
@@ -51,14 +53,18 @@ export default function ReportIssuePage() {
     setLoading(false)
   }
 
+  const MAX_IMAGES = 5
+
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files)
     files.forEach(file => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImages(prev => [...prev, reader.result])
-      }
-      reader.readAsDataURL(file)
+      setImages(prev => {
+        if (prev.length >= MAX_IMAGES) return prev
+        const reader = new FileReader()
+        reader.onloadend = () => setImages(p => p.length < MAX_IMAGES ? [...p, reader.result] : p)
+        reader.readAsDataURL(file)
+        return prev
+      })
     })
   }
 
@@ -122,6 +128,50 @@ export default function ReportIssuePage() {
     return (
       <div className="bg-cream min-h-screen flex items-center justify-center px-6">
         <p className="text-forest/60 text-[15px]">{error || 'Order not found'}</p>
+      </div>
+    )
+  }
+
+  const issueStatusStyle = {
+    Pending:  { bg: 'bg-[#FFF3CD]', text: 'text-[#8A6D00]' },
+    Approved: { bg: 'bg-[#E3F2E8]', text: 'text-[#4A7C59]' },
+    Rejected: { bg: 'bg-[#FBEAEA]', text: 'text-[#C0392B]' },
+    Resolved: { bg: 'bg-[#EAF3EC]', text: 'text-[#4A7C59]' },
+  }
+
+  if (existingIssue) {
+    const style = issueStatusStyle[existingIssue.status] || { bg: 'bg-border', text: 'text-forest' }
+    return (
+      <div className="bg-cream min-h-screen">
+        <div className="max-w-[680px] mx-auto px-6 py-12 md:py-16">
+          <Link href={`/orders/${orderId}`} className="inline-block text-[13px] font-medium text-forest/50 hover:text-olive transition-colors mb-8">
+            ← Back to order
+          </Link>
+          <h1 className="font-display font-bold text-forest text-[40px] md:text-[52px] leading-none mb-3" style={{ letterSpacing: '-0.02em' }}>
+            Your Ticket
+          </h1>
+          <p className="text-forest/55 text-[14px] mb-10">Order {order.orderNumber}</p>
+          <div className="rounded-[20px] border-[1.5px] border-border bg-surface p-7 md:p-8">
+            <div className="flex items-center justify-between mb-6">
+              <p className="text-[13px] font-bold uppercase tracking-wide text-forest/50">Status</p>
+              <span className={`inline-flex rounded-full px-4 py-1.5 text-[12px] font-bold uppercase tracking-wide ${style.bg} ${style.text}`}>
+                {existingIssue.status}
+              </span>
+            </div>
+            <p className="text-[14px] text-forest/70 leading-relaxed">
+              {existingIssue.status === 'Pending' && "We've received your report and our team is reviewing it. We'll email you once there's an update."}
+              {existingIssue.status === 'Approved' && 'Your report has been approved. Our team will be in touch to resolve this shortly.'}
+              {existingIssue.status === 'Rejected' && "We've reviewed your report but were unable to approve it. Please check your email for details."}
+              {existingIssue.status === 'Resolved' && 'This issue has been resolved. Thank you for your patience.'}
+            </p>
+            {existingIssue.adminNote && (
+              <div className="mt-6 pt-6 border-t-[1.5px] border-border">
+                <p className="text-[12px] font-bold uppercase tracking-wide text-forest/50 mb-2">Note from our team</p>
+                <p className="text-[14px] text-forest leading-relaxed">{existingIssue.adminNote}</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     )
   }

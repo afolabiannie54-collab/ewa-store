@@ -23,6 +23,7 @@ export default function OrderDetailPage() {
   const { status } = useSession()
 
   const [order, setOrder] = useState(null)
+  const [issue, setIssue] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const showToast = useToast()
@@ -48,6 +49,7 @@ export default function OrderDetailPage() {
         setError(data.error)
       } else {
         setOrder(data.order)
+        setIssue(data.issue || null)
       }
     } catch (err) {
       setError('Failed to load order')
@@ -265,12 +267,21 @@ export default function OrderDetailPage() {
 
           {order.status === 'Delivered' && (
             <>
-              <Link
-                href={`/orders/${order._id}/issue`}
-                className="rounded-full border-[1.5px] border-border text-forest text-[13px] font-bold uppercase tracking-wide px-7 py-3.5 hover:border-olive transition-colors"
-              >
-                Report a Problem
-              </Link>
+              {issue ? (
+                <Link
+                  href={`/orders/${order._id}/issue`}
+                  className="rounded-full border-[1.5px] border-border text-forest text-[13px] font-bold uppercase tracking-wide px-7 py-3.5 hover:border-olive transition-colors"
+                >
+                  View Your Ticket
+                </Link>
+              ) : (
+                <Link
+                  href={`/orders/${order._id}/issue`}
+                  className="rounded-full border-[1.5px] border-border text-forest text-[13px] font-bold uppercase tracking-wide px-7 py-3.5 hover:border-olive transition-colors"
+                >
+                  Report a Problem
+                </Link>
+              )}
               {order.items.map((item, i) => (
                 <Link
                   key={i}

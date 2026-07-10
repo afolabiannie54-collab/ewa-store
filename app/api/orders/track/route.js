@@ -24,7 +24,8 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ order }, { status: 200 })
+    const { paymentReference, ...safeOrder } = order.toObject()
+    return NextResponse.json({ order: safeOrder }, { status: 200 })
 
   } catch (error) {
     console.error('Track order error:', error)
