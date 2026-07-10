@@ -64,12 +64,12 @@ export default function AdminCategoriesPage() {
   }
 
   const toggleActive = async (cat) => {
-    await fetch(`/api/admin/categories/${cat._id}`, {
+    const res = await fetch(`/api/admin/categories/${cat._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ active: !cat.active })
     })
-    fetchCategories()
+    if (res.ok) fetchCategories()
   }
 
   const handleDelete = async () => {
@@ -162,6 +162,7 @@ export default function AdminCategoriesPage() {
                       type="checkbox"
                       checked={cat.active}
                       onChange={() => toggleActive(cat)}
+                      aria-label={`${cat.name} active`}
                       className="accent-olive w-4 h-4 cursor-pointer"
                     />
                   </td>

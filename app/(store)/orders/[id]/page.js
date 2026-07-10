@@ -111,7 +111,17 @@ export default function OrderDetailPage() {
   if (error || !order) {
     return (
       <div className="bg-cream min-h-screen flex items-center justify-center px-6">
-        <p className="text-forest/60 text-[15px]">{error || 'Order not found'}</p>
+        <div className="text-center">
+          <p className="text-forest/60 text-[15px] mb-4">{error || 'Order not found'}</p>
+          {error && (
+            <button
+              onClick={fetchOrder}
+              className="rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-7 py-3 hover:bg-forest transition-colors"
+            >
+              Retry
+            </button>
+          )}
+        </div>
       </div>
     )
   }

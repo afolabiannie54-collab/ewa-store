@@ -8,9 +8,22 @@ export async function GET(req) {
     await requireAdmin()
     await connectDB()
 
-    const inquiries = await Inquiry.find().sort({ createdAt: -1 })
+    const { searchParams } = new URL(req.url)
+    const status = searchParams.get('status') || ''
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
+    const limit = 20
 
-    return NextResponse.json({ inquiries }, { status: 200 })
+    const query = status ? { status } : {}
+
+    const total = await Inquiry.countDocuments(query)
+    const totalPages = Math.max(1, Math.ceil(total / limit))
+
+    const inquiries = await Inquiry.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+
+    return NextResponse.json({ inquiries, total, totalPages, page }, { status: 200 })
 
   } catch (error) {
     if (error.message === 'Not authorized') {

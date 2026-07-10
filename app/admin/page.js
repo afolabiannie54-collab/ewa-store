@@ -44,6 +44,7 @@ function ArrowIcon(props) {
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
   const [greeting, setGreeting] = useState('')
 
   useEffect(() => {
@@ -52,20 +53,42 @@ export default function AdminDashboard() {
   }, [])
 
   const fetchStats = async () => {
+    setFetchError(false)
+    setLoading(true)
     try {
       const res = await fetch('/api/admin/stats')
       const data = await res.json()
-      setStats(data)
+      if (!res.ok) {
+        setFetchError(true)
+      } else {
+        setStats(data)
+      }
     } catch (err) {
-      console.error('Failed to load stats')
+      setFetchError(true)
     }
     setLoading(false)
   }
 
-  if (loading || !stats) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader size="lg" />
+      </div>
+    )
+  }
+
+  if (fetchError || !stats) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-forest/60 text-[15px] mb-4">Failed to load dashboard stats.</p>
+          <button
+            onClick={fetchStats}
+            className="rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-7 py-3 hover:bg-forest transition-colors"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     )
   }

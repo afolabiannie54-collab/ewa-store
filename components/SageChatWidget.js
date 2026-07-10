@@ -876,7 +876,7 @@ export default function SageChatWidget() {
                     placeholder="Ask Sage anything..."
                     disabled={streaming}
                     className="flex-1 bg-transparent outline-none disabled:opacity-50"
-                    style={{ fontSize: '14px', color: '#283618' }}
+                    style={{ fontSize: '16px', color: '#283618' }}
                   />
                   <button
                     type="submit"

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Loader from '@/components/Loader'
 import AdminEmptyState from '@/components/AdminEmptyState'
+import Pagination from '@/components/Pagination'
 
 const STATUS_FILTERS = ['', 'Unread', 'In Progress', 'Resolved']
 
@@ -16,31 +17,44 @@ export default function AdminInquiriesPage() {
   const [inquiries, setInquiries] = useState([])
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [replyingId, setReplyingId] = useState(null)
   const [replyText, setReplyText] = useState('')
   const [sending, setSending] = useState(false)
   const [replyMessage, setReplyMessage] = useState('')
 
-  useEffect(() => { fetchInquiries() }, [])
-
-  const fetchInquiries = async () => {
+  const fetchInquiries = useCallback(async () => {
+    setLoading(true)
     try {
-      const res = await fetch('/api/admin/inquiries')
+      const params = new URLSearchParams({ page })
+      if (filterStatus) params.set('status', filterStatus)
+      const res = await fetch(`/api/admin/inquiries?${params}`)
       const data = await res.json()
       setInquiries(data.inquiries || [])
+      setTotal(data.total || 0)
+      setTotalPages(data.totalPages || 1)
     } catch (err) {
       console.error('Failed to load inquiries')
     }
     setLoading(false)
+  }, [page, filterStatus])
+
+  useEffect(() => { fetchInquiries() }, [fetchInquiries])
+
+  const handleFilterChange = (s) => {
+    setFilterStatus(s)
+    setPage(1)
   }
 
   const updateStatus = async (id, status) => {
-    await fetch(`/api/admin/inquiries/${id}`, {
+    const res = await fetch(`/api/admin/inquiries/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status })
     })
-    fetchInquiries()
+    if (res.ok) fetchInquiries()
   }
 
   const startReply = (id) => {
@@ -73,8 +87,6 @@ export default function AdminInquiriesPage() {
     setSending(false)
   }
 
-  const filteredInquiries = filterStatus ? inquiries.filter(i => i.status === filterStatus) : inquiries
-
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
       <Loader size="lg" />
@@ -93,7 +105,7 @@ export default function AdminInquiriesPage() {
         {STATUS_FILTERS.map(s => (
           <button
             key={s}
-            onClick={() => setFilterStatus(s)}
+            onClick={() => handleFilterChange(s)}
             className={`rounded-full px-5 py-2.5 text-[13px] font-bold uppercase tracking-wide transition-colors ${
               filterStatus === s
                 ? 'bg-olive text-cream'
@@ -101,14 +113,15 @@ export default function AdminInquiriesPage() {
             }`}
           >
             {s || 'All'}
-            <span className={`ml-1.5 ${filterStatus === s ? 'text-cream/70' : 'text-forest/40'}`}>
-              ({s ? inquiries.filter(i => i.status === s).length : inquiries.length})
-            </span>
           </button>
         ))}
       </div>
 
-      {filteredInquiries.length === 0 ? (
+      {total > 0 && (
+        <p className="text-[13px] text-forest/45 mb-4">{total} inquiry{total !== 1 ? 's' : ''}</p>
+      )}
+
+      {inquiries.length === 0 ? (
         <AdminEmptyState
           icon={<svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>}
           title="No inquiries yet"
@@ -116,7 +129,7 @@ export default function AdminInquiriesPage() {
         />
       ) : (
         <div className="flex flex-col gap-4">
-          {filteredInquiries.map(inquiry => (
+          {inquiries.map(inquiry => (
             <div key={inquiry._id} className="rounded-[20px] border-[1.5px] border-border bg-surface p-6 md:p-7">
 
               <div className="flex items-start justify-between gap-4 mb-4">
@@ -187,6 +200,8 @@ export default function AdminInquiriesPage() {
           ))}
         </div>
       )}
+
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} />
 
     </div>
   )

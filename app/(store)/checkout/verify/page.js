@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Loader from '@/components/Loader'
+import { clearGuestCart } from '@/lib/cart-client'
 
 function OrderConfirmedIllustration() {
   return (
@@ -46,6 +47,7 @@ function VerifyContent() {
       const data = await res.json()
 
       if (res.ok && data.order) {
+        clearGuestCart()
         setOrder(data.order)
         setStatus('found')
         window.dispatchEvent(new Event('cart:updated'))

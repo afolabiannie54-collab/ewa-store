@@ -9,6 +9,7 @@ export default function AdminShippingPage() {
   const [editingId, setEditingId] = useState(null)
   const [editValue, setEditValue] = useState('')
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
   useEffect(() => { fetchRates() }, [])
 
@@ -35,14 +36,25 @@ export default function AdminShippingPage() {
 
   const saveEdit = async (id) => {
     setSaving(true)
-    await fetch(`/api/admin/shipping/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rate: Number(editValue) })
-    })
-    setEditingId(null)
-    setSaving(false)
-    fetchRates()
+    setSaveError('')
+    try {
+      const res = await fetch(`/api/admin/shipping/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rate: Number(editValue) })
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setSaveError(data.error || 'Failed to save')
+        return
+      }
+      setEditingId(null)
+      fetchRates()
+    } catch (err) {
+      setSaveError('Network error — please try again')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (loading) return (
@@ -68,28 +80,31 @@ export default function AdminShippingPage() {
             </div>
 
             {editingId === rate._id ? (
-              <div className="flex items-center gap-2.5">
-                <span className="text-[14px] font-bold text-forest/50">₦</span>
-                <input
-                  type="number"
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  className="w-[110px] rounded-[10px] border-[2px] border-olive bg-cream px-3.5 py-2.5 text-[14px] font-bold text-forest outline-none"
-                  autoFocus
-                />
-                <button
-                  onClick={() => saveEdit(rate._id)}
-                  disabled={saving}
-                  className="rounded-full bg-olive text-cream text-[12px] font-bold uppercase tracking-wide px-5 py-2.5 hover:bg-forest transition-colors disabled:opacity-60"
-                >
-                  {saving ? <Loader size="sm" color="cream" /> : 'Save'}
-                </button>
-                <button
-                  onClick={cancelEdit}
-                  className="rounded-full border-[1.5px] border-border text-forest/60 text-[12px] font-bold uppercase tracking-wide px-5 py-2.5 hover:border-olive transition-colors"
-                >
-                  Cancel
-                </button>
+              <div className="flex flex-col items-end gap-2">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-[14px] font-bold text-forest/50">₦</span>
+                  <input
+                    type="number"
+                    value={editValue}
+                    onChange={(e) => { setEditValue(e.target.value); setSaveError('') }}
+                    className="w-[110px] rounded-[10px] border-[2px] border-olive bg-cream px-3.5 py-2.5 text-[14px] font-bold text-forest outline-none"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => saveEdit(rate._id)}
+                    disabled={saving}
+                    className="rounded-full bg-olive text-cream text-[12px] font-bold uppercase tracking-wide px-5 py-2.5 hover:bg-forest transition-colors disabled:opacity-60"
+                  >
+                    {saving ? <Loader size="sm" color="cream" /> : 'Save'}
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="rounded-full border-[1.5px] border-border text-forest/60 text-[12px] font-bold uppercase tracking-wide px-5 py-2.5 hover:border-olive transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                {saveError && <p className="text-[12px] text-error">{saveError}</p>}
               </div>
             ) : (
               <div className="flex items-center gap-4">

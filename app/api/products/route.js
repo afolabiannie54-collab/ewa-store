@@ -2,6 +2,8 @@ import connectDB from '@/lib/mongodb'
 import Product from '@/models/Product'
 import { NextResponse } from 'next/server'
 
+const PAGE_SIZE = 12
+
 export async function GET(req) {
   try {
     await connectDB()
@@ -14,6 +16,7 @@ export async function GET(req) {
     const maxPrice = searchParams.get('maxPrice')
     const search = searchParams.get('search')
     const sort = searchParams.get('sort')
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
 
     const query = { status: 'Active' }
 
@@ -60,7 +63,11 @@ export async function GET(req) {
       products.sort((a, b) => b.averageRating - a.averageRating)
     }
 
-    return NextResponse.json({ products }, { status: 200 })
+    const total = products.length
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+    const paginated = products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+    return NextResponse.json({ products: paginated, total, totalPages, page }, { status: 200 })
 
   } catch (error) {
     console.error('Get products error:', error)

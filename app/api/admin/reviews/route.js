@@ -10,12 +10,26 @@ export async function GET(req) {
     await requireAdmin()
     await connectDB()
 
-    const reviews = await Review.find()
-      .populate('productId', 'name')
+    const { searchParams } = new URL(req.url)
+    const status = searchParams.get('status') // 'pending' | 'approved' | ''
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
+    const limit = 20
+
+    const query = {}
+    if (status === 'approved') query.isApproved = true
+    if (status === 'pending') query.isApproved = false
+
+    const total = await Review.countDocuments(query)
+    const totalPages = Math.max(1, Math.ceil(total / limit))
+
+    const reviews = await Review.find(query)
+      .populate('productId', 'name slug')
       .populate('userId', 'name email')
       .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
 
-    return NextResponse.json({ reviews }, { status: 200 })
+    return NextResponse.json({ reviews, total, totalPages, page }, { status: 200 })
 
   } catch (error) {
     if (error.message === 'Not authorized') {

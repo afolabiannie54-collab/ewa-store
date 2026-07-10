@@ -102,9 +102,10 @@ export default function ProductDetailPage() {
 
   const checkWishlist = async (productId) => {
     try {
-      const res = await fetch('/api/users/me/wishlist')
+      const res = await fetch('/api/users/me/wishlist/ids')
+      if (!res.ok) return
       const data = await res.json()
-      setInWishlist(data.wishlist?.some(p => p._id === productId))
+      setInWishlist((data.ids || []).some(id => id.toString() === productId))
     } catch (err) {
       console.error('Failed to check wishlist')
     }
@@ -398,10 +399,13 @@ export default function ProductDetailPage() {
         {/* TABS */}
         <FadeInSection>
         <div className="mb-20">
-          <div className="flex gap-4 md:gap-8 border-b-[1.5px] border-border mb-8 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
+          <div role="tablist" className="flex gap-4 md:gap-8 border-b-[1.5px] border-border mb-8 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
             {['description', 'ingredients', 'how to use'].map(tab => (
               <button
                 key={tab}
+                role="tab"
+                aria-selected={activeTab === tab}
+                id={`tab-${tab.replace(/\s+/g, '-')}`}
                 onClick={() => setActiveTab(tab)}
                 className={`flex-shrink-0 pb-4 text-[13px] md:text-[15px] font-bold uppercase tracking-wide capitalize transition-colors border-b-[2.5px] -mb-[1.5px] ${
                   activeTab === tab ? 'border-olive text-forest' : 'border-transparent text-forest/40 hover:text-forest/70'
@@ -413,32 +417,38 @@ export default function ProductDetailPage() {
           </div>
 
           {activeTab === 'description' && (
-            <p className="text-[16px] text-forest/75 leading-relaxed max-w-[640px]">
-              {product.description}
-            </p>
-          )}
-
-          {activeTab === 'ingredients' && (
-            <div className="max-w-[640px]">
-              {product.keyActives?.length > 0 && (
-                <p className="text-[16px] text-forest mb-4">
-                  <span className="font-bold">Key Actives:</span> {product.keyActives.join(', ')}
-                </p>
-              )}
-              <p className="text-[15px] text-forest/60 leading-relaxed">
-                {product.ingredients || 'Full ingredient list not available.'}
+            <div role="tabpanel" aria-labelledby="tab-description">
+              <p className="text-[16px] text-forest/75 leading-relaxed max-w-[640px]">
+                {product.description}
               </p>
             </div>
           )}
 
+          {activeTab === 'ingredients' && (
+            <div role="tabpanel" aria-labelledby="tab-ingredients">
+              <div className="max-w-[640px]">
+                {product.keyActives?.length > 0 && (
+                  <p className="text-[16px] text-forest mb-4">
+                    <span className="font-bold">Key Actives:</span> {product.keyActives.join(', ')}
+                  </p>
+                )}
+                <p className="text-[15px] text-forest/60 leading-relaxed">
+                  {product.ingredients || 'Full ingredient list not available.'}
+                </p>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'how to use' && (
-            <div className="max-w-[640px]">
-              <p className="text-[13px] font-bold uppercase tracking-wide text-olive mb-3">
-                Usage: {product.usageTime}
-              </p>
-              <p className="text-[16px] text-forest/75 leading-relaxed">
-                {product.howToUse || 'No usage instructions available.'}
-              </p>
+            <div role="tabpanel" aria-labelledby="tab-how-to-use">
+              <div className="max-w-[640px]">
+                <p className="text-[13px] font-bold uppercase tracking-wide text-olive mb-3">
+                  Usage: {product.usageTime}
+                </p>
+                <p className="text-[16px] text-forest/75 leading-relaxed">
+                  {product.howToUse || 'No usage instructions available.'}
+                </p>
+              </div>
             </div>
           )}
         </div>

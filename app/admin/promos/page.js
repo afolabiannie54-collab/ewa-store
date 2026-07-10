@@ -85,30 +85,32 @@ export default function AdminPromosPage() {
   }
 
   const toggleActive = async (promo) => {
-    await fetch(`/api/admin/promos/${promo._id}`, {
+    const res = await fetch(`/api/admin/promos/${promo._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ active: !promo.active })
     })
-    fetchPromos()
+    if (res.ok) fetchPromos()
   }
 
   const toggleOneTimePerCustomer = async (promo) => {
-    await fetch(`/api/admin/promos/${promo._id}`, {
+    const res = await fetch(`/api/admin/promos/${promo._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ oneTimePerCustomer: !promo.oneTimePerCustomer })
     })
-    fetchPromos()
+    if (res.ok) fetchPromos()
   }
 
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
-    await fetch(`/api/admin/promos/${deleteTarget._id}`, { method: 'DELETE' })
-    setDeleteTarget(null)
+    const res = await fetch(`/api/admin/promos/${deleteTarget._id}`, { method: 'DELETE' })
     setDeleting(false)
-    fetchPromos()
+    if (res.ok) {
+      setDeleteTarget(null)
+      fetchPromos()
+    }
   }
 
   const inputClass = 'w-full rounded-[12px] border-[2px] border-forest/15 bg-cream px-4 py-3 text-[14px] text-forest placeholder:text-forest/35 outline-none transition-colors focus:border-olive'
@@ -262,10 +264,10 @@ export default function AdminPromosPage() {
                       {new Date(promo.expiryDate).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="px-6 py-4">
-                      <input type="checkbox" checked={promo.active} onChange={() => toggleActive(promo)} className="accent-olive w-4 h-4 cursor-pointer" />
+                      <input type="checkbox" checked={promo.active} onChange={() => toggleActive(promo)} aria-label={`${promo.code} active`} className="accent-olive w-4 h-4 cursor-pointer" />
                     </td>
                     <td className="px-6 py-4">
-                      <input type="checkbox" checked={!!promo.oneTimePerCustomer} onChange={() => toggleOneTimePerCustomer(promo)} className="accent-olive w-4 h-4 cursor-pointer" />
+                      <input type="checkbox" checked={!!promo.oneTimePerCustomer} onChange={() => toggleOneTimePerCustomer(promo)} aria-label={`${promo.code} one time per customer`} className="accent-olive w-4 h-4 cursor-pointer" />
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button

@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Loader from '@/components/Loader'
 import ConfirmModal from '@/components/ConfirmModal'
 import AdminEmptyState from '@/components/AdminEmptyState'
+import Pagination from '@/components/Pagination'
 import StarRating from '@/components/StarRating'
 
 const FILTER_OPTIONS = [
@@ -16,54 +17,63 @@ export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
 
-  useEffect(() => { fetchReviews() }, [])
-
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
+    setLoading(true)
     try {
-      const res = await fetch('/api/admin/reviews')
+      const params = new URLSearchParams({ page })
+      if (filterStatus) params.set('status', filterStatus)
+      const res = await fetch(`/api/admin/reviews?${params}`)
       const data = await res.json()
       setReviews(data.reviews || [])
+      setTotal(data.total || 0)
+      setTotalPages(data.totalPages || 1)
     } catch (err) {
       console.error('Failed to load reviews')
     }
     setLoading(false)
+  }, [page, filterStatus])
+
+  useEffect(() => { fetchReviews() }, [fetchReviews])
+
+  const handleFilterChange = (key) => {
+    setFilterStatus(key)
+    setPage(1)
   }
 
   const handleApprove = async (id) => {
-    await fetch(`/api/admin/reviews/${id}`, {
+    const res = await fetch(`/api/admin/reviews/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ isApproved: true })
     })
-    fetchReviews()
+    if (res.ok) fetchReviews()
   }
 
   const handleReject = async (id) => {
-    await fetch(`/api/admin/reviews/${id}`, {
+    const res = await fetch(`/api/admin/reviews/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ isApproved: false })
     })
-    fetchReviews()
+    if (res.ok) fetchReviews()
   }
 
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
-    await fetch(`/api/admin/reviews/${deleteTarget._id}`, { method: 'DELETE' })
-    setDeleteTarget(null)
+    const res = await fetch(`/api/admin/reviews/${deleteTarget._id}`, { method: 'DELETE' })
     setDeleting(false)
-    fetchReviews()
+    if (res.ok) {
+      setDeleteTarget(null)
+      fetchReviews()
+    }
   }
-
-  const filteredReviews = filterStatus === 'approved'
-    ? reviews.filter(r => r.isApproved)
-    : filterStatus === 'pending'
-    ? reviews.filter(r => !r.isApproved)
-    : reviews
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -83,7 +93,7 @@ export default function AdminReviewsPage() {
         {FILTER_OPTIONS.map(f => (
           <button
             key={f.key}
-            onClick={() => setFilterStatus(f.key)}
+            onClick={() => handleFilterChange(f.key)}
             className={`rounded-full px-5 py-2.5 text-[13px] font-bold uppercase tracking-wide transition-colors ${
               filterStatus === f.key
                 ? 'bg-olive text-cream'
@@ -91,14 +101,15 @@ export default function AdminReviewsPage() {
             }`}
           >
             {f.label}
-            {f.key === '' && <span className={`ml-1.5 ${filterStatus === '' ? 'text-cream/70' : 'text-forest/40'}`}>({reviews.length})</span>}
-            {f.key === 'pending' && <span className={`ml-1.5 ${filterStatus === 'pending' ? 'text-cream/70' : 'text-forest/40'}`}>({reviews.filter(r => !r.isApproved).length})</span>}
-            {f.key === 'approved' && <span className={`ml-1.5 ${filterStatus === 'approved' ? 'text-cream/70' : 'text-forest/40'}`}>({reviews.filter(r => r.isApproved).length})</span>}
           </button>
         ))}
       </div>
 
-      {filteredReviews.length === 0 ? (
+      {total > 0 && (
+        <p className="text-[13px] text-forest/45 mb-4">{total} review{total !== 1 ? 's' : ''}</p>
+      )}
+
+      {reviews.length === 0 ? (
         <AdminEmptyState
           icon={<svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>}
           title="No reviews yet"
@@ -106,7 +117,7 @@ export default function AdminReviewsPage() {
         />
       ) : (
         <div className="flex flex-col gap-4">
-          {filteredReviews.map(review => (
+          {reviews.map(review => (
             <div key={review._id} className="rounded-[20px] border-[1.5px] border-border bg-surface p-6 md:p-7">
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="flex-1">
@@ -155,6 +166,8 @@ export default function AdminReviewsPage() {
           ))}
         </div>
       )}
+
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} />
 
       <ConfirmModal
         isOpen={!!deleteTarget}

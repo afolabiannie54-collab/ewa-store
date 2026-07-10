@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Loader from '@/components/Loader'
 import AdminEmptyState from '@/components/AdminEmptyState'
+import Pagination from '@/components/Pagination'
 
 const STATUS_FILTERS = ['', 'Pending', 'Approved', 'Rejected', 'Resolved']
 
@@ -18,21 +19,32 @@ export default function AdminIssuesPage() {
   const [issues, setIssues] = useState([])
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
 
-  useEffect(() => { fetchIssues() }, [])
-
-  const fetchIssues = async () => {
+  const fetchIssues = useCallback(async () => {
+    setLoading(true)
     try {
-      const res = await fetch('/api/admin/issues')
+      const params = new URLSearchParams({ page })
+      if (filterStatus) params.set('status', filterStatus)
+      const res = await fetch(`/api/admin/issues?${params}`)
       const data = await res.json()
       setIssues(data.issues || [])
+      setTotal(data.total || 0)
+      setTotalPages(data.totalPages || 1)
     } catch (err) {
       console.error('Failed to load issues')
     }
     setLoading(false)
-  }
+  }, [page, filterStatus])
 
-  const filteredIssues = filterStatus ? issues.filter(i => i.status === filterStatus) : issues
+  useEffect(() => { fetchIssues() }, [fetchIssues])
+
+  const handleFilterChange = (s) => {
+    setFilterStatus(s)
+    setPage(1)
+  }
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -52,7 +64,7 @@ export default function AdminIssuesPage() {
         {STATUS_FILTERS.map(s => (
           <button
             key={s}
-            onClick={() => setFilterStatus(s)}
+            onClick={() => handleFilterChange(s)}
             className={`rounded-full px-5 py-2.5 text-[13px] font-bold uppercase tracking-wide transition-colors ${
               filterStatus === s
                 ? 'bg-olive text-cream'
@@ -60,17 +72,16 @@ export default function AdminIssuesPage() {
             }`}
           >
             {s || 'All'}
-            {s && (
-              <span className={`ml-1.5 ${filterStatus === s ? 'text-cream/70' : 'text-forest/40'}`}>
-                ({issues.filter(i => i.status === s).length})
-              </span>
-            )}
           </button>
         ))}
       </div>
 
+      {total > 0 && (
+        <p className="text-[13px] text-forest/45 mb-4">{total} issue{total !== 1 ? 's' : ''}</p>
+      )}
+
       <div className="rounded-[20px] border-[1.5px] border-border bg-surface overflow-hidden">
-        {filteredIssues.length === 0 ? (
+        {issues.length === 0 ? (
           <AdminEmptyState
             icon={<svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg>}
             title="No issues reported"
@@ -89,10 +100,10 @@ export default function AdminIssuesPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredIssues.map((issue, i) => (
+              {issues.map((issue, i) => (
                 <tr
                   key={issue._id}
-                  className={`hover:bg-cream/60 transition-colors ${i < filteredIssues.length - 1 ? 'border-b-[1.5px] border-border' : ''}`}
+                  className={`hover:bg-cream/60 transition-colors ${i < issues.length - 1 ? 'border-b-[1.5px] border-border' : ''}`}
                 >
                   <td className="px-6 py-4 font-bold text-forest text-[14px]">{issue.orderId?.orderNumber || 'N/A'}</td>
                   <td className="px-6 py-4 text-[13px] text-forest">{issue.reasonType}</td>
@@ -119,6 +130,8 @@ export default function AdminIssuesPage() {
           </table>
         )}
       </div>
+
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} />
 
     </div>
   )

@@ -323,6 +323,7 @@ export default function AccountPage() {
           <h2 className="font-display font-bold text-forest text-[19px] mb-6">Change Password</h2>
 
           <div className="mb-4">
+            <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Current Password</label>
             <input
               type="password"
               placeholder="Current Password"
@@ -333,6 +334,7 @@ export default function AccountPage() {
             <FieldError message={passwordFieldErrors.currentPassword} />
           </div>
           <div className="mb-4">
+            <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">New Password</label>
             <input
               type="password"
               placeholder="New Password"
@@ -343,6 +345,7 @@ export default function AccountPage() {
             <FieldError message={passwordFieldErrors.newPassword} />
           </div>
           <div className="mb-6">
+            <label className="block text-[12px] font-bold uppercase tracking-wide text-forest mb-2">Confirm New Password</label>
             <input
               type="password"
               placeholder="Confirm New Password"

@@ -102,12 +102,9 @@ export default function Navbar() {
 
   const fetchCartCount = useCallback(() => {
     if (session) {
-      fetch('/api/cart')
+      fetch('/api/cart/count')
         .then(r => r.json())
-        .then(data => {
-          const count = (data.items || []).reduce((sum, item) => sum + item.quantity, 0)
-          setCartCount(count)
-        })
+        .then(data => setCartCount(data.count || 0))
         .catch(() => {})
     } else {
       try {
@@ -249,6 +246,9 @@ export default function Navbar() {
             <div className="relative hidden md:block" ref={accountRef}>
               <button
                 onClick={() => setAccountOpen(!accountOpen)}
+                aria-expanded={accountOpen}
+                aria-haspopup="true"
+                aria-label="Account menu"
                 className="text-[16px] font-semibold text-cream hover:text-olive transition-colors duration-200 flex items-center gap-1.5"
               >
                 {session ? 'Account' : 'Login'}
@@ -296,7 +296,14 @@ export default function Navbar() {
       </nav>
 
       {searchOpen && (
-        <div className="fixed inset-0 z-[60] bg-forest/97 flex items-start justify-center pt-32 px-6 overflow-y-auto" onClick={() => setSearchOpen(false)}>
+        <div
+          className="fixed inset-0 z-[60] bg-forest/97 flex items-start justify-center pt-32 px-6 overflow-y-auto"
+          onClick={() => setSearchOpen(false)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setSearchOpen(false) }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Search"
+        >
           <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg">
             <form onSubmit={handleSearch}>
               <input
@@ -389,7 +396,9 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <Link href="/cart" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-semibold text-text border-b border-border">Cart</Link>
+              {session?.user?.role !== 'admin' && (
+                <Link href="/cart" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-semibold text-text border-b border-border">Cart</Link>
+              )}
               <Link href="/track-order" onClick={() => setMobileOpen(false)} className="py-4 text-[18px] font-semibold text-text border-b border-border">Track Order</Link>
             </div>
 

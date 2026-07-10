@@ -8,6 +8,7 @@ import ProductCard from '@/components/ProductCard'
 import QuickAddModal from '@/components/QuickAddModal'
 import AdminBrowsingBanner from '@/components/AdminBrowsingBanner'
 import FadeInSection from '@/components/FadeInSection'
+import Pagination from '@/components/Pagination'
 import { useToast } from '@/lib/useToast'
 
 const SKIN_TYPES = ['Oily', 'Dry', 'Combination', 'Sensitive', 'Normal']
@@ -38,6 +39,8 @@ function ShopContent() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
+  const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
   const [categories, setCategories] = useState([])
   const [wishlistIds, setWishlistIds] = useState([])
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false)
@@ -56,7 +59,8 @@ function ShopContent() {
     search: searchParams.get('search') || '',
     sort: '',
     minPrice: '',
-    maxPrice: ''
+    maxPrice: '',
+    page: 1
   })
   const [priceInput, setPriceInput] = useState({ min: '', max: '' })
   const priceTimerRef = useRef(null)
@@ -73,7 +77,7 @@ function ShopContent() {
       return
     }
     const timer = setTimeout(() => {
-      setFilters(prev => ({ ...prev, search: searchInput }))
+      setFilters(prev => ({ ...prev, search: searchInput, page: 1 }))
     }, 300)
     return () => clearTimeout(timer)
   }, [searchInput])
@@ -92,6 +96,7 @@ function ShopContent() {
       skinType: searchParams.get('skinType') || '',
       skinConcern: searchParams.get('skinConcern') || '',
       search: newSearch,
+      page: 1,
     }))
   }, [searchParams])
 
@@ -127,12 +132,15 @@ function ShopContent() {
     if (filters.sort) params.set('sort', filters.sort)
     if (filters.minPrice) params.set('minPrice', filters.minPrice)
     if (filters.maxPrice) params.set('maxPrice', filters.maxPrice)
+    params.set('page', filters.page || 1)
 
     try {
       const res = await fetch(`/api/products?${params.toString()}`)
       if (!res.ok) { setFetchError(true); setLoading(false); return }
       const data = await res.json()
       setProducts(data.products || [])
+      setTotal(data.total || 0)
+      setTotalPages(data.totalPages || 1)
     } catch {
       setFetchError(true)
     }
@@ -141,10 +149,10 @@ function ShopContent() {
 
   const fetchWishlist = async () => {
     try {
-      const res = await fetch('/api/users/me/wishlist')
+      const res = await fetch('/api/users/me/wishlist/ids')
       if (!res.ok) return
       const data = await res.json()
-      setWishlistIds((data.wishlist || []).map(p => p._id))
+      setWishlistIds(data.ids || [])
     } catch {
       // ignore
     }
@@ -179,14 +187,14 @@ function ShopContent() {
   }
 
   const updateFilter = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: prev[key] === value ? '' : value }))
+    setFilters(prev => ({ ...prev, [key]: prev[key] === value ? '' : value, page: 1 }))
   }
 
   // Debounce price range inputs
   const applyPriceFilter = (min, max) => {
     clearTimeout(priceTimerRef.current)
     priceTimerRef.current = setTimeout(() => {
-      setFilters(prev => ({ ...prev, minPrice: min, maxPrice: max }))
+      setFilters(prev => ({ ...prev, minPrice: min, maxPrice: max, page: 1 }))
     }, 500)
   }
 
@@ -210,7 +218,7 @@ function ShopContent() {
           Shop
         </h1>
         <p className="text-olive text-[13px] font-bold uppercase tracking-[0.15em] mb-10">
-          {loading ? 'Loading products' : `${products.length} product${products.length !== 1 ? 's' : ''}`}
+          {loading ? 'Loading products' : `${total} product${total !== 1 ? 's' : ''}`}
         </p>
 
         {isAdmin && <AdminBrowsingBanner />}
@@ -219,6 +227,7 @@ function ShopContent() {
         <div className="flex flex-wrap gap-2.5 md:gap-3.5 mb-7">
           <button
             onClick={() => updateFilter('category', '')}
+            aria-pressed={!filters.category}
             className={`rounded-full px-5 md:px-7 py-2.5 md:py-3.5 text-[13px] md:text-[15px] font-bold uppercase tracking-wide transition-colors ${
               !filters.category ? 'bg-olive text-cream' : 'bg-surface border-[1.5px] border-border text-forest hover:border-olive'
             }`}
@@ -229,6 +238,7 @@ function ShopContent() {
             <button
               key={cat}
               onClick={() => updateFilter('category', cat)}
+              aria-pressed={filters.category === cat}
               className={`rounded-full px-5 md:px-7 py-2.5 md:py-3.5 text-[13px] md:text-[15px] font-bold uppercase tracking-wide transition-colors ${
                 filters.category === cat ? 'bg-olive text-cream' : 'bg-surface border-[1.5px] border-border text-forest hover:border-olive'
               }`}
@@ -266,7 +276,7 @@ function ShopContent() {
                   <button
                     key={option.value}
                     onClick={() => {
-                      setFilters({ ...filters, sort: option.value })
+                      setFilters({ ...filters, sort: option.value, page: 1 })
                       setSortOpen(false)
                     }}
                     className={`block w-full text-left px-5 md:px-6 py-3 md:py-3.5 text-[14px] md:text-[15px] transition-colors ${
@@ -307,6 +317,7 @@ function ShopContent() {
                     <button
                       key={type}
                       onClick={() => updateFilter('skinType', type)}
+                      aria-pressed={filters.skinType === type}
                       className={`rounded-full px-4 md:px-5 py-2 md:py-2.5 text-[13px] md:text-[15px] font-medium transition-colors ${
                         filters.skinType === type
                           ? 'bg-olive text-cream'
@@ -328,6 +339,7 @@ function ShopContent() {
                     <button
                       key={concern}
                       onClick={() => updateFilter('skinConcern', concern)}
+                      aria-pressed={filters.skinConcern === concern}
                       className={`rounded-full px-4 md:px-5 py-2 md:py-2.5 text-[13px] md:text-[15px] font-medium transition-colors ${
                         filters.skinConcern === concern
                           ? 'bg-olive text-cream'
@@ -371,7 +383,7 @@ function ShopContent() {
               <button
                 onClick={() => {
                   setPriceInput({ min: '', max: '' })
-                  setFilters(prev => ({ ...prev, skinType: '', skinConcern: '', minPrice: '', maxPrice: '' }))
+                  setFilters(prev => ({ ...prev, skinType: '', skinConcern: '', minPrice: '', maxPrice: '', page: 1 }))
                 }}
                 className="mt-6 text-[13px] md:text-[14px] font-bold text-error hover:underline"
               >
@@ -407,6 +419,12 @@ function ShopContent() {
           </div>
         )}
         </FadeInSection>
+
+        <Pagination
+          page={filters.page || 1}
+          totalPages={totalPages}
+          onChange={(p) => setFilters(prev => ({ ...prev, page: p }))}
+        />
       </div>
 
       <QuickAddModal

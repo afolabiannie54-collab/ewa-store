@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Loader from '@/components/Loader'
+import ConfirmModal from '@/components/ConfirmModal'
 
 const statusStyle = {
   Pending: { background: '#FFF3CD', color: '#8A6D00' },
@@ -27,6 +28,7 @@ export default function AdminOrderDetailPage() {
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState('')
+  const [confirmStatus, setConfirmStatus] = useState(null)
 
   useEffect(() => { fetchOrder() }, [orderId])
 
@@ -53,7 +55,10 @@ export default function AdminOrderDetailPage() {
       })
       const data = await res.json()
       if (!res.ok) setError(data.error)
-      else fetchOrder()
+      else {
+        setConfirmStatus(null)
+        fetchOrder()
+      }
     } catch (err) {
       setError('Something went wrong')
     }
@@ -160,11 +165,21 @@ export default function AdminOrderDetailPage() {
 
             {nextStatus && (
               <button
-                onClick={() => handleStatusUpdate(nextStatus)}
+                onClick={() => setConfirmStatus(nextStatus)}
                 disabled={updating}
                 className="w-full mt-5 rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-wide py-4 hover:bg-forest transition-colors disabled:opacity-60"
               >
-                {updating ? <Loader size="sm" color="cream" /> : `Mark as ${nextStatus}`}
+                {`Mark as ${nextStatus}`}
+              </button>
+            )}
+
+            {order.status !== 'Cancelled' && order.status !== 'Delivered' && (
+              <button
+                onClick={() => setConfirmStatus('Cancelled')}
+                disabled={updating}
+                className="w-full mt-3 rounded-full border-[1.5px] border-error/40 text-error text-[13px] font-bold uppercase tracking-wide py-3.5 hover:bg-error/5 transition-colors disabled:opacity-60"
+              >
+                Cancel Order
               </button>
             )}
 
@@ -172,13 +187,24 @@ export default function AdminOrderDetailPage() {
               <p className="text-[13px] text-forest/50 mt-4">Order lifecycle complete.</p>
             )}
             {order.status === 'Cancelled' && (
-              <p className="text-[13px] text-error mt-4">Cancelled by customer.</p>
+              <p className="text-[13px] text-error mt-4">Cancelled.</p>
             )}
           </div>
 
         </div>
 
       </div>
+
+      <ConfirmModal
+        isOpen={!!confirmStatus}
+        onClose={() => setConfirmStatus(null)}
+        onConfirm={() => handleStatusUpdate(confirmStatus)}
+        title={confirmStatus === 'Cancelled' ? 'Cancel this order?' : `Mark as ${confirmStatus}?`}
+        message={confirmStatus === 'Cancelled' ? 'This will cancel the order permanently.' : `Update this order's status to ${confirmStatus}.`}
+        confirmLabel={confirmStatus === 'Cancelled' ? 'Cancel Order' : `Mark as ${confirmStatus}`}
+        danger={confirmStatus === 'Cancelled'}
+        loading={updating}
+      />
     </div>
   )
 }

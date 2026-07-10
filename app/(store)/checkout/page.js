@@ -33,6 +33,7 @@ export default function CheckoutPage() {
   const [promoInput, setPromoInput] = useState('')
   const [promoApplied, setPromoApplied] = useState(null)
   const [promoError, setPromoError] = useState('')
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false)
   const [shippingRates, setShippingRates] = useState([])
 
   useEffect(() => {
@@ -137,20 +138,19 @@ export default function CheckoutPage() {
   const shippingCost = shippingTier ? (shippingRates.find(r => r.tier === shippingTier)?.rate || 0) : 0
 
   const discount = promoApplied?.discount || 0
-  const total = subtotal + shippingCost - discount
+  const total = Math.max(0, subtotal + shippingCost - discount)
 
   const handleApplyPromo = async () => {
     setPromoError('')
-    if (!promoInput) return
-
+    if (!promoInput.trim()) return
+    setIsApplyingPromo(true)
     try {
       const res = await fetch('/api/promos/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify({ code: promoInput, subtotal, guestEmail: form.guestEmail })
+        body: JSON.stringify({ code: promoInput.trim(), subtotal, guestEmail: form.guestEmail })
       })
       const data = await res.json()
-
       if (!res.ok) {
         setPromoError(data.error)
         setPromoApplied(null)
@@ -160,6 +160,7 @@ export default function CheckoutPage() {
     } catch (err) {
       setPromoError('Could not validate promo code')
     }
+    setIsApplyingPromo(false)
   }
 
   const handlePayment = async (e) => {
@@ -233,7 +234,6 @@ export default function CheckoutPage() {
         ref: data.reference,
         metadata: data.metadata,
         callback: function (response) {
-          clearGuestCart()
           router.push(`/checkout/verify?reference=${response.reference}`)
         },
         onClose: function () {
@@ -467,13 +467,25 @@ export default function CheckoutPage() {
               <button
                 type="button"
                 onClick={handleApplyPromo}
-                className="rounded-[10px] bg-forest text-cream px-5 py-2.5 text-[13px] font-bold hover:bg-olive transition-colors"
+                disabled={isApplyingPromo}
+                className="rounded-[10px] bg-forest text-cream px-5 py-2.5 text-[13px] font-bold hover:bg-olive transition-colors disabled:opacity-60"
               >
-                Apply
+                {isApplyingPromo ? '…' : 'Apply'}
               </button>
             </div>
             {promoError && <p className="text-[12px] text-error mb-4">{promoError}</p>}
-            {promoApplied && <p className="text-[12px] font-medium text-success mb-4">Code applied: -₦{discount.toLocaleString()}</p>}
+            {promoApplied && (
+              <div className="flex items-center gap-3 mb-4">
+                <p className="text-[12px] font-medium text-success">Code applied: -₦{discount.toLocaleString()}</p>
+                <button
+                  type="button"
+                  onClick={() => { setPromoApplied(null); setPromoInput('') }}
+                  className="text-[11px] font-bold text-forest/40 hover:text-error transition-colors underline"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
 
             <div className="border-t-[1.5px] border-border pt-5 mt-2 flex flex-col gap-2.5">
               <div className="flex justify-between text-[14px] text-forest">

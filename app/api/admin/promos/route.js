@@ -32,6 +32,10 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    if (discountType === 'percentage' && (Number(discountValue) <= 0 || Number(discountValue) > 100)) {
+      return NextResponse.json({ error: 'Percentage discount must be between 1 and 100' }, { status: 400 })
+    }
+
     const existing = await PromoCode.findOne({ code: code.toUpperCase() })
     if (existing) {
       return NextResponse.json({ error: 'This code already exists' }, { status: 409 })

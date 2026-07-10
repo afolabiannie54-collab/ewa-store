@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import Loader from '@/components/Loader'
@@ -26,6 +26,28 @@ export default function QuickAddModal({ slug, product: productProp, isOpen, onCl
   const [quantity, setQuantity] = useState(1)
   const [message, setMessage] = useState('')
   const [adding, setAdding] = useState(false)
+  const modalRef = useRef(null)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKey = (e) => {
+      if (e.key === 'Escape') { onClose(); return }
+      if (e.key !== 'Tab') return
+      const focusable = modalRef.current?.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+      if (!focusable || focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus() }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [isOpen, onClose])
 
   useEffect(() => {
     if (isOpen && (slug || productProp)) {
@@ -120,6 +142,10 @@ export default function QuickAddModal({ slug, product: productProp, isOpen, onCl
       onClick={onClose}
     >
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Quick add to cart"
         className="relative w-full max-w-[480px] rounded-[20px] bg-surface overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >

@@ -32,12 +32,14 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Category name is required' }, { status: 400 })
     }
 
-    const existing = await Category.findOne({ name: name.trim() })
+    const trimmedName = name.trim()
+    const escaped = trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const existing = await Category.findOne({ name: { $regex: new RegExp(`^${escaped}$`, 'i') } })
     if (existing) {
       return NextResponse.json({ error: 'This category already exists' }, { status: 409 })
     }
 
-    const category = await Category.create({ name: name.trim() })
+    const category = await Category.create({ name: trimmedName })
 
     return NextResponse.json({ category }, { status: 201 })
 

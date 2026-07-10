@@ -19,6 +19,7 @@ const statusStyle = {
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -39,17 +40,22 @@ export default function AdminOrdersPage() {
 
   const fetchOrders = useCallback(async () => {
     setLoading(true)
+    setFetchError(false)
     try {
       const params = new URLSearchParams({ page })
       if (statusFilter) params.set('status', statusFilter)
       if (debouncedSearch) params.set('search', debouncedSearch)
       const res = await fetch(`/api/admin/orders?${params}`)
       const data = await res.json()
-      setOrders(data.orders || [])
-      setTotal(data.total || 0)
-      setTotalPages(data.totalPages || 1)
+      if (!res.ok) {
+        setFetchError(true)
+      } else {
+        setOrders(data.orders || [])
+        setTotal(data.total || 0)
+        setTotalPages(data.totalPages || 1)
+      }
     } catch {
-      // leave previous state visible
+      setFetchError(true)
     }
     setLoading(false)
   }, [page, statusFilter, debouncedSearch])
@@ -100,6 +106,18 @@ export default function AdminOrdersPage() {
       {loading ? (
         <div className="flex items-center justify-center py-24">
           <Loader size="lg" />
+        </div>
+      ) : fetchError ? (
+        <div className="flex items-center justify-center py-24">
+          <div className="text-center">
+            <p className="text-forest/60 text-[14px] mb-4">Failed to load orders.</p>
+            <button
+              onClick={fetchOrders}
+              className="rounded-full bg-olive text-cream text-[13px] font-bold uppercase tracking-[0.1em] px-7 py-3 hover:bg-forest transition-colors"
+            >
+              Retry
+            </button>
+          </div>
         </div>
       ) : (
         <>

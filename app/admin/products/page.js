@@ -94,7 +94,7 @@ export default function AdminProductsPage() {
       const res = await fetch(`/api/admin/products/${product._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...product, isFeatured: !product.isFeatured, images: product.images })
+        body: JSON.stringify({ isFeatured: !product.isFeatured })
       })
       if (res.ok) fetchProducts()
     } catch {

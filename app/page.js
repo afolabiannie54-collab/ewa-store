@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
 import ProductCard from '@/components/ProductCard'
@@ -11,6 +12,7 @@ import { useToast } from '@/lib/useToast'
 
 export default function HomePage() {
   const showToast = useToast()
+  const { data: session } = useSession()
   const [featured, setFeatured] = useState([])
   const [loading, setLoading] = useState(true)
   const [wishlistIds, setWishlistIds] = useState([])
@@ -20,9 +22,12 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchFeatured()
-    fetchWishlist()
     fetchFeaturedReviews()
   }, [])
+
+  useEffect(() => {
+    if (session) fetchWishlist()
+  }, [session])
 
   const fetchFeatured = async () => {
     try {
@@ -37,10 +42,10 @@ export default function HomePage() {
 
   const fetchWishlist = async () => {
     try {
-      const res = await fetch('/api/users/me/wishlist')
+      const res = await fetch('/api/users/me/wishlist/ids')
       if (!res.ok) return
       const data = await res.json()
-      setWishlistIds((data.wishlist || []).map(p => p._id))
+      setWishlistIds(data.ids || [])
     } catch (err) {
       // not logged in or no wishlist yet — fine to ignore
     }
@@ -60,15 +65,15 @@ export default function HomePage() {
   const handleWishlistToggle = async (productId, currentlyWishlisted) => {
     try {
       if (currentlyWishlisted) {
-        await fetch(`/api/users/me/wishlist/${productId}`, { method: 'DELETE' })
-        setWishlistIds(prev => prev.filter(id => id !== productId))
+        const res = await fetch(`/api/users/me/wishlist/${productId}`, { method: 'DELETE' })
+        if (res.ok) setWishlistIds(prev => prev.filter(id => id !== productId))
       } else {
-        await fetch('/api/users/me/wishlist', {
+        const res = await fetch('/api/users/me/wishlist', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productId })
         })
-        setWishlistIds(prev => [...prev, productId])
+        if (res.ok) setWishlistIds(prev => [...prev, productId])
       }
     } catch (err) {
       console.error('Wishlist toggle failed')
