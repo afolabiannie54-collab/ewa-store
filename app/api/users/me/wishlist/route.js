@@ -13,7 +13,10 @@ export async function GET(req) {
 
     await connectDB()
 
-    const dbUser = await User.findById(user.id).populate('wishlist')
+    const dbUser = await User.findById(user.id).populate({
+      path: 'wishlist',
+      match: { status: 'Active' }
+    })
 
     return NextResponse.json({ wishlist: dbUser.wishlist }, { status: 200 })
 

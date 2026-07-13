@@ -34,7 +34,8 @@ export async function GET(req) {
           size: item.size,
           price: variant.price,
           availableStock: variant.stockQuantity,
-          quantity: item.quantity
+          quantity: item.quantity,
+          unavailable: product.status !== 'Active'
         }
       })
       .filter(Boolean)
@@ -63,8 +64,8 @@ export async function POST(req) {
     }
 
     const product = await Product.findById(productId)
-    if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    if (!product || product.status !== 'Active') {
+      return NextResponse.json({ error: 'This product is no longer available' }, { status: 404 })
     }
 
     const variant = product.variants.find(v => v.size === size)

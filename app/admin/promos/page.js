@@ -42,9 +42,23 @@ export default function AdminPromosPage() {
   const validate = () => {
     const errors = {}
     if (!isRequired(form.code)) errors.code = 'Code is required'
-    if (!isRequired(form.discountValue)) errors.discountValue = 'Value is required'
-    if (!isRequired(form.expiryDate)) errors.expiryDate = 'Expiry date is required'
-    if (!isRequired(form.usageLimit)) errors.usageLimit = 'Usage limit is required'
+    if (!isRequired(form.discountValue)) {
+      errors.discountValue = 'Value is required'
+    } else if (Number(form.discountValue) <= 0) {
+      errors.discountValue = 'Value must be greater than 0'
+    } else if (form.discountType === 'percentage' && Number(form.discountValue) > 100) {
+      errors.discountValue = 'Percentage cannot exceed 100'
+    }
+    if (!isRequired(form.expiryDate)) {
+      errors.expiryDate = 'Expiry date is required'
+    } else if (new Date(form.expiryDate) <= new Date()) {
+      errors.expiryDate = 'Expiry date must be in the future'
+    }
+    if (!isRequired(form.usageLimit)) {
+      errors.usageLimit = 'Usage limit is required'
+    } else if (Number(form.usageLimit) < 1) {
+      errors.usageLimit = 'Usage limit must be at least 1'
+    }
     return errors
   }
 

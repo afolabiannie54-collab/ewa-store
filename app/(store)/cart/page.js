@@ -132,6 +132,7 @@ export default function CartPage() {
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const hasOverstock = items.some(i => i.quantity > i.availableStock)
+  const hasUnavailable = items.some(i => i.unavailable)
 
   if (loading) {
     return (
@@ -179,10 +180,11 @@ export default function CartPage() {
             <div>
               {items.map((item) => {
                 const outOfStock = item.availableStock === 0
+                const unavailable = item.unavailable
                 return (
                   <div
                     key={`${item.productId}-${item.size}`}
-                    className={`flex gap-5 py-6 border-b-[1.5px] border-border transition-opacity ${outOfStock ? 'opacity-60' : ''}`}
+                    className={`flex gap-5 py-6 border-b-[1.5px] border-border transition-opacity ${outOfStock || unavailable ? 'opacity-60' : ''}`}
                   >
                     <div className="relative w-[100px] h-[100px] rounded-[16px] overflow-hidden bg-surface border-[1.5px] border-border flex-shrink-0">
                       {item.image && (
@@ -191,15 +193,25 @@ export default function CartPage() {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <Link href={`/shop/${item.slug}`} className="font-display font-bold text-forest text-[19px] md:text-[21px] hover:text-olive transition-colors">
-                        {item.name}
-                      </Link>
+                      {unavailable ? (
+                        <span className="font-display font-bold text-forest text-[19px] md:text-[21px]">
+                          {item.name}
+                        </span>
+                      ) : (
+                        <Link href={`/shop/${item.slug}`} className="font-display font-bold text-forest text-[19px] md:text-[21px] hover:text-olive transition-colors">
+                          {item.name}
+                        </Link>
+                      )}
                       <p className="text-[13px] text-forest/50 mt-1">Size: {item.size}</p>
                       <p className="font-display font-bold text-forest text-[18px] mt-2">
                         ₦{item.price.toLocaleString()}
                       </p>
 
-                      {outOfStock ? (
+                      {unavailable ? (
+                        <span className="inline-flex items-center text-[11px] font-bold uppercase tracking-wide text-error bg-error/8 px-2.5 py-1 rounded-full mt-2">
+                          No longer available
+                        </span>
+                      ) : outOfStock ? (
                         <span className="inline-flex items-center text-[11px] font-bold uppercase tracking-wide text-error bg-error/8 px-2.5 py-1 rounded-full mt-2">
                           Out of Stock
                         </span>
@@ -219,25 +231,27 @@ export default function CartPage() {
                         <TrashIcon className="w-5 h-5" />
                       </button>
 
-                      <div className="flex items-center rounded-full border-[1.5px] border-border">
-                        <button
-                          onClick={() => handleUpdateQuantity(item.productId, item.size, item.quantity - 1)}
-                          disabled={outOfStock || isUpdating}
-                          aria-label={`Decrease quantity of ${item.name}`}
-                          className="w-9 h-9 flex items-center justify-center text-forest text-[16px] hover:bg-surface transition-colors rounded-l-full disabled:opacity-30"
-                        >
-                          −
-                        </button>
-                        <span className="w-9 text-center text-[14px] font-bold text-forest" aria-label={`Quantity: ${item.quantity}`}>{item.quantity}</span>
-                        <button
-                          onClick={() => handleUpdateQuantity(item.productId, item.size, item.quantity + 1)}
-                          disabled={item.quantity >= item.availableStock || isUpdating}
-                          aria-label={`Increase quantity of ${item.name}`}
-                          className="w-9 h-9 flex items-center justify-center text-forest text-[16px] hover:bg-surface transition-colors rounded-r-full disabled:opacity-30"
-                        >
-                          +
-                        </button>
-                      </div>
+                      {!unavailable && (
+                        <div className="flex items-center rounded-full border-[1.5px] border-border">
+                          <button
+                            onClick={() => handleUpdateQuantity(item.productId, item.size, item.quantity - 1)}
+                            disabled={outOfStock || isUpdating}
+                            aria-label={`Decrease quantity of ${item.name}`}
+                            className="w-9 h-9 flex items-center justify-center text-forest text-[16px] hover:bg-surface transition-colors rounded-l-full disabled:opacity-30"
+                          >
+                            −
+                          </button>
+                          <span className="w-9 text-center text-[14px] font-bold text-forest" aria-label={`Quantity: ${item.quantity}`}>{item.quantity}</span>
+                          <button
+                            onClick={() => handleUpdateQuantity(item.productId, item.size, item.quantity + 1)}
+                            disabled={item.quantity >= item.availableStock || isUpdating}
+                            aria-label={`Increase quantity of ${item.name}`}
+                            className="w-9 h-9 flex items-center justify-center text-forest text-[16px] hover:bg-surface transition-colors rounded-r-full disabled:opacity-30"
+                          >
+                            +
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )
@@ -264,6 +278,15 @@ export default function CartPage() {
                   </div>
                   <p className="text-[12px] text-forest/45 text-center mt-3">
                     Admin accounts cannot complete purchases.
+                  </p>
+                </div>
+              ) : hasUnavailable ? (
+                <div>
+                  <div className="block text-center w-full rounded-full bg-border text-muted text-[14px] font-bold uppercase tracking-[0.1em] py-[18px] cursor-not-allowed">
+                    Proceed to Checkout
+                  </div>
+                  <p className="text-[12px] text-error/80 text-center mt-3">
+                    Remove unavailable items to continue.
                   </p>
                 </div>
               ) : hasOverstock ? (

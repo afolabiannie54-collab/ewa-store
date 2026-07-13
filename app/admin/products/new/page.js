@@ -111,6 +111,14 @@ export default function NewProductPage() {
       setError('At least one complete variant (size, price, stock) is required')
       return
     }
+    if (validVariants.some(v => Number(v.price) <= 0)) {
+      setError('All variant prices must be greater than ₦0')
+      return
+    }
+    if (validVariants.some(v => Number(v.stockQuantity) < 0)) {
+      setError('Stock quantity cannot be negative')
+      return
+    }
 
     setLoading(true)
 
@@ -362,12 +370,12 @@ export default function NewProductPage() {
                         className={`${variantInputClass} col-span-3`}
                       />
                       <input
-                        type="number" placeholder="Price" value={variant.price}
+                        type="number" placeholder="Price" value={variant.price} min="0.01" step="0.01"
                         onChange={(e) => updateVariant(i, 'price', e.target.value)}
                         className={`${variantInputClass} col-span-2`}
                       />
                       <input
-                        type="number" placeholder="Qty" value={variant.stockQuantity}
+                        type="number" placeholder="Qty" value={variant.stockQuantity} min="0" step="1"
                         onChange={(e) => updateVariant(i, 'stockQuantity', e.target.value)}
                         className={variantInputClass}
                       />

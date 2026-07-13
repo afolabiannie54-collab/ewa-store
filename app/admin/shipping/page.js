@@ -35,6 +35,11 @@ export default function AdminShippingPage() {
   }
 
   const saveEdit = async (id) => {
+    const rate = Number(editValue)
+    if (isNaN(rate) || rate < 0) {
+      setSaveError('Rate cannot be negative')
+      return
+    }
     setSaving(true)
     setSaveError('')
     try {
@@ -86,6 +91,7 @@ export default function AdminShippingPage() {
                   <input
                     type="number"
                     value={editValue}
+                    min="0"
                     onChange={(e) => { setEditValue(e.target.value); setSaveError('') }}
                     className="w-[110px] rounded-[10px] border-[2px] border-olive bg-cream px-3.5 py-2.5 text-[14px] font-bold text-forest outline-none"
                     autoFocus

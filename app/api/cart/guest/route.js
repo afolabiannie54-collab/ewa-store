@@ -29,7 +29,8 @@ export async function POST(req) {
         size: item.size,
         price: variant.price,
         availableStock: variant.stockQuantity,
-        quantity: Math.min(item.quantity, variant.stockQuantity)
+        quantity: Math.min(item.quantity, variant.stockQuantity),
+        unavailable: product.status !== 'Active'
       })
     }
 
