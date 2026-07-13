@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import SessionWrapper from "@/components/SessionWrapper";
 import Footer from "@/components/Footer";
 import BackToTop from "@/components/BackToTop";
+import ScrollToTop from "@/components/ScrollToTop";
 import SageChatWidget from "@/components/SageChatWidget";
 import { ToastProvider } from "@/lib/useToast";
 
@@ -38,6 +39,7 @@ export default function RootLayout({ children }) {
         <Script src="https://js.paystack.co/v1/inline.js" strategy="beforeInteractive" />
       <SessionWrapper>
         <ToastProvider>
+          <ScrollToTop />
           <Navbar />
           {children}
           <Footer />
