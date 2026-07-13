@@ -6,10 +6,13 @@ import Loader from '@/components/Loader'
 import FieldError from '@/components/FieldError'
 import { isValidEmail, isRequired } from '@/lib/validation'
 
-function TrackIcon(props) {
+function TruckIcon(props) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M3 12h4l3-9 4 18 3-9h4" />
+      <path d="M1 3h15v13H1z" />
+      <path d="M16 8h4l3 4v4h-7V8z" />
+      <circle cx="5.5" cy="18.5" r="2.5" />
+      <circle cx="18.5" cy="18.5" r="2.5" />
     </svg>
   )
 }
@@ -73,17 +76,17 @@ function TrackOrderContent() {
     <div className="bg-forest min-h-screen">
       <div className="max-w-[1320px] mx-auto px-6 md:px-12 py-16 md:py-24">
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start max-w-[560px] mx-auto lg:max-w-none">
 
           {/* LEFT: BIG STATEMENT */}
-          <div>
-            <div className="w-14 h-14 rounded-full bg-cream/10 flex items-center justify-center mb-8">
-              <TrackIcon className="w-6 h-6 text-cream" />
+          <div className="text-center lg:text-left">
+            <div className="w-14 h-14 rounded-full bg-cream/10 flex items-center justify-center mb-8 mx-auto lg:mx-0">
+              <TruckIcon className="w-6 h-6 text-cream" />
             </div>
             <h1 className="font-display font-bold text-cream text-[52px] md:text-[76px] leading-[0.95] mb-6" style={{ letterSpacing: '-0.03em' }}>
               Where&apos;s your<br />order?
             </h1>
-            <p className="text-cream/60 text-[16px] leading-relaxed max-w-[400px]">
+            <p className="text-cream/60 text-[16px] leading-relaxed max-w-[400px] mx-auto lg:mx-0">
               Pop in your order number and the email you checked out with — we&apos;ll pull up exactly where things stand.
             </p>
           </div>
