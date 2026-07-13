@@ -52,6 +52,13 @@
   }
 }
 
+/* Prevent iOS Safari from zooming on input focus — must be outside @layer to beat Tailwind utilities */
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+textarea,
+select {
+  font-size: 16px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

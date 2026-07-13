@@ -22,6 +22,10 @@ const taiHeritagePro = Tai_Heritage_Pro({
 export const metadata = {
   title: "EWA — Clean Skincare",
   description: "Clean skincare for every skin type. Formulated with intention, made for you.",
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({ children }) {
