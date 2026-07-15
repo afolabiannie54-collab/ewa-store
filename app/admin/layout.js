@@ -67,6 +67,14 @@ function InquiriesIcon(props) {
     </svg>
   )
 }
+function UsersIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="9" cy="7" r="3.5" /><path d="M1.5 20.5c0-4 3.4-7 7.5-7s7.5 3 7.5 7" />
+      <circle cx="18" cy="8" r="2.5" /><path d="M22.5 20.5c0-2.8-1.9-5.1-4.5-6" />
+    </svg>
+  )
+}
 function CollapseIcon(props) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -80,6 +88,7 @@ const NAV_LINKS = [
   { href: '/admin/products', label: 'Products', icon: ProductsIcon, badgeKey: 'outOfStockProducts' },
   { href: '/admin/categories', label: 'Categories', icon: CategoriesIcon },
   { href: '/admin/orders', label: 'Orders', icon: OrdersIcon, badgeKey: 'pendingOrders' },
+  { href: '/admin/users', label: 'Users', icon: UsersIcon },
   { href: '/admin/issues', label: 'Issues', icon: IssuesIcon, badgeKey: 'pendingIssues' },
   { href: '/admin/reviews', label: 'Reviews', icon: ReviewsIcon, badgeKey: 'pendingReviews' },
   { href: '/admin/promos', label: 'Promo Codes', icon: PromosIcon },

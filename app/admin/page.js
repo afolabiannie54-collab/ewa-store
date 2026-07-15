@@ -102,6 +102,7 @@ export default function AdminDashboard() {
   const quickActions = [
     { label: 'Add Product', href: '/admin/products/new' },
     { label: 'View Orders', href: '/admin/orders' },
+    { label: 'View Users', href: '/admin/users' },
     { label: 'View Issues', href: '/admin/issues' },
     { label: 'Manage Reviews', href: '/admin/reviews' },
     { label: 'Promo Codes', href: '/admin/promos' },
