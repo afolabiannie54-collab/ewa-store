@@ -155,14 +155,14 @@ export default function AdminUsersPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-[14px]">
                 <thead>
-                  <tr className="border-b-[1.5px] border-border">
-                    <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-forest/45">Name</th>
-                    <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-forest/45">Email</th>
-                    <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-forest/45">Role</th>
-                    <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-forest/45">Joined</th>
-                    <th className="text-right px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-forest/45">Orders</th>
-                    <th className="text-right px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-forest/45">Total Spent</th>
-                    <th className="text-center px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-forest/45">Verified</th>
+                  <tr className="bg-forest">
+                    <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Name</th>
+                    <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Email</th>
+                    <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Role</th>
+                    <th className="text-left px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Joined</th>
+                    <th className="text-right px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Orders</th>
+                    <th className="text-right px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Total Spent</th>
+                    <th className="text-center px-6 py-4 text-[11px] font-bold uppercase tracking-wide text-cream/70">Verified</th>
                   </tr>
                 </thead>
                 <tbody>
