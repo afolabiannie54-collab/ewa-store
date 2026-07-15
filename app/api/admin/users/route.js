@@ -1,10 +1,22 @@
 import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
-import Order from '@/models/Order'
 import { requireAdmin } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
 const PAGE_SIZE = 20
+
+const SORT_MAP = {
+  newest: { createdAt: -1 },
+  orders: { orderCount: -1, createdAt: -1 },
+  spent: { totalSpent: -1, createdAt: -1 },
+}
+
+const SENSITIVE_FIELDS = {
+  password: 0, addresses: 0, wishlist: 0,
+  verificationOTP: 0, verificationOTPExpiry: 0,
+  pendingEmail: 0, emailChangeOTP: 0, emailChangeOTPExpiry: 0,
+  resetPasswordOTP: 0, resetPasswordOTPExpiry: 0,
+}
 
 export async function GET(req) {
   try {
@@ -15,51 +27,64 @@ export async function GET(req) {
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
     const search = searchParams.get('search')?.trim() || ''
     const role = searchParams.get('role') || ''
+    const sort = searchParams.get('sort') || 'newest'
 
-    const query = {}
-    if (role === 'customer' || role === 'admin') query.role = role
+    const matchStage = {}
+    if (role === 'customer' || role === 'admin') matchStage.role = role
     if (search) {
-      query.$or = [
+      matchStage.$or = [
         { name: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } }
       ]
     }
 
-    const total = await User.countDocuments(query)
-    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+    const sortStage = SORT_MAP[sort] || SORT_MAP.newest
 
-    const users = await User.find(query)
-      .select('name email role isEmailVerified createdAt lastLoginAt')
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * PAGE_SIZE)
-      .limit(PAGE_SIZE)
-      .lean()
-
-    const userIds = users.map(u => u._id)
-
-    const orderStats = await Order.aggregate([
-      { $match: { userId: { $in: userIds }, status: { $ne: 'Cancelled' } } },
+    const basePipeline = [
+      { $match: matchStage },
       {
-        $group: {
-          _id: '$userId',
-          orderCount: { $sum: 1 },
-          totalSpent: { $sum: '$total' }
+        $lookup: {
+          from: 'orders',
+          let: { userId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$userId', '$$userId'] },
+                    { $ne: ['$status', 'Cancelled'] }
+                  ]
+                }
+              }
+            },
+            { $group: { _id: null, count: { $sum: 1 }, total: { $sum: '$total' } } }
+          ],
+          as: 'orderStats'
         }
-      }
+      },
+      {
+        $addFields: {
+          orderCount: { $ifNull: [{ $arrayElemAt: ['$orderStats.count', 0] }, 0] },
+          totalSpent: { $ifNull: [{ $arrayElemAt: ['$orderStats.total', 0] }, 0] }
+        }
+      },
+      { $project: { ...SENSITIVE_FIELDS, orderStats: 0 } }
+    ]
+
+    const [countResult, users] = await Promise.all([
+      User.aggregate([...basePipeline, { $count: 'total' }]),
+      User.aggregate([
+        ...basePipeline,
+        { $sort: sortStage },
+        { $skip: (page - 1) * PAGE_SIZE },
+        { $limit: PAGE_SIZE }
+      ])
     ])
 
-    const statsMap = {}
-    for (const stat of orderStats) {
-      statsMap[stat._id.toString()] = { orderCount: stat.orderCount, totalSpent: stat.totalSpent }
-    }
+    const total = countResult[0]?.total || 0
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
-    const enriched = users.map(u => ({
-      ...u,
-      orderCount: statsMap[u._id.toString()]?.orderCount || 0,
-      totalSpent: statsMap[u._id.toString()]?.totalSpent || 0
-    }))
-
-    return NextResponse.json({ users: enriched, total, totalPages, page }, { status: 200 })
+    return NextResponse.json({ users, total, totalPages, page }, { status: 200 })
 
   } catch (error) {
     if (error.message === 'Not authorized') {

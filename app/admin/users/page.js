@@ -12,6 +12,12 @@ const ROLE_FILTERS = [
   { label: 'Admins', value: 'admin' },
 ]
 
+const SORT_OPTIONS = [
+  { label: 'Newest', value: 'newest' },
+  { label: 'Most Orders', value: 'orders' },
+  { label: 'Highest Spend', value: 'spent' },
+]
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -20,6 +26,7 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [roleFilter, setRoleFilter] = useState('')
+  const [sort, setSort] = useState('newest')
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const searchTimerRef = useRef(null)
@@ -37,7 +44,7 @@ export default function AdminUsersPage() {
     setLoading(true)
     setFetchError(false)
     try {
-      const params = new URLSearchParams({ page })
+      const params = new URLSearchParams({ page, sort })
       if (roleFilter) params.set('role', roleFilter)
       if (debouncedSearch) params.set('search', debouncedSearch)
       const res = await fetch(`/api/admin/users?${params}`)
@@ -53,12 +60,17 @@ export default function AdminUsersPage() {
       setFetchError(true)
     }
     setLoading(false)
-  }, [page, roleFilter, debouncedSearch])
+  }, [page, roleFilter, sort, debouncedSearch])
 
   useEffect(() => { fetchUsers() }, [fetchUsers])
 
   const handleRoleChange = (r) => {
     setRoleFilter(r)
+    setPage(1)
+  }
+
+  const handleSortChange = (s) => {
+    setSort(s)
     setPage(1)
   }
 
@@ -80,22 +92,41 @@ export default function AdminUsersPage() {
         />
       </div>
 
-      <div className="flex gap-2 flex-wrap mb-8">
-        {ROLE_FILTERS.map(f => (
-          <button
-            key={f.value}
-            onClick={() => handleRoleChange(f.value)}
-            className={`rounded-full px-5 py-2 text-[13px] font-bold uppercase tracking-wide transition-colors ${
-              roleFilter === f.value
-                ? 'bg-forest text-cream'
-                : 'bg-surface border-[1.5px] border-border text-forest hover:border-olive'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-2 mb-8">
+        <div className="flex gap-2">
+          {ROLE_FILTERS.map(f => (
+            <button
+              key={f.value}
+              onClick={() => handleRoleChange(f.value)}
+              className={`rounded-full px-5 py-2 text-[13px] font-bold uppercase tracking-wide transition-colors ${
+                roleFilter === f.value
+                  ? 'bg-forest text-cream'
+                  : 'bg-surface border-[1.5px] border-border text-forest hover:border-olive'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-2 ml-4">
+          {SORT_OPTIONS.map(s => (
+            <button
+              key={s.value}
+              onClick={() => handleSortChange(s.value)}
+              className={`rounded-full px-4 py-2 text-[12px] font-bold uppercase tracking-wide transition-colors ${
+                sort === s.value
+                  ? 'bg-olive text-cream'
+                  : 'bg-surface border-[1.5px] border-border text-forest/60 hover:border-olive'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+
         {total > 0 && (
-          <span className="ml-auto text-[13px] text-forest/45 self-center">
+          <span className="ml-auto text-[13px] text-forest/45">
             {total} user{total !== 1 ? 's' : ''}
           </span>
         )}
